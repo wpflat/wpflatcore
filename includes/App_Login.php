@@ -18,6 +18,9 @@ class App_Login {
 
 	/** When set, the pages belong to the client portal instead of the team app. */
 	private static $portal = false;
+
+	/** A name for the place being signed in to, when it is neither the app nor the client portal (a module's own front-end page). */
+	private static $label = '';
 	private static $base   = '';
 
 	/** Where these pages live: the app, or the client portal when serving it. */
@@ -38,9 +41,10 @@ class App_Login {
 	}
 
 	/** Serve the sign-in / reset pages for the client portal (called by Portal). */
-	public static function route_for_portal( $portal_url ) {
+	public static function route_for_portal( $portal_url, $label = '' ) {
 		self::$portal = true;
 		self::$base   = $portal_url;
+		self::$label  = (string) $label;
 		self::route();
 	}
 
@@ -58,6 +62,10 @@ class App_Login {
 			return;
 		}
 		$to = ! empty( $_POST['bd_portal'] ) ? Portal::url() : App_Page::url(); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! empty( $_POST['bd_return'] ) ) { // a module's own front-end page asked to be returned to // phpcs:ignore WordPress.Security.NonceVerification
+			$back = wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['bd_return'] ) ), '' ); // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
+			$to   = '' !== $back ? $back : $to;
+		}
 		wp_safe_redirect( add_query_arg( 'bd_error', '1', $to ) );
 		exit;
 	}
@@ -199,7 +207,7 @@ class App_Login {
 		}
 		$name = (string) Settings::get( 'business_name' );
 		$name = $name ? $name : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
-		$what = self::$portal ? Terminology::fmt( '{client} portal account' ) : 'account';
+		$what = '' !== self::$label ? self::$label . ' account' : ( self::$portal ? Terminology::fmt( '{client} portal account' ) : 'account' );
 		$url  = add_query_arg( array( 'key' => $key, 'login' => rawurlencode( $user_login ) ), self::base() );
 		return "Hi,\r\n\r\nSomeone asked to reset the password for your {$name} {$what}:\r\n\r\n{$user_login}\r\n\r\nIf that wasn't you, you can ignore this email — nothing will change.\r\n\r\nTo choose a new password, open this link:\r\n\r\n{$url}\r\n\r\nThe link works for a limited time.\r\n";
 	}
@@ -333,7 +341,7 @@ a:hover{color:var(--muted)}
 	<div class="card">
 		<h1><?php echo esc_html( $titles[ $view ] ); ?></h1>
 		<?php if ( 'login' === $view ) : ?>
-			<p class="sub"><?php echo esc_html( self::$portal ? ( $name ? 'to your ' . $name . ' ' . Terminology::fmt( '{client} portal' ) : 'to your ' . Terminology::fmt( '{client} portal' ) ) : ( $name ? 'to ' . $name : 'to your workspace' ) ); ?></p>
+			<p class="sub"><?php echo esc_html( '' !== self::$label ? ( $name ? 'to ' . $name . ' ' . self::$label : 'to ' . self::$label ) : ( self::$portal ? ( $name ? 'to your ' . $name . ' ' . Terminology::fmt( '{client} portal' ) : 'to your ' . Terminology::fmt( '{client} portal' ) ) : ( $name ? 'to ' . $name : 'to your workspace' ) ) ); ?></p>
 		<?php elseif ( 'forgot' === $view ) : ?>
 			<p class="sub">Enter your email or username and we’ll send you a link.</p>
 		<?php else : ?>
@@ -368,6 +376,7 @@ a:hover{color:var(--muted)}
 			<input type="hidden" name="redirect_to" id="bd-redirect" value="<?php echo esc_url( $app ); ?>">
 			<input type="hidden" name="bd_login" value="1">
 			<?php if ( self::$portal ) : ?><input type="hidden" name="bd_portal" value="1"><?php endif; ?>
+			<?php if ( '' !== self::$label ) : ?><input type="hidden" name="bd_return" value="<?php echo esc_url( $app ); ?>"><?php endif; ?>
 			<button class="btn" type="submit" name="wp-submit" data-busy="Signing in…">Sign in</button>
 		</form>
 
@@ -407,7 +416,7 @@ a:hover{color:var(--muted)}
 		</form>
 		<?php endif; ?>
 	</div>
-	<p class="foot"><?php echo esc_html( $label ); ?> · <?php echo self::$portal ? Terminology::fmt( '{client} portal' ) : 'team workspace'; ?></p>
+	<p class="foot"><?php echo esc_html( $label ); ?> · <?php echo '' !== self::$label ? esc_html( self::$label ) : ( self::$portal ? Terminology::fmt( '{client} portal' ) : 'team workspace' ); ?></p>
 </main>
 <script>
 (function () {

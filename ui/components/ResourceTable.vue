@@ -128,6 +128,9 @@ const saveRecord = async ( values ) => {
 			payload[ f.name ] = values[ f.name ];
 		}
 	} );
+	if ( ! drawer.isNew && typeof cfg.value.keepOnSave === 'function' ) {
+		Object.assign( payload, cfg.value.keepOnSave( drawer.record ) );
+	}
 	const res = drawer.isNew ? await api.create( cfg.value.resource, payload ) : await api.update( cfg.value.resource, drawer.id, payload );
 	ElMessage.success( `${ cfg.value.singular || 'Record' } saved` );
 	return res;

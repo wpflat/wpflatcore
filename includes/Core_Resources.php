@@ -61,11 +61,16 @@ class Core_Resources {
 					if ( isset( $params['member_ids'] ) && is_array( $params['member_ids'] ) ) {
 						Services\Groups::sync_group( $row['id'], $params['member_ids'] );
 					}
+					if ( isset( $params['roles'] ) && is_array( $params['roles'] ) ) {
+						Services\Groups::set_roles( $row['id'], $params['roles'] );
+					}
 				},
 				'decorate' => function ( $rows, $single ) {
 					global $wpdb;
 					foreach ( $rows as &$r ) {
 						$r['member_count'] = (int) $r['member_count'];
+						$r['roles']        = array_map( array( Services\Groups::class, 'role_info' ), Services\Groups::roles( $r['id'] ) );
+						$r['role_users']   = count( Services\Groups::member_users( $r['id'] ) );
 						if ( $single ) {
 							$r['members'] = array_map( function ( $m ) {
 								return array( 'id' => (int) $m['id'], 'name' => $m['name'], 'email' => $m['email'] );
@@ -78,6 +83,7 @@ class Core_Resources {
 				'after_delete' => function ( $row ) {
 					global $wpdb;
 					$wpdb->delete( Schema::table( 'bizy_group_members' ), array( 'group_id' => $row['id'] ) );
+					Services\Groups::forget_roles( $row['id'] );
 					do_action( 'bizycore_group_deleted', (int) $row['id'] );
 				},
 			),

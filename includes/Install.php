@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) || exit;
 class Install {
 
 	/** Bump when the SQL changes. */
-	const DB_VERSION = '4';
+	const DB_VERSION = '5';
 	const OPTION     = 'bizycore_db_version';
 
 	public static function activate() {

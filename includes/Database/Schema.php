@@ -20,7 +20,7 @@ class Schema {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$charset = $wpdb->get_charset_collate();
 		$t       = array();
-		foreach ( array( 'departments', 'groups', 'group_members', 'clients', 'client_departments', 'client_contacts', 'team_members', 'activity', 'lookups', 'threads', 'messages', 'message_files', 'thread_reads', 'notifications' ) as $n ) {
+		foreach ( array( 'departments', 'groups', 'group_members', 'group_roles', 'clients', 'client_departments', 'client_contacts', 'team_members', 'activity', 'lookups', 'threads', 'messages', 'message_files', 'thread_reads', 'notifications' ) as $n ) {
 			$t[ $n ] = self::table( 'bizy_' . $n );
 		}
 
@@ -79,6 +79,15 @@ class Schema {
   PRIMARY KEY  (id),
   UNIQUE KEY group_client (group_id,client_id),
   KEY client_id (client_id)
+) $charset;";
+
+		$sql[] = "CREATE TABLE {$t['group_roles']} (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  group_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  role_slug varchar(60) NOT NULL DEFAULT '',
+  PRIMARY KEY  (id),
+  UNIQUE KEY group_role (group_id,role_slug),
+  KEY role_slug (role_slug)
 ) $charset;";
 
 		$sql[] = "CREATE TABLE {$t['client_departments']} (

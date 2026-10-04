@@ -64,6 +64,9 @@ class Routes {
 			array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'add_link' ), 'permission_callback' => array( __CLASS__, 'can_use' ) ),
 			array( 'methods' => 'DELETE', 'callback' => array( __CLASS__, 'remove_link' ), 'permission_callback' => array( __CLASS__, 'can_use' ) ),
 		) );
+		register_rest_route( self::NS, '/group-roles', array(
+			array( 'methods' => 'GET', 'callback' => function () { return rest_ensure_response( \BizyCore\Services\Groups::assignable_roles() ); }, 'permission_callback' => array( __CLASS__, 'can_use' ) ),
+		) );
 		register_rest_route( self::NS, '/links/types', array(
 			array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'link_types' ), 'permission_callback' => array( __CLASS__, 'can_use' ) ),
 		) );

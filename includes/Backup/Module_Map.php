@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Module_Map {
 
-	const CORE_TABLES = array( 'bizy_departments', 'bizy_lookups', 'bizy_clients', 'bizy_client_departments', 'bizy_client_contacts', 'bizy_team_members', 'bizy_activity', 'bizy_threads', 'bizy_messages', 'bizy_message_files', 'bizy_thread_reads', 'bizy_links' );
+	const CORE_TABLES = array( 'bizy_departments', 'bizy_lookups', 'bizy_clients', 'bizy_groups', 'bizy_group_members', 'bizy_group_roles', 'bizy_client_departments', 'bizy_client_contacts', 'bizy_team_members', 'bizy_activity', 'bizy_threads', 'bizy_messages', 'bizy_message_files', 'bizy_thread_reads', 'bizy_links' );
 
 	/** Tables per module (without the WordPress prefix). `optional` ones can be left out; `excluded` ones are never saved. */
 	public static function modules() {
@@ -102,6 +102,8 @@ class Module_Map {
 	public static function refs() {
 		$out = array(
 			'bizy_client_departments' => array( 'client_id' => 'bizy_clients', 'department_id' => 'bizy_departments' ),
+			'bizy_group_members'      => array( 'group_id' => 'bizy_groups', 'client_id' => 'bizy_clients' ),
+			'bizy_group_roles'        => array( 'group_id' => 'bizy_groups' ),
 			'bizy_client_contacts'    => array( 'client_id' => 'bizy_clients' ),
 			'bizy_threads'            => array( 'client_id' => 'bizy_clients' ),
 			'bizy_messages'           => array( 'thread_id' => 'bizy_threads' ),

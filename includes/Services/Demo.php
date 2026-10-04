@@ -35,6 +35,7 @@ class Demo {
 			'loaded' => ! empty( $ids ),
 			'counts' => array_map( 'count', $ids ),
 			'login'  => ( ! empty( $ids ) && is_array( $login ) && ! empty( $login['username'] ) ) ? array( 'username' => $login['username'], 'password' => $login['password'], 'url' => \BizyCore\Portal::url() ) : null,
+			'role_login' => ( ! empty( $ids ) && is_array( $login ) && ! empty( $login['teacher']['username'] ) ) ? array( 'role' => $login['teacher']['role_label'], 'username' => $login['teacher']['username'], 'password' => $login['teacher']['password'], 'url' => home_url( '/files/' ) ) : null,
 		);
 	}
 
@@ -104,6 +105,25 @@ class Demo {
 			$u = get_userdata( $uid );
 			update_option( 'bizycore_demo_login', array( 'user_id' => $uid, 'username' => $u->user_login, 'password' => $pass ), false );
 		}
+		// A sample custom role (what a role-editor plugin makes), a group tied to it, and a user who has the role but is not a client.
+		add_role( 'bizy_demo_teacher', 'Teacher (Sample)', array( 'read' => true ) );
+		$group_t = self::add( 'bizy_groups', array( 'name' => 'Teachers (Sample)', 'description' => 'Everyone with the Teacher role', 'color' => '#7c3aed', 'status' => 'active', 'department_id' => $web ) );
+		Groups::set_roles( $group_t, array( 'bizy_demo_teacher' ) );
+		self::$ids['bizy_group_roles@group_id'][] = $group_t;
+		$tuser = wp_insert_user( array( 'user_login' => 'sample.teacher', 'user_pass' => wp_generate_password( 14, false ), 'user_email' => 'teacher@sample.example', 'display_name' => 'Tola Teacher (Sample)', 'role' => 'bizy_demo_teacher' ) );
+		$teacher = null;
+		if ( ! is_wp_error( $tuser ) ) {
+			$tpass = wp_generate_password( 14, false );
+			wp_set_password( $tpass, $tuser );
+			update_user_meta( $tuser, 'show_admin_bar_front', 'false' );
+			$teacher = array( 'user_id' => $tuser, 'username' => 'sample.teacher', 'password' => $tpass, 'role_label' => 'Teacher (Sample)' );
+		}
+		$demo_login = get_option( 'bizycore_demo_login', array() );
+		if ( $teacher ) {
+			$demo_login            = is_array( $demo_login ) ? $demo_login : array();
+			$demo_login['teacher'] = $teacher;
+			update_option( 'bizycore_demo_login', $demo_login, false );
+		}
 		$team = array(
 			self::add( 'bizy_team_members', array( 'name' => 'Zara Bello (Sample)', 'email' => 'zara@sample.example', 'role' => 'Designer', 'kind' => 'employee', 'status' => 'active', 'department_id' => $web ) ),
 			self::add( 'bizy_team_members', array( 'name' => 'Tunde Okafor (Sample)', 'email' => 'tunde@sample.example', 'role' => 'Developer', 'kind' => 'employee', 'status' => 'active', 'department_id' => $web ) ),
@@ -113,7 +133,7 @@ class Demo {
 		 *
 		 * @param array $ctx departments (web, marketing), clients (3 ids), team (2 ids)
 		 */
-		do_action( 'bizycore_demo_load', array( 'web' => $web, 'marketing' => $mkt, 'clients' => $clients, 'team' => $team, 'groups' => array( $group_a, $group_b ) ) );
+		do_action( 'bizycore_demo_load', array( 'web' => $web, 'marketing' => $mkt, 'clients' => $clients, 'team' => $team, 'groups' => array( $group_a, $group_b ), 'role_group' => $group_t ) );
 		update_option( self::OPTION, self::$ids, false );
 		delete_option( 'bizycore_fresh_install' );
 		return self::status();
@@ -133,15 +153,22 @@ class Demo {
 				$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . $name . " WHERE $col IN ($in)" ); // phpcs:ignore WordPress.DB
 			}
 		}
+		if ( ! empty( $ids['bizy_groups'] ) ) {
+			$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'bizy_group_roles WHERE group_id IN (' . implode( ',', array_map( 'intval', $ids['bizy_groups'] ) ) . ')' ); // phpcs:ignore WordPress.DB
+		}
 		if ( ! empty( $ids['bizy_clients'] ) ) {
 			$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'bizy_activity WHERE client_id IN (' . implode( ',', array_map( 'intval', $ids['bizy_clients'] ) ) . ')' ); // phpcs:ignore WordPress.DB
 		}
 		do_action( 'bizycore_demo_cleared', $ids );
 		$login = get_option( 'bizycore_demo_login', array() );
+		require_once ABSPATH . 'wp-admin/includes/user.php';
 		if ( is_array( $login ) && ! empty( $login['user_id'] ) ) {
-			require_once ABSPATH . 'wp-admin/includes/user.php';
 			wp_delete_user( (int) $login['user_id'] );
 		}
+		if ( is_array( $login ) && ! empty( $login['teacher']['user_id'] ) ) {
+			wp_delete_user( (int) $login['teacher']['user_id'] );
+		}
+		remove_role( 'bizy_demo_teacher' );
 		delete_option( 'bizycore_demo_login' );
 		delete_option( self::OPTION );
 		return self::status();

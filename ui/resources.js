@@ -64,6 +64,7 @@ export const groupsConfig = () => ( {
 	initialFilters: { status: 'active' },
 	filters: [ { name: 'status', label: 'Status', options: ACTIVE_STATUSES } ],
 	defaults: { status: 'active', color: '#6366f1' },
+	keepOnSave: ( r ) => ( { roles: groupRoleSlugs( r ) } ),
 	actionsWidth: 96,
 	actions: ( r ) => [ { label: 'Open', type: 'primary', onClick: () => navigate( `/groups/${ r.id }` ) } ],
 	columns: [
@@ -73,11 +74,25 @@ export const groupsConfig = () => ( {
 			render: ( r ) => h( 'a', { class: 'bd-strong bd-link bd-cell-group', href: `#/groups/${ r.id }` }, [ h( 'span', { class: 'bd-swatch', style: { background: r.color || '#6b7280' } } ), r.name ] ),
 		},
 		{ prop: 'description', label: 'Description', minWidth: 220 },
-		{ label: tp( 'client' ), minWidth: 110, render: ( r ) => String( r.member_count || 0 ) },
+		{
+			label: 'Linked roles',
+			minWidth: 180,
+			render: ( r ) => ( r.roles && r.roles.length ? h( 'span', { class: 'bd-chips' }, r.roles.map( ( x ) => h( 'span', { class: 'bd-badge ' + ( x.missing ? 'bd-badge--warning' : 'bd-badge--info' ), title: x.missing ? 'role removed' : x.slug }, x.label ) ) ) : '—' ),
+		},
+		{ label: tp( 'client' ), minWidth: 150, render: ( r ) => groupMembersLine( r ) },
 		{ prop: 'status', label: 'Status', type: 'status' },
 	],
 	fields: groupFields(),
 } );
+
+export const groupRoleSlugs = ( g ) => ( ( g && g.roles ) || [] ).map( ( r ) => r.slug );
+
+/** "2 hand-picked + 5 with a linked role" (the second part only when roles are linked). */
+export const groupMembersLine = ( g ) => {
+	const picked = Number( ( g && g.member_count ) || 0 );
+	const viaRole = Number( ( g && g.role_users ) || 0 );
+	return g && g.roles && g.roles.length ? sdk.fmt( `${ picked } hand-picked + ${ viaRole } with a linked role` ) : String( picked );
+};
 
 export const groupFields = () => [
 	{ name: 'name', label: `${ t( 'group' ) } name`, required: true, wide: true },
