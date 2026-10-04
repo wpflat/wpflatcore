@@ -27,6 +27,7 @@ class Plugin {
 		Stealth::init();
 		Assets::init();
 		Shell::init();
+		Home_Module::init();
 		App_Page::init();
 		Media::init();
 		Cron::init();

@@ -77,6 +77,7 @@ class Registry {
 			'settings_keys' => array(),
 			'file_kinds'    => array(),
 			'public_paths'  => array(),
+			'front'         => array(), // array( 'url' => callable returning the module's own front-end page address, or '' when it has none )
 			'public_params' => array(),
 			'portal_tabs'   => array(),
 			'roles'         => array(),
@@ -272,9 +273,20 @@ class Registry {
 				'status'  => $m['status'],
 				'reason'  => $m['reason'],
 				'enabled' => self::enabled( $id ),
+				'front_url' => self::front_url( $id ),
 			);
 		}
 		return $out;
+	}
+
+	/** The address of a module's own front-end page (what the site home page can point at), or '' when it has none. */
+	public static function front_url( $id ) {
+		$m = isset( self::$mods[ $id ] ) ? self::$mods[ $id ] : null;
+		if ( ! $m || ! self::enabled( $id ) || empty( $m['front']['url'] ) || ! is_callable( $m['front']['url'] ) ) {
+			return '';
+		}
+		$u = call_user_func( $m['front']['url'] );
+		return is_string( $u ) ? $u : '';
 	}
 
 	/** Scripts/styles the Core app should load for the enabled modules: id => array( script => url, style => url ). */

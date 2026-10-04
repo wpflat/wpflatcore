@@ -33,6 +33,7 @@ class Settings {
 				'app_login'              => true,
 				'app_home'               => false,
 				'app_slug'               => 'app',
+				'home_module'            => '',
 				'portal_enabled'         => true,
 				'portal_auto_users'      => true,
 				'portal_slug'            => 'portal',
@@ -85,6 +86,9 @@ class Settings {
 				$out[ $key ] = is_array( $v ) ? array_values( array_map( 'sanitize_text_field', $v ) ) : $default;
 			} elseif ( in_array( $key, self::TEXTAREAS, true ) ) {
 				$out[ $key ] = sanitize_textarea_field( (string) $v );
+			} elseif ( 'home_module' === $key ) {
+				$id          = sanitize_key( (string) $v );
+				$out[ $key ] = ( '' === $id || '' !== Registry::front_url( $id ) ) ? $id : $cur[ $key ]; // only a module that has a front-end page
 			} elseif ( 'app_slug' === $key || 'portal_slug' === $key ) {
 				$slug        = sanitize_title( (string) $v );
 				$out[ $key ] = '' !== $slug ? $slug : $default;
@@ -96,7 +100,7 @@ class Settings {
 		}
 		$out = apply_filters( 'bizycore_settings_sanitize', $out, $in );
 		update_option( self::OPTION, $out, false );
-		if ( $cur['app_slug'] !== $out['app_slug'] || $cur['portal_slug'] !== $out['portal_slug'] || $cur['app_home'] !== $out['app_home'] ) {
+		if ( $cur['app_slug'] !== $out['app_slug'] || $cur['portal_slug'] !== $out['portal_slug'] || $cur['app_home'] !== $out['app_home'] || $cur['home_module'] !== $out['home_module'] ) {
 			do_action( 'bizycore_addresses_changed' );
 			do_action( 'litespeed_purge_all' );
 		}

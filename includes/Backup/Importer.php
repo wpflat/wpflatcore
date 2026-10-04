@@ -848,7 +848,7 @@ class Importer {
 				foreach ( array_keys( Registry::all() ) as $rm ) {
 					$owned[ $rm ] = Module_Map::settings_keys( $rm );
 				}
-				$keep  = array( 'app_slug', 'app_home', 'app_login', 'app_frontend', 'app_fullscreen', 'app_keep_staff', 'delete_on_uninstall', 'delete_backups_on_uninstall' );
+				$keep  = array( 'app_slug', 'app_home', 'home_module', 'app_login', 'app_frontend', 'app_fullscreen', 'app_keep_staff', 'delete_on_uninstall', 'delete_backups_on_uninstall' );
 				$next  = $live;
 				foreach ( $opt['bizycore_settings'] as $k => $v ) {
 					$owner = 'core';

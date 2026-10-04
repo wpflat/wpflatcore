@@ -121,6 +121,8 @@ const sendTest = async () => {
 
 /* ───────────── Modules ───────────── */
 const mods = ref( store.modules.map( ( m ) => ( { ...m } ) ) );
+const homeChoices = computed( () => mods.value.filter( ( m ) => m.enabled && m.front_url ) );
+const homeModuleUrl = computed( () => { const m = mods.value.find( ( x ) => x.id === form.home_module ); return m ? m.front_url : ''; } );
 const modBusy = ref( false );
 const toggleModule = async ( m, on ) => {
 	m.enabled = on;
@@ -206,6 +208,21 @@ const save = async () => {
 						<li v-if="!mods.length" class="bd-muted">No module plugins are installed yet.</li>
 					</ul>
 					<p v-if="!store.canManage" class="bd-help">Only a WordPress administrator can change modules.</p>
+				</el-card>
+				<el-card shadow="never">
+					<template #header><div class="bd-widget__head"><span>Site home page</span></div></template>
+					<el-form label-position="top" @submit.prevent>
+						<el-form-item label="When someone opens your website's home page">
+							<el-select v-model="form.home_module" style="width:100%">
+								<el-option value="" label="Show my website's own home page (default)" />
+								<el-option v-for="m in homeChoices" :key="m.id" :value="m.id" :label="'Take them straight to ' + m.label" />
+							</el-select>
+							<div class="bd-help" v-if="homeChoices.length">Installed Bizy for just one module? Pick it here and visitors go straight to it (they sign in first if the page needs it). Your normal home page stays at <code>{{ store.homeUrl }}?bd_site=1</code>, and the app at its own address.</div>
+							<div class="bd-help" v-else>No module has a page of its own to use as the home page yet. For BizyFiles, turn on its front-end page in Files settings first.</div>
+							<div class="bd-help" v-if="homeModuleUrl">Visitors will land on <a class="bd-link" :href="homeModuleUrl" target="_blank" rel="noopener">{{ homeModuleUrl }}</a></div>
+						</el-form-item>
+					</el-form>
+					<el-button type="primary" :loading="saving" @click="save">Save</el-button>
 				</el-card>
 				<el-card shadow="never">
 					<template #header><div class="bd-widget__head"><span>The app</span></div></template>
