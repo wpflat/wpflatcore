@@ -69,7 +69,8 @@ class Roles {
 		);
 		foreach ( Registry::all() as $m ) {
 			foreach ( (array) $m['roles'] as $slug => $r ) {
-				$roles[ $slug ] = array( 'label' => $r['label'], 'desc' => isset( $r['desc'] ) ? $r['desc'] : '', 'caps' => $base + self::flag( (array) $r['caps'] ), 'internal' => true, 'module' => $m['id'] );
+				$staff          = ! isset( $r['staff'] ) || $r['staff']; // a module role can be for people who do not use the Bizy app (staff = false), e.g. a file viewer who only uses a front-end page
+				$roles[ $slug ] = array( 'label' => $r['label'], 'desc' => isset( $r['desc'] ) ? $r['desc'] : '', 'caps' => ( $staff ? $base : array( 'read' => true ) ) + self::flag( (array) $r['caps'] ), 'internal' => $staff, 'module' => $m['id'] );
 			}
 		}
 		return $roles;

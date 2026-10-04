@@ -110,13 +110,19 @@ class Demo {
 		$group_t = self::add( 'bizy_groups', array( 'name' => 'Teachers (Sample)', 'description' => 'Everyone with the Teacher role', 'color' => '#7c3aed', 'status' => 'active', 'department_id' => $web ) );
 		Groups::set_roles( $group_t, array( 'bizy_demo_teacher' ) );
 		self::$ids['bizy_group_roles@group_id'][] = $group_t;
-		$tuser = wp_insert_user( array( 'user_login' => 'sample.teacher', 'user_pass' => wp_generate_password( 14, false ), 'user_email' => 'teacher@sample.example', 'display_name' => 'Tola Teacher (Sample)', 'role' => 'bizy_demo_teacher' ) );
+		$tlogin = 'sample.teacher';
+		$temail = 'teacher@sample.example';
+		for ( $i = 2; username_exists( $tlogin ) || email_exists( $temail ); $i++ ) { // never take over someone else's account
+			$tlogin = 'sample.teacher' . $i;
+			$temail = 'teacher' . $i . '@sample.example';
+		}
+		$tuser = wp_insert_user( array( 'user_login' => $tlogin, 'user_pass' => wp_generate_password( 14, false ), 'user_email' => $temail, 'display_name' => 'Tola Teacher (Sample)', 'role' => 'bizy_demo_teacher' ) );
 		$teacher = null;
 		if ( ! is_wp_error( $tuser ) ) {
 			$tpass = wp_generate_password( 14, false );
 			wp_set_password( $tpass, $tuser );
 			update_user_meta( $tuser, 'show_admin_bar_front', 'false' );
-			$teacher = array( 'user_id' => $tuser, 'username' => 'sample.teacher', 'password' => $tpass, 'role_label' => 'Teacher (Sample)' );
+			$teacher = array( 'user_id' => $tuser, 'username' => $tlogin, 'password' => $tpass, 'role_label' => 'Teacher (Sample)' );
 		}
 		$demo_login = get_option( 'bizycore_demo_login', array() );
 		if ( $teacher ) {
