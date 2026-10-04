@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: BizyCore
- * Description: The foundation of the Bizy suite — clients, team, departments, portal and backup, plus the connection points that BizyTasks, BizyMoney and BizyDocs plug into.
+ * Description: The foundation of the Bizy suite — clients, team, departments, portal and backup, plus the connection points that BizyTasks, BizyMoney and BizyDoc plug into.
  * Version: 0.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4

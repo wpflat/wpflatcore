@@ -35,7 +35,7 @@ class Legacy {
 		'threads' => 'core', 'messages' => 'core', 'message_files' => 'core', 'thread_reads' => 'core',
 		'projects' => 'tasks', 'project_phases' => 'tasks', 'tasks' => 'tasks',
 		'services' => 'money', 'client_services' => 'money', 'renewals' => 'money', 'charges' => 'money', 'invoices' => 'money', 'invoice_items' => 'money', 'invoice_installments' => 'money', 'payments' => 'money', 'expenses' => 'money', 'recurring_expenses' => 'money', 'pay_allocations' => 'money', 'pay_items' => 'money', 'payouts' => 'money', 'email_log' => 'money',
-		'contract_templates' => 'docs', 'contracts' => 'docs', 'contract_signers' => 'docs', 'contract_events' => 'docs',
+		'contract_templates' => 'doc', 'contracts' => 'doc', 'contract_signers' => 'doc', 'contract_events' => 'doc',
 	);
 
 	/** Core's tables in the order they are imported (parents first). */
@@ -47,11 +47,11 @@ class Legacy {
 	/** Old role => new role. Old roles stay (the old plugin may still be running); the new ones are added. */
 	const ROLES = array(
 		'bizydash_client' => 'bizy_user', 'bizydash_client_manager' => 'bizy_client_manager', 'bizydash_team_manager' => 'bizy_team_manager', 'bizydash_admin' => 'bizy_admin',
-		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_money_team', 'bizydash_contract_team' => 'bizy_docs_team', 'bizydash_staff' => 'bizy_client_manager',
+		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_money_team', 'bizydash_contract_team' => 'bizy_doc_team', 'bizydash_staff' => 'bizy_client_manager',
 	);
 
 	/** Old module id => new module id. */
-	const MODULES = array( 'work' => 'tasks', 'finance' => 'money', 'contracts' => 'docs' );
+	const MODULES = array( 'work' => 'tasks', 'finance' => 'money', 'contracts' => 'doc' );
 
 	const BATCH = 200;
 
@@ -681,7 +681,7 @@ class Legacy {
 				}
 				$grants = get_user_meta( $u->ID, 'bizydash_manager_modules', true );
 				if ( is_array( $grants ) && ! get_user_meta( $u->ID, 'bizycore_manager_modules', true ) ) {
-					$map = array( 'clients' => 'clients', 'messages' => 'messages', 'work' => 'tasks', 'billing' => 'money', 'finance' => 'money', 'contracts' => 'docs' );
+					$map = array( 'clients' => 'clients', 'messages' => 'messages', 'work' => 'tasks', 'billing' => 'money', 'finance' => 'money', 'contracts' => 'doc' );
 					update_user_meta( $u->ID, 'bizycore_manager_modules', array_values( array_unique( array_filter( array_map( function ( $g ) use ( $map ) {
 						return isset( $map[ $g ] ) ? $map[ $g ] : '';
 					}, $grants ) ) ) ) );

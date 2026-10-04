@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  *   bizytasks_task_done      ( $task )
  *   bizymoney_invoice_sent   ( $invoice )
  *   bizymoney_invoice_paid   ( $invoice )
- *   bizydocs_document_signed ( $document )
+ *   bizydoc_document_signed ( $document )
  *
  * Module-specific names start with the module plugin's slug so they never collide.
  */

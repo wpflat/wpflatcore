@@ -783,7 +783,7 @@ class Importer {
 			$job['vstage'] = 'modules';
 		}
 		if ( 'modules' === $job['vstage'] ) {
-			// Modules may check what they are about to receive (BizyDocs verifies the signing audit trail). A module
+			// Modules may check what they are about to receive (BizyDoc verifies the signing audit trail). A module
 			// stops the restore by throwing a RuntimeException; nothing live has been touched yet.
 			$names = array();
 			foreach ( $job['tables'] as $t ) {
@@ -927,7 +927,7 @@ class Importer {
 		if ( $bad ) {
 			$warn[] = 'After restoring, the row counts of ' . implode( ', ', $bad ) . ' differ from the backup. Use “Undo” to go back.';
 		}
-		// Modules report on what they now hold (BizyDocs: signed contracts that still verify) and may add warnings.
+		// Modules report on what they now hold (BizyDoc: signed contracts that still verify) and may add warnings.
 		foreach ( (array) apply_filters( 'bizycore_restore_integrity', array(), $mods ) as $w ) {
 			$warn[] = (string) $w;
 		}

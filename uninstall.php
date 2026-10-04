@@ -1,7 +1,7 @@
 <?php
 /**
  * Removes BizyCore data on uninstall, only when "Delete all Bizy data when the plugin is deleted" is on in Settings.
- * The module plugins (BizyTasks, BizyMoney, BizyDocs) clean up their own tables the same way. Delete the modules first:
+ * The module plugins (BizyTasks, BizyMoney, BizyDoc) clean up their own tables the same way. Delete the modules first:
  * once BizyCore's settings are gone they keep their data (the safe default).
  */
 
@@ -14,7 +14,7 @@ if ( empty( $settings['delete_on_uninstall'] ) ) {
 	return;
 }
 
-// Tables: bizy_* only (the module plugins' bizytasks_*, bizymoney_*, bizydocs_* and the old bizydash_* tables are not ours).
+// Tables: bizy_* only (the module plugins' bizytasks_*, bizymoney_*, bizydoc_* and the old bizydash_* tables are not ours).
 foreach ( (array) $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix . 'bizy_' ) . '%' ) ) as $table ) {
 	$wpdb->query( 'DROP TABLE IF EXISTS `' . esc_sql( $table ) . '`' ); // phpcs:ignore WordPress.DB
 }
@@ -36,7 +36,7 @@ foreach ( (array) wp_roles()->roles as $slug => $def ) {
 }
 foreach ( wp_roles()->role_objects as $role ) {
 	foreach ( array_keys( (array) $role->capabilities ) as $cap ) {
-		if ( 0 === strpos( $cap, 'bizycore_' ) || 'manage_bizycore' === $cap || 0 === strpos( $cap, 'bizytasks_' ) || 0 === strpos( $cap, 'bizymoney_' ) || 0 === strpos( $cap, 'bizydocs_' ) ) {
+		if ( 0 === strpos( $cap, 'bizycore_' ) || 'manage_bizycore' === $cap || 0 === strpos( $cap, 'bizytasks_' ) || 0 === strpos( $cap, 'bizymoney_' ) || 0 === strpos( $cap, 'bizydoc_' ) ) {
 			$role->remove_cap( $cap );
 		}
 	}

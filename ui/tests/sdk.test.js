@@ -40,7 +40,7 @@ describe( 'routes', () => {
 	it( 'ignores routes of switched-off or missing modules', () => {
 		const s = createSdk( boot );
 		s.registerRoute( { path: '/billing', module: 'money', component: C } );
-		s.registerRoute( { path: '/legal', module: 'docs', component: C } );
+		s.registerRoute( { path: '/legal', module: 'doc', component: C } );
 		expect( s.resolve( '/billing' ) ).toBeNull();
 		expect( s.resolve( '/legal' ) ).toBeNull();
 	} );

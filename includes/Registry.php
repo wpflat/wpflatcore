@@ -8,7 +8,7 @@ defined( 'ABSPATH' ) || exit;
  * capability and portal arrays of the old single plugin: Core never names a module, it only reads this registry.
  *
  * A definition (all keys optional except id, label, version):
- *   id            slug, lowercase letters/digits/dashes — 'tasks', 'money', 'docs'
+ *   id            slug, lowercase letters/digits/dashes — 'tasks', 'money', 'doc'
  *   label         'Tasks'
  *   version       the module plugin's version
  *   requires_core minimum BizyCore version, e.g. '0.1.0'
