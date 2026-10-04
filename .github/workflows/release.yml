@@ -1,0 +1,42 @@
+name: Release
+
+# Push a tag like v0.1.0 (it must match the "Version:" line in bizycore.php) and this attaches an installable zip to a GitHub release.
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: bizycore
+
+      - name: Check the tag matches the plugin version
+        run: |
+          V=$(grep -m1 '^ \* Version:' bizycore/bizycore.php | awk '{print $3}')
+          if [ "v$V" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match Version: $V in bizycore.php" >&2
+            exit 1
+          fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Build the zip (the plugin folder, without development files)
+        run: |
+          zip -rq "bizycore-$VERSION.zip" bizycore \
+            -x "bizycore/.git/*" "bizycore/.github/*" "bizycore/.gitignore" "bizycore/ui/*" "bizycore/vite*.js" "bizycore/package*.json" "bizycore/API.md" \
+               "bizycore/node_modules/*" "bizycore/lib/dompdf/tests/*" '*.DS_Store'
+          cp "bizycore-$VERSION.zip" bizycore.zip   # a stable name, so .../releases/latest/download/bizycore.zip always works
+          unzip -l bizycore.zip | tail -1
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bizycore-${{ env.VERSION }}.zip
+            bizycore.zip
+          generate_release_notes: true
