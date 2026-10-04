@@ -1,0 +1,144 @@
+<?php
+namespace BizyCore\Rest;
+
+use BizyCore\Mail_Settings;
+use BizyCore\Media;
+use BizyCore\Services\Mailer;
+use BizyCore\Paths;
+use BizyCore\Roles;
+use BizyCore\Services\Activity;
+use BizyCore\Settings;
+use BizyCore\Shell;
+use BizyCore\Stealth;
+use BizyCore\Stealth_Admin;
+use BizyCore\Stealth_Check;
+use BizyCore\Stealth_Readiness;
+
+defined( 'ABSPATH' ) || exit;
+
+/** Settings, preferences, uploads and the security (stealth) screen. Namespace bizycore/v1. */
+class System_Routes {
+
+	const NS = 'bizycore/v1';
+
+	public static function init() {
+		add_action( 'rest_api_init', array( __CLASS__, 'register' ) );
+	}
+
+	private static function done( $r ) {
+		return is_wp_error( $r ) ? $r : rest_ensure_response( $r );
+	}
+
+	public static function register() {
+		$use     = array( Resource_Controller::class, 'can' );
+		$admin   = array( Roles::class, 'can_admin' );
+		$wpadmin = function () {
+			return current_user_can( 'manage_options' );
+		};
+		register_rest_route( self::NS, '/demo', array(
+			array( 'methods' => 'GET', 'callback' => function () { return rest_ensure_response( \BizyCore\Services\Demo::status() ); }, 'permission_callback' => $admin ),
+			array( 'methods' => 'POST', 'callback' => function () { return self::done( \BizyCore\Services\Demo::load() ); }, 'permission_callback' => $admin ),
+			array( 'methods' => 'DELETE', 'callback' => function () { return rest_ensure_response( \BizyCore\Services\Demo::clear() ); }, 'permission_callback' => $admin ),
+		) );
+		register_rest_route( self::NS, '/meta', array( 'methods' => 'GET', 'callback' => function () {
+			return rest_ensure_response( Shell::meta_payload() );
+		}, 'permission_callback' => $use ) );
+		register_rest_route( self::NS, '/prefs', array(
+			array( 'methods' => 'GET', 'callback' => function () {
+				return rest_ensure_response( array( 'theme' => Shell::theme() ) );
+			}, 'permission_callback' => $use ),
+			array( 'methods' => 'POST,PUT', 'callback' => array( __CLASS__, 'save_prefs' ), 'permission_callback' => $use ),
+		) );
+		register_rest_route( self::NS, '/settings', array(
+			array( 'methods' => 'GET', 'callback' => function () {
+				return rest_ensure_response( Settings::get() );
+			}, 'permission_callback' => $use ),
+			array( 'methods' => 'POST,PUT', 'callback' => array( __CLASS__, 'save_settings' ), 'permission_callback' => $admin ),
+		) );
+		register_rest_route( self::NS, '/mail-settings', array(
+			array( 'methods' => 'GET', 'callback' => function () {
+				return rest_ensure_response( Mail_Settings::get_public() );
+			}, 'permission_callback' => $admin ),
+			array( 'methods' => 'POST,PUT', 'callback' => function ( \WP_REST_Request $r ) {
+				return rest_ensure_response( Mail_Settings::update( (array) $r->get_json_params() ) );
+			}, 'permission_callback' => $admin ),
+		) );
+		register_rest_route( self::NS, '/mail-settings/test', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'mail_test' ), 'permission_callback' => $admin ) );
+		register_rest_route( self::NS, '/files/upload', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'upload' ), 'permission_callback' => $use ) );
+		register_rest_route( self::NS, '/files/status', array( 'methods' => 'GET', 'callback' => function () {
+			return rest_ensure_response( Paths::status() );
+		}, 'permission_callback' => $admin ) );
+
+		/* Security & privacy (Beta): only WordPress administrators */
+		register_rest_route( self::NS, '/stealth', array(
+			array( 'methods' => 'GET', 'callback' => function () {
+				return rest_ensure_response( Stealth_Admin::overview() );
+			}, 'permission_callback' => $wpadmin ),
+			array( 'methods' => 'POST', 'callback' => function ( \WP_REST_Request $r ) {
+				return self::done( Stealth_Admin::save( (array) $r->get_json_params() ) );
+			}, 'permission_callback' => $wpadmin ),
+		) );
+		register_rest_route( self::NS, '/stealth/confirm', array( 'methods' => 'POST', 'callback' => function () {
+			Stealth::confirm();
+			return rest_ensure_response( Stealth_Admin::overview() );
+		}, 'permission_callback' => $wpadmin ) );
+		register_rest_route( self::NS, '/stealth/secret', array( 'methods' => 'POST', 'callback' => function () {
+			return rest_ensure_response( array( 'secret' => Stealth_Admin::make_secret() ) );
+		}, 'permission_callback' => $wpadmin ) );
+		register_rest_route( self::NS, '/stealth/test', array( 'methods' => 'POST', 'callback' => function ( \WP_REST_Request $r ) {
+			$p = (array) $r->get_json_params();
+			return self::done( Stealth_Readiness::run_step( (string) ( isset( $p['step'] ) ? $p['step'] : 'start' ) ) );
+		}, 'permission_callback' => $wpadmin ) );
+		register_rest_route( self::NS, '/stealth/ack', array( 'methods' => 'POST', 'callback' => function ( \WP_REST_Request $r ) {
+			$p = (array) $r->get_json_params();
+			return rest_ensure_response( Stealth_Readiness::acknowledge( ! empty( $p['ack'] ) ) );
+		}, 'permission_callback' => $wpadmin ) );
+		register_rest_route( self::NS, '/stealth/recovery-card', array( 'methods' => 'GET', 'callback' => function () {
+			return rest_ensure_response( array( 'text' => Stealth_Admin::recovery_card() ) );
+		}, 'permission_callback' => $wpadmin ) );
+		register_rest_route( self::NS, '/stealth/check', array( 'methods' => 'POST', 'callback' => function () {
+			return rest_ensure_response( Stealth_Check::run() );
+		}, 'permission_callback' => $wpadmin ) );
+	}
+
+	public static function save_prefs( \WP_REST_Request $r ) {
+		$p = (array) $r->get_json_params();
+		if ( isset( $p['theme'] ) ) {
+			update_user_meta( get_current_user_id(), 'bizycore_theme', in_array( $p['theme'], array( 'dark', 'auto' ), true ) ? $p['theme'] : 'light' );
+		}
+		return rest_ensure_response( array( 'theme' => Shell::theme() ) );
+	}
+
+	public static function save_settings( \WP_REST_Request $r ) {
+		$out = Settings::update( (array) $r->get_json_params() );
+		Activity::log( 'settings', 0, 0, 'updated', 'Settings updated' );
+		return rest_ensure_response( $out );
+	}
+
+	/** Send a short test message so the owner knows the connection works before emailing a client. */
+	public static function mail_test( \WP_REST_Request $r ) {
+		$p  = (array) $r->get_json_params();
+		$to = sanitize_email( isset( $p['to'] ) ? (string) $p['to'] : '' );
+		if ( ! is_email( $to ) ) {
+			return new \WP_Error( 'bizycore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
+		}
+		$m    = Mail_Settings::get_full();
+		$via  = 'smtp' === $m['method'] ? 'Bizy SMTP (' . $m['smtp_host'] . ':' . $m['smtp_port'] . ')' : 'the site mailer (wp_mail)';
+		$biz  = (string) Settings::get( 'business_name' );
+		$html = '<p>This is a test message from ' . esc_html( $biz ) . '.</p><p>If you can read it, your email settings work. It was sent through ' . esc_html( $via ) . '.</p>';
+		$res  = Mailer::send( array( 'to' => array( $to ), 'subject' => 'Bizy test email', 'html' => $html, 'text' => 'This is a test message. It was sent through ' . $via . '.' ) );
+		if ( empty( $res['ok'] ) ) {
+			return new \WP_Error( 'bizycore_mail_failed', $res['error'], array( 'status' => 502 ) );
+		}
+		Activity::log( 'settings', 0, 0, 'test_email', 'Email test sent to ' . $to );
+		return rest_ensure_response( array( 'ok' => true, 'via' => $via, 'to' => $to ) );
+	}
+
+	public static function upload( \WP_REST_Request $r ) {
+		$f = isset( $r->get_file_params()['file'] ) ? $r->get_file_params()['file'] : null;
+		if ( ! $f ) {
+			return new \WP_Error( 'bizycore_upload', 'No file was received.', array( 'status' => 400 ) );
+		}
+		return self::done( Media::store( $f ) );
+	}
+}
