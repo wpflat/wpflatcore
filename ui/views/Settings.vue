@@ -164,8 +164,8 @@ const save = async () => {
 						<el-row :gutter="16">
 							<el-col :xs="24" :sm="12"><el-form-item label="Business name"><el-input v-model="form.business_name" placeholder="Your business" /></el-form-item></el-col>
 							<el-col :xs="24" :sm="12"><el-form-item label="Company name (legal)"><el-input v-model="form.company_name" /></el-form-item></el-col>
-							<el-col :xs="24" :sm="12"><el-form-item label="Logo"><AttachmentField v-model="form.business_logo_id" v-model:url="form.business_logo_url" title="Business logo" /><div v-if="form.business_logo_url" class="bd-logo-prev"><img :src="form.business_logo_url" alt="Logo preview" /></div></el-form-item></el-col>
-							<el-col :xs="24" :sm="12"><el-form-item label="Logo for emails (PNG/JPG)"><AttachmentField v-model="form.business_logo_email_id" v-model:url="form.business_logo_email_url" title="Email logo" /><div class="bd-help">Email apps don't show SVG logos, so add a PNG or JPG version here. Not needed if your logo is already a PNG or JPG.</div></el-form-item></el-col>
+							<el-col :xs="24" :sm="12"><el-form-item label="Logo"><AttachmentField v-model="form.business_logo_id" v-model:url="form.business_logo_url" title="Business logo" library /><div v-if="form.business_logo_url" class="bd-logo-prev"><img :src="form.business_logo_url" alt="Logo preview" /></div></el-form-item></el-col>
+							<el-col :xs="24" :sm="12"><el-form-item label="Logo for emails (PNG/JPG)"><AttachmentField v-model="form.business_logo_email_id" v-model:url="form.business_logo_email_url" title="Email logo" library /><div class="bd-help">Email apps don't show SVG logos, so add a PNG or JPG version here. Not needed if your logo is already a PNG or JPG.</div></el-form-item></el-col>
 							<el-col :span="24"><el-form-item label="Address"><el-input v-model="form.business_address" type="textarea" :rows="3" /></el-form-item></el-col>
 							<el-col :xs="24" :sm="8"><el-form-item label="Email"><el-input v-model="form.business_email" /></el-form-item></el-col>
 							<el-col :xs="24" :sm="8"><el-form-item label="Phone"><el-input v-model="form.business_phone" /></el-form-item></el-col>

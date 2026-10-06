@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BizyCore
  * Description: The foundation of the Bizy suite — clients, team, departments, portal and backup, plus the connection points that BizyTasks, BizyMoney and BizyDoc plug into.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Digitalzooks
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'BIZYCORE_VERSION', '0.3.0' );
+define( 'BIZYCORE_VERSION', '0.3.1' );
 define( 'BIZYCORE_FILE', __FILE__ );
 define( 'BIZYCORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BIZYCORE_URL', plugin_dir_url( __FILE__ ) );

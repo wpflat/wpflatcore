@@ -88,7 +88,7 @@ onMounted( async () => {
 		<span v-else class="bd-muted">{{ $fmt( 'No active {groups} yet — add them from the {Groups} page.' ) }}</span>
 	</template>
 
-	<AttachmentField v-else-if="f.type === 'attachment'" :model-value="values[ f.name ] || 0" :url="values[ f.urlKey ] || ''" :title="f.label" @update:model-value="set( $event )" @update:url="values[ f.urlKey ] = $event" />
+	<AttachmentField v-else-if="f.type === 'attachment'" :model-value="values[ f.name ] || 0" :url="values[ f.urlKey ] || ''" :title="f.label" :library="!! f.library" @update:model-value="set( $event )" @update:url="values[ f.urlKey ] = $event" />
 
 	<div v-else-if="f.type === 'static'">{{ f.render ? f.render( values ) : values[ f.name ] }}</div>
 

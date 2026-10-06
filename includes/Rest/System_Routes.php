@@ -64,6 +64,9 @@ class System_Routes {
 			}, 'permission_callback' => $admin ),
 		) );
 		register_rest_route( self::NS, '/mail-settings/test', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'mail_test' ), 'permission_callback' => $admin ) );
+		// The WordPress Media Library, for pickers such as the logo fields: list images, and add to the library.
+		register_rest_route( self::NS, '/media-library', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'library_list' ), 'permission_callback' => $use ) );
+		register_rest_route( self::NS, '/media-library/upload', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'library_upload' ), 'permission_callback' => $use ) );
 		register_rest_route( self::NS, '/files/upload', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'upload' ), 'permission_callback' => $use ) );
 		register_rest_route( self::NS, '/files/status', array( 'methods' => 'GET', 'callback' => function () {
 			return rest_ensure_response( Paths::status() );
@@ -132,6 +135,63 @@ class System_Routes {
 		}
 		Activity::log( 'settings', 0, 0, 'test_email', 'Email test sent to ' . $to );
 		return rest_ensure_response( array( 'ok' => true, 'via' => $via, 'to' => $to ) );
+	}
+
+	private static function library_row( $id ) {
+		$thumb = wp_get_attachment_image_url( $id, 'medium' );
+		$url   = wp_get_attachment_url( $id );
+		return array(
+			'id'    => (int) $id,
+			'title' => get_the_title( $id ),
+			'url'   => (string) $url,
+			'thumb' => $thumb ? $thumb : (string) $url,
+			'mime'  => (string) get_post_mime_type( $id ),
+			'date'  => get_the_date( 'Y-m-d', $id ),
+		);
+	}
+
+	/** Images in the WordPress Media Library, newest first. Query: search, page. */
+	public static function library_list( \WP_REST_Request $r ) {
+		$per = 24;
+		$q   = new \WP_Query( array(
+			'post_type'      => 'attachment',
+			'post_status'    => 'inherit',
+			'post_mime_type' => 'image',
+			's'              => sanitize_text_field( (string) $r->get_param( 'search' ) ),
+			'posts_per_page' => $per,
+			'paged'          => max( 1, (int) $r->get_param( 'page' ) ),
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+			'fields'         => 'ids',
+			'no_found_rows'  => false,
+		) );
+		return rest_ensure_response( array(
+			'items'   => array_map( array( __CLASS__, 'library_row' ), $q->posts ),
+			'total'   => (int) $q->found_posts,
+			'pages'   => (int) $q->max_num_pages,
+			'can_add' => current_user_can( 'upload_files' ),
+		) );
+	}
+
+	/** Add an image to the WordPress Media Library (WordPress's own upload rules and sizes apply). */
+	public static function library_upload( \WP_REST_Request $r ) {
+		if ( ! current_user_can( 'upload_files' ) ) {
+			return new \WP_Error( 'bizycore_forbidden', 'Your account cannot add files to the WordPress Media Library. Choose an image that is already there, or ask an administrator.', array( 'status' => 403 ) );
+		}
+		$files = $r->get_file_params();
+		if ( empty( $files['file'] ) ) {
+			return new \WP_Error( 'bizycore_upload', 'No file was sent.', array( 'status' => 400 ) );
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		$ft = wp_check_filetype( (string) $files['file']['name'] );
+		if ( 0 !== strpos( (string) $ft['type'], 'image/' ) ) {
+			return new \WP_Error( 'bizycore_type', 'Choose an image file (PNG, JPG, GIF or WebP).', array( 'status' => 400 ) );
+		}
+		$_FILES['file'] = $files['file'];
+		$id = media_handle_upload( 'file', 0 );
+		return is_wp_error( $id ) ? $id : rest_ensure_response( self::library_row( $id ) );
 	}
 
 	public static function upload( \WP_REST_Request $r ) {

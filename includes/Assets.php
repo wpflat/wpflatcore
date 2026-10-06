@@ -42,7 +42,13 @@ class Assets {
 
 	/** Address of a module's bundle file, e.g. module_url( 'tasks', 'bizytasks.js' ). */
 	public static function module_url( $module, $file ) {
-		return home_url( '/' . self::BASE . '/a/' . self::version() . '/m/' . $module . '/' . $file );
+		// The address carries the bundle's own change time, so a module update is never hidden by a browser's cached copy.
+		$ver = self::version();
+		$m   = Registry::get( $module );
+		if ( $m && ! empty( $m['assets_dir'] ) && is_readable( $m['assets_dir'] . '/' . $file ) ) {
+			$ver = (string) filemtime( $m['assets_dir'] . '/' . $file );
+		}
+		return home_url( '/' . self::BASE . '/a/' . $ver . '/m/' . $module . '/' . $file );
 	}
 
 	public static function init() {

@@ -48,7 +48,7 @@ export const departmentsConfig = () => ( {
 		{ name: 'type', label: `${ dept().one } type`, type: 'select', required: true, options: () => options( 'department_type' ) },
 		{ name: 'status', label: 'Status', type: 'select', required: true, options: ACTIVE_STATUSES },
 		{ name: 'description', label: 'Description', type: 'textarea', wide: true },
-		{ name: 'logo_attachment_id', label: 'Logo', type: 'attachment', urlKey: 'logo_url', wide: true },
+		{ name: 'logo_attachment_id', label: 'Logo', type: 'attachment', urlKey: 'logo_url', library: true, wide: true },
 	],
 } );
 
