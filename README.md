@@ -4,7 +4,7 @@ The foundation of the Bizy suite: clients and contacts, team, departments, group
 
 
 
-Part of the **Bizy** suite (BizyCore, BizyTasks, BizyMoney, BizyDoc, BizyFiles). Each plugin has its own repository and installs on its own; the modules need BizyCore.
+Part of the **Bizy** suite (BizyCore, BizyTasks, BizyMoney, BizySign, BizyFiles). Each plugin has its own repository and installs on its own; the modules need BizyCore.
 
 ## Install
 

@@ -47,7 +47,7 @@ class Legacy {
 	/** Old role => new role. Old roles stay (the old plugin may still be running); the new ones are added. */
 	const ROLES = array(
 		'bizydash_client' => 'bizy_user', 'bizydash_client_manager' => 'bizy_client_manager', 'bizydash_team_manager' => 'bizy_team_manager', 'bizydash_admin' => 'bizy_admin',
-		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_money_team', 'bizydash_contract_team' => 'bizy_doc_team', 'bizydash_staff' => 'bizy_client_manager',
+		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_money_team', 'bizydash_contract_team' => 'bizy_sign_team', 'bizydash_staff' => 'bizy_client_manager',
 	);
 
 	/** Old module id => new module id. */

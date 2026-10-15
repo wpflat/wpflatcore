@@ -29,7 +29,7 @@ const load = async () => {
 onMounted( load );
 
 const a = computed( () => ( status.value ? status.value.analysis : null ) );
-const OWNER_LABEL = { core: 'Core', tasks: 'BizyTasks', money: 'BizyMoney', doc: 'BizyDoc', ignored: 'Not used' };
+const OWNER_LABEL = { core: 'Core', tasks: 'BizyTasks', money: 'BizyMoney', sign: 'BizySign', ignored: 'Not used' };
 
 const adopt = async ( body ) => {
 	busy.value = true;
@@ -122,7 +122,7 @@ const failed = computed( () => ( a.value && a.value.report && a.value.report.fai
 <template>
 	<el-card v-loading="loading" shadow="never">
 		<template #header><div class="bd-widget__head"><span>Move from BizyDash</span></div></template>
-		<p class="bd-muted bd-small">Coming from the old single BizyDash plugin? Choose one of its backups. Your clients, contacts, team, departments, conversations, settings and logo come across with the same ids. Invoices, projects, tasks and contracts are kept safely and come across when BizyMoney, BizyTasks and BizyDoc are installed. The old plugin is not touched.</p>
+		<p class="bd-muted bd-small">Coming from the old single BizyDash plugin? Choose one of its backups. Your clients, contacts, team, departments, conversations, settings and logo come across with the same ids. Invoices, projects, tasks and contracts are kept safely and come across when BizyMoney, BizyTasks and BizySign are installed. The old plugin is not touched.</p>
 		<el-alert v-if="msg.text" :title="msg.text" :type="msg.type" show-icon :closable="false" class="bd-mb" />
 
 		<template v-if="status && !status.adopted">
