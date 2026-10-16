@@ -645,12 +645,12 @@ html.dark .bd-ava { color: hsl(var(--h) 90% 80%); background: hsl(var(--h) 55% 4
 .bd-top__tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 
 /* Full-screen app mode: WordPress's own chrome steps aside. */
-body.bizydash-fullscreen { --bd-adminbar: 0px; }
-body.bizydash-fullscreen #adminmenumain, body.bizydash-fullscreen #adminmenuback, body.bizydash-fullscreen #adminmenuwrap, body.bizydash-fullscreen #wpadminbar, body.bizydash-fullscreen #wpfooter { display: none !important; }
-html.wp-toolbar:has(body.bizydash-fullscreen) { padding-top: 0 !important; }
-body.bizydash-fullscreen #wpcontent, body.bizydash-fullscreen #wpbody-content { margin-left: 0 !important; padding: 0 !important; }
-body.bizydash-fullscreen #wpbody { padding-top: 0 !important; }
-body.bizydash-frontend { margin: 0; background: var(--bd-bg); }
+body.bizycore-fullscreen { --bd-adminbar: 0px; }
+body.bizycore-fullscreen #adminmenumain, body.bizycore-fullscreen #adminmenuback, body.bizycore-fullscreen #adminmenuwrap, body.bizycore-fullscreen #wpadminbar, body.bizycore-fullscreen #wpfooter { display: none !important; }
+html.wp-toolbar:has(body.bizycore-fullscreen) { padding-top: 0 !important; }
+body.bizycore-fullscreen #wpcontent, body.bizycore-fullscreen #wpbody-content { margin-left: 0 !important; padding: 0 !important; }
+body.bizycore-fullscreen #wpbody { padding-top: 0 !important; }
+body.bizycore-frontend { margin: 0; background: var(--bd-bg); }
 
 @media (max-width: 1180px) { .bd-top { padding: 0 20px; } }
 @media (max-width: 900px) {

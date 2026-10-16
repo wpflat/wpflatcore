@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
  * departments, team, conversations, activity, lists) keeping every id, so what the modules import later lines up.
  * Each module then imports its part from the same archive when it is installed:
  *
- *   add_filter( 'bizycore_legacy_import_money', function ( $report, $reader, $legacy ) {
+ *   add_filter( 'bizycore_legacy_import_finance', function ( $report, $reader, $legacy ) {
  *       foreach ( $reader->rows( 'invoices' ) as $row ) { … }
  *       return array( 'invoices' => 197 );
  *   }, 10, 3 );
@@ -34,8 +34,8 @@ class Legacy {
 		'brands' => 'core', 'lookups' => 'core', 'clients' => 'core', 'client_brands' => 'core', 'client_contacts' => 'core', 'team_members' => 'core', 'activity' => 'core',
 		'threads' => 'core', 'messages' => 'core', 'message_files' => 'core', 'thread_reads' => 'core',
 		'projects' => 'tasks', 'project_phases' => 'tasks', 'tasks' => 'tasks',
-		'services' => 'money', 'client_services' => 'money', 'renewals' => 'money', 'charges' => 'money', 'invoices' => 'money', 'invoice_items' => 'money', 'invoice_installments' => 'money', 'payments' => 'money', 'expenses' => 'money', 'recurring_expenses' => 'money', 'pay_allocations' => 'money', 'pay_items' => 'money', 'payouts' => 'money', 'email_log' => 'money',
-		'contract_templates' => 'doc', 'contracts' => 'doc', 'contract_signers' => 'doc', 'contract_events' => 'doc',
+		'services' => 'finance', 'client_services' => 'finance', 'renewals' => 'finance', 'charges' => 'finance', 'invoices' => 'finance', 'invoice_items' => 'finance', 'invoice_installments' => 'finance', 'payments' => 'finance', 'expenses' => 'finance', 'recurring_expenses' => 'finance', 'pay_allocations' => 'finance', 'pay_items' => 'finance', 'payouts' => 'finance', 'email_log' => 'finance',
+		'contract_templates' => 'sign', 'contracts' => 'sign', 'contract_signers' => 'sign', 'contract_events' => 'sign',
 	);
 
 	/** Core's tables in the order they are imported (parents first). */
@@ -47,11 +47,11 @@ class Legacy {
 	/** Old role => new role. Old roles stay (the old plugin may still be running); the new ones are added. */
 	const ROLES = array(
 		'bizydash_client' => 'bizy_user', 'bizydash_client_manager' => 'bizy_client_manager', 'bizydash_team_manager' => 'bizy_team_manager', 'bizydash_admin' => 'bizy_admin',
-		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_money_team', 'bizydash_contract_team' => 'bizy_sign_team', 'bizydash_staff' => 'bizy_client_manager',
+		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_finance_team', 'bizydash_contract_team' => 'bizy_sign_team', 'bizydash_staff' => 'bizy_client_manager',
 	);
 
 	/** Old module id => new module id. */
-	const MODULES = array( 'work' => 'tasks', 'finance' => 'money', 'contracts' => 'doc' );
+	const MODULES = array( 'work' => 'tasks', 'finance' => 'finance', 'contracts' => 'sign' );
 
 	const BATCH = 200;
 
@@ -681,7 +681,7 @@ class Legacy {
 				}
 				$grants = get_user_meta( $u->ID, 'bizydash_manager_modules', true );
 				if ( is_array( $grants ) && ! get_user_meta( $u->ID, 'bizycore_manager_modules', true ) ) {
-					$map = array( 'clients' => 'clients', 'messages' => 'messages', 'work' => 'tasks', 'billing' => 'money', 'finance' => 'money', 'contracts' => 'doc' );
+					$map = array( 'clients' => 'clients', 'messages' => 'messages', 'work' => 'tasks', 'billing' => 'finance', 'finance' => 'finance', 'contracts' => 'sign' );
 					update_user_meta( $u->ID, 'bizycore_manager_modules', array_values( array_unique( array_filter( array_map( function ( $g ) use ( $map ) {
 						return isset( $map[ $g ] ) ? $map[ $g ] : '';
 					}, $grants ) ) ) ) );

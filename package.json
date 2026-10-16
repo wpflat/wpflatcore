@@ -1,6 +1,6 @@
 {
   "name": "bizycore",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "type": "module",
   "description": "The foundation of the Bizy suite: clients and contacts, team, departments, groups, roles, settings, activity, notifications, messages, the client portal, backup and restore, stealth mode, the app shell and the module registry that the other Bizy plugins plug into.",

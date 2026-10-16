@@ -211,7 +211,7 @@ class Messages {
 
 	/**
 	 * What a conversation can be about, for the "About" picker: array( array( value => 'project:12', name, group ) ).
-	 * Modules add their records with the `bizycore_message_contexts` filter (BizyTasks: projects, BizyMoney: invoices…).
+	 * Modules add their records with the `bizycore_message_contexts` filter (BizyTasks: projects, BizyFinance: invoices…).
 	 */
 	public static function contexts_for( array $a, $client_id ) {
 		if ( ! self::sees_client( $a, $client_id ) ) {

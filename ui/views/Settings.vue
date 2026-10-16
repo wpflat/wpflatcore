@@ -21,7 +21,7 @@ const saving = ref( false );
 const tab = ref( props.initialTab === 'brands' ? 'departments' : props.initialTab );
 const removingDemo = ref( false );
 
-// Tabs modules add (BizyMoney: payment methods, currencies, invoice wording…).
+// Tabs modules add (BizyFinance: payment methods, currencies, invoice wording…).
 const moduleTabs = computed( () => sdk.slot( 'settings.tabs', {} ) );
 // Backup, migration and other tabs for people who manage the suite.
 const adminTabs = computed( () => ( store.canManage ? sdk.slot( 'settings.admin-tabs', {} ) : [] ) );

@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
  *   routes        first path segments that belong to this module, e.g. array( 'tasks', 'projects' )
  *   menu          sub-menu: array( array( label, route, cap?, url? ) )
  *   cap           capability that opens the module (empty = every Bizy user)
- *   caps          capabilities the module adds, e.g. array( 'bizymoney_billing' )
+ *   caps          capabilities the module adds, e.g. array( 'bizyfinance_billing' )
  *   resources     REST resource names the module owns, e.g. array( 'projects', 'tasks' )
  *   tables        table names (without prefix) the module owns — used by backup
  *   options       WordPress options the module owns — used by backup

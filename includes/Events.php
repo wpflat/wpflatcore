@@ -11,8 +11,8 @@ defined( 'ABSPATH' ) || exit;
  *   bizycore_record_deleted  ( $type, $id )              a record was removed (Links forgets it)
  *   bizycore_client_saved    ( $row, $before )
  *   bizytasks_task_done      ( $task )
- *   bizymoney_invoice_sent   ( $invoice )
- *   bizymoney_invoice_paid   ( $invoice )
+ *   bizyfinance_invoice_sent ( $invoice )
+ *   bizyfinance_invoice_paid ( $invoice )
  *   bizysign_document_signed ( $document )
  *
  * Module-specific names start with the module plugin's slug so they never collide.

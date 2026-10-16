@@ -9,7 +9,7 @@ class Schema {
 	/** Bump when the SQL below changes. */
 	const VERSION = '3';
 
-	/** Full table name for a name that already starts with its plugin prefix (bizy_, bizytasks_, bizymoney_…). */
+	/** Full table name for a name that already starts with its plugin prefix (bizy_, bizytasks_, bizyfinance_…). */
 	public static function table( $name ) {
 		global $wpdb;
 		return $wpdb->prefix . $name;
@@ -117,7 +117,7 @@ class Schema {
   KEY email (email)
 ) $charset;";
 
-		// Pay, salary and bank details are not here: BizyMoney keeps them in its own table, linked by team_member_id.
+		// Pay, salary and bank details are not here: BizyFinance keeps them in its own table, linked by team_member_id.
 		$sql[] = "CREATE TABLE {$t['team_members']} (
   id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(190) NOT NULL DEFAULT '',

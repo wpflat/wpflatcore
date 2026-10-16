@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Lookups {
 
-	/** Core's own lists; modules add theirs through the `bizycore_lookup_defaults` filter (BizyMoney: billing periods, expense categories…). */
+	/** Core's own lists; modules add theirs through the `bizycore_lookup_defaults` filter (BizyFinance: billing periods, expense categories…). */
 	public static function defaults() {
 		$core = array(
 			'client_type'     => array(
