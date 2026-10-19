@@ -232,7 +232,24 @@ class Collab_Routes {
 		$uid                 = (int) $m['wp_user_id'];
 		list( $role, $mods ) = $uid ? Roles::role_of( $uid ) : array( '', array() );
 		$u                   = $uid ? get_userdata( $uid ) : null;
-		return rest_ensure_response( array( 'has_login' => (bool) $u, 'login' => $u ? $u->user_login : '', 'is_wp_admin' => $u ? user_can( $u, 'manage_options' ) : false, 'role' => $role, 'modules' => $mods, 'roles' => self::role_options(), 'manager_modules' => self::grant_labels(), 'invited' => ( $u && (int) get_user_meta( $u->ID, 'bizycore_team_invited', true ) ) ? gmdate( 'Y-m-d H:i:s', (int) get_user_meta( $u->ID, 'bizycore_team_invited', true ) ) : '', 'email' => $m['email'] ) );
+		$pend                = ( ! $u ) ? \BizyCore\Services\Team_Invite::pending( (int) $m['id'] ) : null;
+		if ( $pend ) {
+			$role = (string) $pend['role'];
+			$mods = (array) $pend['modules'];
+		}
+		return rest_ensure_response( array(
+			'has_login'       => (bool) $u,
+			'login'           => $u ? $u->user_login : '',
+			'is_wp_admin'     => $u ? user_can( $u, 'manage_options' ) : false,
+			'role'            => $role,
+			'modules'         => $mods,
+			'roles'           => self::role_options(),
+			'manager_modules' => self::grant_labels(),
+			'pending'         => (bool) $pend,
+			'invited'         => ( $pend && ! empty( $pend['sent_at'] ) ) ? gmdate( 'Y-m-d H:i:s', (int) $pend['sent_at'] ) : '',
+			'joined'          => $u ? ( (int) get_user_meta( $u->ID, 'bizycore_team_joined', true ) ? gmdate( 'Y-m-d H:i:s', (int) get_user_meta( $u->ID, 'bizycore_team_joined', true ) ) : '' ) : '',
+			'email'           => $m['email'],
+		) );
 	}
 
 	/** The roles and manager modules offered when adding a team member (before they have a record). */
@@ -240,68 +257,84 @@ class Collab_Routes {
 		return rest_ensure_response( array( 'roles' => self::role_options(), 'manager_modules' => self::grant_labels() ) );
 	}
 
+	/**
+	 * Give a team member a role. Someone who has no login yet gets a waiting invite (no WordPress login is created until they accept, and they
+	 * choose their own username then). Someone who already has a login gets the role straight away.
+	 */
 	public static function team_access_set( \WP_REST_Request $req ) {
 		global $wpdb;
 		$m = self::member( (int) $req['id'] );
 		if ( ! $m ) {
 			return new \WP_Error( 'bizycore_missing', 'Team member not found.', array( 'status' => 404 ) );
 		}
-		$p    = (array) $req->get_json_params();
-		$role = (string) ( isset( $p['role'] ) ? $p['role'] : '' );
-		$uid  = (int) $m['wp_user_id'];
-		$new  = false;
-		if ( ! $uid || ! get_userdata( $uid ) ) {
-			if ( '' === $role ) {
-				return rest_ensure_response( array( 'ok' => true ) );
-			}
-			$email = sanitize_email( $m['email'] );
-			if ( ! $email ) {
-				return new \WP_Error( 'bizycore_email', 'Add an email address to this person first.', array( 'status' => 400 ) );
-			}
-			$ex = get_user_by( 'email', $email );
-			if ( $ex ) {
-				$uid = (int) $ex->ID;
-			} else {
-				$uid = wp_insert_user( array( 'user_login' => sanitize_user( strstr( $email, '@', true ) . wp_rand( 10, 99 ), true ), 'user_email' => $email, 'user_pass' => wp_generate_password( 32, true, true ), 'display_name' => $m['name'], 'role' => '' ) );
-				if ( is_wp_error( $uid ) ) {
-					return $uid;
-				}
-				update_user_meta( $uid, 'show_admin_bar_front', 'false' );
-				$new = true;
-			}
-			$wpdb->update( Schema::table( 'bizy_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
+		$p      = (array) $req->get_json_params();
+		$role   = (string) ( isset( $p['role'] ) ? $p['role'] : '' );
+		$mods   = (array) ( isset( $p['modules'] ) ? $p['modules'] : array() );
+		$invite = ! empty( $p['invite'] ) || ! empty( $p['notify'] );
+		$uid    = (int) $m['wp_user_id'];
+		$error  = '';
+		if ( '' !== $role && ! isset( Roles::roles()[ $role ] ) ) {
+			return new \WP_Error( 'bizycore_role', 'Unknown role.', array( 'status' => 400 ) );
 		}
-		$r = Roles::assign( $uid, $role, (array) ( isset( $p['modules'] ) ? $p['modules'] : array() ) );
+		if ( ! $uid || ! get_userdata( $uid ) ) {
+			$email = sanitize_email( $m['email'] );
+			$ex    = $email ? get_user_by( 'email', $email ) : false;
+			if ( $ex ) { // they already have a login on this site: link it and give the role now
+				$uid = (int) $ex->ID;
+				$wpdb->update( Schema::table( 'bizy_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
+				\BizyCore\Services\Team_Invite::forget( (int) $m['id'] );
+			} elseif ( '' === $role ) {
+				\BizyCore\Services\Team_Invite::forget( (int) $m['id'] );
+				return self::team_access_get( $req );
+			} else {
+				if ( ! $email ) {
+					return new \WP_Error( 'bizycore_email', 'Add an email address to this person first.', array( 'status' => 400 ) );
+				}
+				\BizyCore\Services\Team_Invite::set_pending( (int) $m['id'], $role, $mods );
+				if ( $invite ) {
+					$sent = \BizyCore\Services\Team_Invite::send( (int) $m['id'] );
+					if ( is_wp_error( $sent ) ) {
+						$error = $sent->get_error_message();
+					}
+				}
+				$res = self::team_access_get( $req );
+				if ( '' !== $error ) {
+					$d                 = $res->get_data();
+					$d['invite_error'] = $error;
+					$res->set_data( $d );
+				}
+				return $res;
+			}
+		}
+		$r = Roles::assign( $uid, $role, $mods );
 		if ( is_wp_error( $r ) ) {
 			return $r;
 		}
-		$invite = ! empty( $p['invite'] ) || ! empty( $p['notify'] );
 		if ( $invite && '' !== $role ) {
-			$sent = \BizyCore\Services\Team_Invite::send( $uid, $new || ! empty( $p['reset'] ) );
+			$sent = \BizyCore\Services\Team_Invite::notify_existing( $uid );
 			if ( is_wp_error( $sent ) ) {
-				$req->set_param( 'invite_error', $sent->get_error_message() );
+				$error = $sent->get_error_message();
 			}
 		}
 		$res = self::team_access_get( $req );
-		if ( $req->get_param( 'invite_error' ) ) {
+		if ( '' !== $error ) {
 			$d                 = $res->get_data();
-			$d['invite_error'] = (string) $req->get_param( 'invite_error' );
+			$d['invite_error'] = $error;
 			$res->set_data( $d );
 		}
 		return $res;
 	}
 
-	/** Send (or send again) the invite to a team member who already has a Bizy role. */
+	/** Send (or send again) the invite to a team member who has not joined yet. */
 	public static function team_invite( \WP_REST_Request $req ) {
 		$m = self::member( (int) $req['id'] );
-		if ( ! $m || ! (int) $m['wp_user_id'] || ! get_userdata( (int) $m['wp_user_id'] ) ) {
-			return new \WP_Error( 'bizycore_invite', 'Give this person a role first, then invite them.', array( 'status' => 400 ) );
+		if ( ! $m ) {
+			return new \WP_Error( 'bizycore_missing', 'Team member not found.', array( 'status' => 404 ) );
 		}
-		list( $role ) = Roles::role_of( (int) $m['wp_user_id'] );
-		if ( '' === $role ) {
-			return new \WP_Error( 'bizycore_invite', 'Give this person a role first, then invite them.', array( 'status' => 400 ) );
+		if ( (int) $m['wp_user_id'] && get_userdata( (int) $m['wp_user_id'] ) ) {
+			return new \WP_Error( 'bizycore_invite', 'This person has already joined.', array( 'status' => 400 ) );
 		}
-		$r = \BizyCore\Services\Team_Invite::send( (int) $m['wp_user_id'], true );
+		$r = \BizyCore\Services\Team_Invite::send( (int) $m['id'] );
 		return is_wp_error( $r ) ? $r : self::team_access_get( $req );
 	}
 

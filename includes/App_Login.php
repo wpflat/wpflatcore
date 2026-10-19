@@ -23,6 +23,16 @@ class App_Login {
 	private static $label = '';
 	private static $base   = '';
 
+	/** The team invite being accepted (set by render_invite()). */
+	private static $invite = null;
+
+	/** The page where an invited team member chooses their username and password (the form itself is handled by Team_Invite). */
+	public static function render_invite( $found, $err, $base ) {
+		self::$invite = $found;
+		self::$base   = $base;
+		self::render( $found ? 'invite' : 'invite_bad' );
+	}
+
 	/** Where these pages live: the app, or the client portal when serving it. */
 	public static function base() {
 		return self::$base ? self::$base : App_Page::url();
@@ -267,7 +277,7 @@ class App_Login {
 		$msg   = isset( $_GET['bd_msg'] ) ? sanitize_key( wp_unslash( $_GET['bd_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$sent  = isset( $_GET['bd_sent'] ); // phpcs:ignore WordPress.Security.NonceVerification
 		$label = $name ? $name : 'Bizy';
-		$titles = array( 'login' => 'Sign in', 'forgot' => 'Reset your password', 'reset' => 'Choose a new password' );
+		$titles = array( 'login' => 'Sign in', 'forgot' => 'Reset your password', 'reset' => 'Choose a new password', 'invite' => 'Accept your invite', 'invite_bad' => 'This invite has expired' );
 		$ERR = array(
 			'1'       => 'Those details didn’t match. Check them and try again.',
 			'expired' => 'That reset link has expired or was already used. Ask for a new one below.',
@@ -276,6 +286,11 @@ class App_Login {
 			'mismatch' => 'The two passwords don’t match.',
 			'rule'    => 'That password isn’t allowed. Try a longer or less common one.',
 			'rate'    => 'Too many attempts. Please wait a few minutes and try again.',
+			'login'   => 'Choose a username of at least 3 characters, or use your email.',
+			'login_email' => 'A username that looks like an email address has to be your own email. Tick “Use my email as my username” instead.',
+			'taken'   => 'That username is already taken. Try another one.',
+			'email_taken' => 'An account with this email already exists on this site. Sign in with it instead.',
+			'role'    => 'Your access could not be set up. Please ask for a new invite.',
 		);
 		$OK = array( 'out' => 'You’ve been signed out.', 'reset' => 'Password updated. Sign in with your new one.' );
 		header( 'X-Frame-Options: DENY' );
@@ -357,6 +372,10 @@ a:hover{color:var(--muted)}
 			<p class="sub"><?php echo esc_html( '' !== self::$label ? ( $name ? 'to ' . $name . ' ' . self::$label : 'to ' . self::$label ) : ( self::$portal ? ( $name ? 'to your ' . $name . ' ' . Terminology::fmt( '{client} portal' ) : 'to your ' . Terminology::fmt( '{client} portal' ) ) : ( $name ? 'to ' . $name : 'to your workspace' ) ) ); ?></p>
 		<?php elseif ( 'forgot' === $view ) : ?>
 			<p class="sub">Enter your email or username and we’ll send you a link.</p>
+		<?php elseif ( 'invite' === $view ) : ?>
+			<p class="sub"><?php echo esc_html( 'Hi ' . ( '' !== trim( (string) self::$invite['member']['name'] ) ? trim( explode( ' ', trim( self::$invite['member']['name'] ) )[0] ) : 'there' ) . ', you are joining ' . ( $name ? $name : 'the team' ) . ' as ' . ( ( Roles::roles()[ self::$invite['rec']['role'] ]['label'] ?? '' ) ) . '. Choose how you will sign in.' ); ?></p>
+		<?php elseif ( 'invite_bad' === $view ) : ?>
+			<p class="sub">This invite link has expired or was already used. Ask the person who invited you to send it again.</p>
 		<?php else : ?>
 			<p class="sub">Pick something you don’t use anywhere else.</p>
 		<?php endif; ?>
@@ -408,6 +427,37 @@ a:hover{color:var(--muted)}
 			<button class="btn" type="submit" data-busy="Sending…">Send reset link</button>
 		</form>
 		<a class="back" href="<?php echo esc_url( $app ); ?>">Back to sign in</a>
+
+		<?php elseif ( 'invite_bad' === $view ) : ?>
+			<a class="back" href="<?php echo esc_url( App_Page::url() ); ?>">Go to sign in</a>
+
+		<?php elseif ( 'invite' === $view ) : ?>
+		<form method="post" action="<?php echo esc_url( $app ); ?>" autocomplete="off" id="bd-invite">
+			<div class="field">
+				<label for="user_login">Username</label>
+				<input type="text" name="user_login" id="user_login" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" required autofocus>
+			</div>
+			<div class="row" style="margin-top:-6px">
+				<label><input type="checkbox" name="use_email" id="use_email" value="1"> Use my email as my username (<?php echo esc_html( self::$invite['member']['email'] ); ?>)</label>
+			</div>
+			<div class="field">
+				<label for="pass1">Password</label>
+				<div class="pw">
+					<input type="password" name="pass1" id="pass1" autocomplete="new-password" minlength="8" required>
+					<button type="button" class="bd-eye" data-for="pass1" aria-label="Show password" aria-pressed="false">Show</button>
+				</div>
+				<p class="hint">At least 8 characters.</p>
+			</div>
+			<div class="field">
+				<label for="pass2">Type it again</label>
+				<input type="password" name="pass2" id="pass2" autocomplete="new-password" minlength="8" required>
+			</div>
+			<?php wp_nonce_field( 'bd_invite' ); ?>
+			<button class="btn" type="submit" data-busy="Creating your login…">Accept invite and sign in</button>
+		</form>
+		<script>
+		(function(){var c=document.getElementById('use_email'),u=document.getElementById('user_login'),e=<?php echo wp_json_encode( self::$invite['member']['email'] ); ?>;c.addEventListener('change',function(){if(c.checked){u.dataset.prev=u.value;u.value=e;u.readOnly=true;}else{u.readOnly=false;u.value=u.dataset.prev||'';u.focus();}});})();
+		</script>
 
 		<?php else : ?>
 		<form method="post" action="<?php echo esc_url( $app ); ?>" autocomplete="off">

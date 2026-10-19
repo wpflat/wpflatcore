@@ -63,7 +63,7 @@ class Module_Map {
 
 	/** Option name => owning module. The SMTP password in `bizycore_mail` is stripped on export. */
 	public static function options() {
-		$out = array( 'bizycore_settings' => 'core', 'bizycore_mail' => 'core', 'bizycore_modules_off' => 'core', 'bizycore_terms' => 'core' );
+		$out = array( 'bizycore_settings' => 'core', 'bizycore_mail' => 'core', 'bizycore_modules_off' => 'core', 'bizycore_terms' => 'core', 'bizycore_team_invites' => 'core' );
 		foreach ( Registry::all() as $id => $m ) {
 			foreach ( (array) $m['options'] as $o ) {
 				$out[ $o ] = $id;

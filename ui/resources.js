@@ -321,7 +321,7 @@ export const teamFields = () => {
 			{ name: 'notes', label: 'Notes', type: 'textarea', wide: true },
 			{ name: 'access_role', label: 'Access to Bizy', type: 'select', placeholder: 'No access yet (just a record)', wide: true, show: canGrant, options: () => teamAccess.roles.map( ( r ) => ( { value: r.key, label: r.label } ) ), help: ( v ) => ( ( teamAccess.roles.find( ( r ) => r.key === v.access_role ) || {} ).desc || 'Choose a role to give them a login, and invite them to join.' ) },
 			{ name: 'access_modules', label: 'Also lets them manage', type: 'checks', wide: true, options: () => Object.entries( teamAccess.modules ).map( ( [ value, label ] ) => ( { value, label } ) ), show: ( v, isNew ) => canGrant( v, isNew ) && v.access_role === 'bizy_team_manager' },
-			{ name: 'send_invite', label: 'Invite', type: 'checkbox', checkLabel: 'Email them an invite to join and choose their password', wide: true, show: ( v, isNew ) => canGrant( v, isNew ) && !! v.access_role },
+			{ name: 'send_invite', label: 'Invite', type: 'checkbox', checkLabel: 'Email them an invite to join (they choose their own username and password)', wide: true, show: ( v, isNew ) => canGrant( v, isNew ) && !! v.access_role },
 		],
 		'team.fields',
 		'field'
@@ -363,7 +363,7 @@ export const teamConfig = () => ( {
 			if ( r.invite_error ) {
 				ElMessage.warning( `Access given, but the invite could not be sent: ${ r.invite_error } Use "Send invite" on their page.` );
 			} else {
-				ElMessage.success( values.send_invite ? `Invite sent to ${ values.email }.` : 'Access given.' );
+				ElMessage.success( values.send_invite ? `Invite sent to ${ values.email }. Their login is created when they accept.` : 'Role saved. Send the invite when you are ready.' );
 			}
 		} catch ( e ) {
 			ElMessage.warning( `Added, but access could not be set: ${ errorMessage( e ) } You can set it on their page.` );
@@ -373,7 +373,6 @@ export const teamConfig = () => ( {
 	actionsWidth: 130,
 	actions: ( r, ctx ) => [
 		store.caps.team && r.access_label && r.access_state !== 'active' ? { label: r.access_state === 'invited' ? 'Resend invite' : 'Send invite', onClick: () => sendTeamInvite( r, ctx ) } : null,
-		store.caps.team && r.access_label && r.access_state === 'active' && r.access_label !== 'WordPress administrator' ? { label: 'Send invite again', menu: true, onClick: () => sendTeamInvite( r, ctx ) } : null,
 		! r.is_me ? { label: 'This is me', menu: true, onClick: async () => { try { await api.update( 'team', r.id, { wp_user_id: store.userId } ); ElMessage.success( 'Linked to your login.' ); ctx.reload(); } catch ( e ) { ElMessage.error( errorMessage( e ) ); } } } : null,
 	],
 	columns: [

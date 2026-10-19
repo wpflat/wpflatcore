@@ -262,19 +262,22 @@ class Core_Resources {
 						$r['invited_at']   = '';
 						$uid               = (int) $r['wp_user_id'];
 						$u                 = $uid ? get_userdata( $uid ) : null;
+						$all               = Roles::roles();
 						if ( $u ) {
 							list( $rk ) = Roles::role_of( $uid );
-							$all        = Roles::roles();
-							$is_admin   = user_can( $u, 'manage_options' );
-							if ( $is_admin ) {
+							if ( user_can( $u, 'manage_options' ) ) {
 								$r['access_label'] = 'WordPress administrator';
 								$r['access_state'] = 'active';
 							} elseif ( '' !== $rk && isset( $all[ $rk ] ) ) {
-								$inv               = (int) get_user_meta( $uid, 'bizycore_team_invited', true );
-								$joined            = (int) get_user_meta( $uid, 'bizycore_last_login', true ) > 0 || (bool) get_user_meta( $uid, 'session_tokens', true );
 								$r['access_label'] = $all[ $rk ]['label'];
-								$r['invited_at']   = $inv ? gmdate( 'Y-m-d', $inv ) : '';
-								$r['access_state'] = $joined ? 'active' : ( $inv ? 'invited' : 'not_invited' );
+								$r['access_state'] = 'active';
+							}
+						} else {
+							$pend = Services\Team_Invite::pending( (int) $r['id'] );
+							if ( $pend && isset( $all[ $pend['role'] ] ) ) {
+								$r['access_label'] = $all[ $pend['role'] ]['label'];
+								$r['invited_at']   = ! empty( $pend['sent_at'] ) ? gmdate( 'Y-m-d', (int) $pend['sent_at'] ) : '';
+								$r['access_state'] = ! empty( $pend['sent_at'] ) ? 'invited' : 'not_invited';
 							}
 						}
 					}
