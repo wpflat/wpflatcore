@@ -54,7 +54,7 @@ class Team_Invite {
 			$html = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . $intro . ' You can sign in with your existing login.</p><p><a href="' . esc_url( $app ) . '"><strong>Open ' . esc_html( $biz ) . ' on Bizy</strong></a></p>';
 			$text = "Hi {$first},\n\n{$text_intro}\nSign in with your existing login: {$app}\n";
 		}
-		$r = Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'You are invited to join ' . $biz . ' on Bizy', 'html' => $html, 'text' => $text ) );
+		$r = Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'You are invited to join ' . $biz . ' on Bizy', 'heading' => 'You are invited to join ' . $biz, 'preheader' => $text_intro, 'html' => $html, 'text' => $text ) );
 		if ( empty( $r['ok'] ) ) {
 			return new \WP_Error( 'bizycore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) );
 		}

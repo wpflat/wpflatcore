@@ -209,7 +209,20 @@ class App_Login {
 		$name = $name ? $name : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 		$what = '' !== self::$label ? self::$label . ' account' : ( self::$portal ? Terminology::fmt( '{client} portal account' ) : 'account' );
 		$url  = add_query_arg( array( 'key' => $key, 'login' => rawurlencode( $user_login ) ), self::base() );
-		return "Hi,\r\n\r\nSomeone asked to reset the password for your {$name} {$what}:\r\n\r\n{$user_login}\r\n\r\nIf that wasn't you, you can ignore this email — nothing will change.\r\n\r\nTo choose a new password, open this link:\r\n\r\n{$url}\r\n\r\nThe link works for a limited time.\r\n";
+		// A branded HTML email (logo, card, button) instead of WordPress's plain text.
+		$ct = function () {
+			return 'text/html';
+		};
+		add_filter( 'wp_mail_content_type', $ct );
+		add_action(
+			'phpmailer_init',
+			function () use ( $ct ) {
+				remove_filter( 'wp_mail_content_type', $ct );
+			},
+			1000
+		);
+		$html = '<p>Hi,</p><p>Someone asked to reset the password for your ' . esc_html( $name . ' ' . $what ) . '. Your username is <strong>' . esc_html( $user_login ) . '</strong>.</p><p><a href="' . esc_url( $url ) . '">Choose a new password</a></p><p>If that was not you, you can ignore this email: nothing will change.</p>';
+		return Services\Email_Template::wrap( $html, array( 'title' => 'Reset your password', 'preheader' => 'Choose a new password for your ' . $name . ' ' . $what, 'note' => 'This link works for a limited time.' ) );
 	}
 
 	private static function handle_reset() {

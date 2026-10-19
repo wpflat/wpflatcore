@@ -50,6 +50,9 @@ class Mailer {
 			return array( 'ok' => false, 'error' => 'SMTP is selected but no host is configured (Settings → Email).' );
 		}
 
+		if ( empty( $m['raw'] ) ) { // every Bizy email gets the same branded look (logo, card, button colour, footer)
+			$m['html'] = Email_Template::wrap( isset( $m['html'] ) ? (string) $m['html'] : '', array( 'title' => isset( $m['heading'] ) ? $m['heading'] : '', 'preheader' => isset( $m['preheader'] ) ? $m['preheader'] : '', 'note' => isset( $m['note'] ) ? $m['note'] : 'If you were not expecting this email, you can safely ignore it.' ) );
+		}
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 		if ( $from['email'] ) {
 			$headers[] = 'From: ' . ( $from['name'] ? self::line( $from['name'] ) . ' <' . $from['email'] . '>' : $from['email'] );

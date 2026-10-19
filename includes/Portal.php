@@ -511,7 +511,7 @@ CSS;
 		}
 		$link = add_query_arg( array( 'key' => $key, 'login' => rawurlencode( $u->user_login ) ), self::url() );
 		$html = '<p>Hi ' . esc_html( $u->first_name ?: $u->display_name ) . ',</p><p>' . esc_html( $name ) . ' has set up a ' . Terminology::fmt( '{client} portal' ) . ' for you. There you can follow your projects and tasks, see your invoices and what is coming up, and download signed contracts.</p><p><a href="' . esc_url( $link ) . '">Choose your password and sign in</a></p><p>Your username is <strong>' . esc_html( $u->user_login ) . '</strong>, or you can use your email address. This link works for a limited time; after that you can always use “Forgot password” on the sign-in page: ' . esc_url( self::url() ) . '</p>';
-		$r = Services\Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'Your ' . $name . ' ' . Terminology::fmt( '{client} portal' ), 'html' => $html, 'text' => "Hi,\n\n{$name} has set up a " . Terminology::fmt( '{client} portal' ) . " for you.\nChoose your password and sign in: {$link}\n" ) );
+		$r = Services\Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'Your ' . $name . ' ' . Terminology::fmt( '{client} portal' ), 'heading' => 'Your ' . Terminology::fmt( '{client} portal' ) . ' is ready', 'html' => $html, 'text' => "Hi,\n\n{$name} has set up a " . Terminology::fmt( '{client} portal' ) . " for you.\nChoose your password and sign in: {$link}\n" ) );
 		if ( empty( $r['ok'] ) ) {
 			return new \WP_Error( 'bizycore_mail', $r['error'] ?? 'The email could not be sent.', array( 'status' => 500 ) );
 		}

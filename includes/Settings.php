@@ -23,6 +23,7 @@ class Settings {
 				'business_name'          => '',
 				'business_logo_id'       => 0,
 				'business_logo_email_id' => 0,
+				'brand_color'            => '#222530',
 				'business_address'       => '',
 				'business_email'         => '',
 				'business_phone'         => '',
@@ -89,6 +90,9 @@ class Settings {
 			} elseif ( 'home_module' === $key ) {
 				$id          = sanitize_key( (string) $v );
 				$out[ $key ] = ( '' === $id || '' !== Registry::front_url( $id ) ) ? $id : $cur[ $key ]; // only a module that has a front-end page
+			} elseif ( 'brand_color' === $key ) {
+				$hex         = sanitize_hex_color( (string) $v );
+				$out[ $key ] = $hex ? $hex : $default;
 			} elseif ( 'app_slug' === $key || 'portal_slug' === $key ) {
 				$slug        = sanitize_title( (string) $v );
 				$out[ $key ] = '' !== $slug ? $slug : $default;
