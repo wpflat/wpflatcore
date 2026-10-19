@@ -27,6 +27,9 @@ class Plugin {
 		Stealth::init();
 		Assets::init();
 		Shell::init();
+		add_action( 'wp_login', function ( $login, $user ) {
+			update_user_meta( $user->ID, 'bizycore_last_login', time() );
+		}, 10, 2 );
 		Home_Module::init();
 		App_Page::init();
 		Media::init();

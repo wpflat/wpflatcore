@@ -256,6 +256,27 @@ class Core_Resources {
 				'decorate' => function ( $rows ) {
 					foreach ( $rows as &$r ) {
 						$r['is_me'] = (int) $r['wp_user_id'] > 0 && (int) $r['wp_user_id'] === get_current_user_id();
+						// Their access to Bizy: the role, and whether they have joined yet (so a missed invite can be sent again).
+						$r['access_label'] = '';
+						$r['access_state'] = '';
+						$r['invited_at']   = '';
+						$uid               = (int) $r['wp_user_id'];
+						$u                 = $uid ? get_userdata( $uid ) : null;
+						if ( $u ) {
+							list( $rk ) = Roles::role_of( $uid );
+							$all        = Roles::roles();
+							$is_admin   = user_can( $u, 'manage_options' );
+							if ( $is_admin ) {
+								$r['access_label'] = 'WordPress administrator';
+								$r['access_state'] = 'active';
+							} elseif ( '' !== $rk && isset( $all[ $rk ] ) ) {
+								$inv               = (int) get_user_meta( $uid, 'bizycore_team_invited', true );
+								$joined            = (int) get_user_meta( $uid, 'bizycore_last_login', true ) > 0 || (bool) get_user_meta( $uid, 'session_tokens', true );
+								$r['access_label'] = $all[ $rk ]['label'];
+								$r['invited_at']   = $inv ? gmdate( 'Y-m-d', $inv ) : '';
+								$r['access_state'] = $joined ? 'active' : ( $inv ? 'invited' : 'not_invited' );
+							}
+						}
 					}
 					return $rows;
 				},

@@ -328,6 +328,17 @@ export const teamFields = () => {
 	);
 };
 
+/** Email (or email again) a team member their invite to join. */
+const sendTeamInvite = async ( r, ctx ) => {
+	try {
+		await api.post( `team/${ r.id }/invite`, {} );
+		ElMessage.success( `Invite sent to ${ r.email }.` );
+		ctx.reload();
+	} catch ( e ) {
+		ElMessage.error( errorMessage( e ) );
+	}
+};
+
 export const teamConfig = () => ( {
 	title: tp( 'team' ),
 	description: 'The people you work with.',
@@ -359,8 +370,12 @@ export const teamConfig = () => ( {
 		}
 	},
 	onEdit: ( r ) => navigate( `/team/${ r.id }` ),
-	actionsWidth: 110,
-	actions: ( r, ctx ) => [ ! r.is_me ? { label: 'This is me', menu: true, onClick: async () => { try { await api.update( 'team', r.id, { wp_user_id: store.userId } ); ElMessage.success( 'Linked to your login.' ); ctx.reload(); } catch ( e ) { ElMessage.error( errorMessage( e ) ); } } } : null ],
+	actionsWidth: 130,
+	actions: ( r, ctx ) => [
+		store.caps.team && r.access_label && r.access_state !== 'active' ? { label: r.access_state === 'invited' ? 'Resend invite' : 'Send invite', onClick: () => sendTeamInvite( r, ctx ) } : null,
+		store.caps.team && r.access_label && r.access_state === 'active' && r.access_label !== 'WordPress administrator' ? { label: 'Send invite again', menu: true, onClick: () => sendTeamInvite( r, ctx ) } : null,
+		! r.is_me ? { label: 'This is me', menu: true, onClick: async () => { try { await api.update( 'team', r.id, { wp_user_id: store.userId } ); ElMessage.success( 'Linked to your login.' ); ctx.reload(); } catch ( e ) { ElMessage.error( errorMessage( e ) ); } } } : null,
+	],
 	columns: [
 		{
 			label: 'Person',
@@ -373,6 +388,15 @@ export const teamConfig = () => ( {
 						h( 'div', { class: 'bd-muted bd-small' }, [ r.role, KIND_LABEL[ r.kind ] ].filter( Boolean ).join( ' · ' ) ),
 					] ),
 				] ),
+		},
+		{
+			label: 'Access',
+			minWidth: 190,
+			render: ( r ) => {
+				if ( ! r.access_label ) return muted( 'No access' );
+				const state = { active: [ 'Active', 'success' ], invited: [ 'Invited ' + ( r.invited_at || '' ), 'warning' ], not_invited: [ 'Not invited yet', 'neutral' ] }[ r.access_state ] || [ '', 'neutral' ];
+				return h( 'div', [ h( 'div', r.access_label ), state[ 0 ] ? h( 'span', { class: `bd-badge bd-badge--${ state[ 1 ] } bd-badge--plain` }, state[ 0 ] ) : null ] );
+			},
 		},
 		{ label: dept().one, minWidth: 200, render: ( r ) => ( r.department_name ? h( 'span', { class: 'bd-badge bd-badge--neutral bd-badge--plain' }, r.department_name ) : muted( '—' ) ) },
 		...sdk.extensions( 'team.columns' ).map( ( e ) => e.column ),
