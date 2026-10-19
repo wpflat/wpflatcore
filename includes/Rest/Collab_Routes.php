@@ -80,6 +80,8 @@ class Collab_Routes {
 		/* Access and client logins */
 		self::reg( '/access', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'access' ), 'permission_callback' => $admin ) );
 		self::reg( '/access/sync-clients', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'sync_clients' ), 'permission_callback' => $admin ) );
+		self::reg( '/team/access-options', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'team_access_options' ), 'permission_callback' => $team ) );
+		self::reg( '/team/(?P<id>\d+)/invite', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'team_invite' ), 'permission_callback' => $team ) );
 		self::reg( '/team/(?P<id>\d+)/access', array(
 			array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'team_access_get' ), 'permission_callback' => $team ),
 			array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'team_access_set' ), 'permission_callback' => $team ),
@@ -230,7 +232,12 @@ class Collab_Routes {
 		$uid                 = (int) $m['wp_user_id'];
 		list( $role, $mods ) = $uid ? Roles::role_of( $uid ) : array( '', array() );
 		$u                   = $uid ? get_userdata( $uid ) : null;
-		return rest_ensure_response( array( 'has_login' => (bool) $u, 'login' => $u ? $u->user_login : '', 'is_wp_admin' => $u ? user_can( $u, 'manage_options' ) : false, 'role' => $role, 'modules' => $mods, 'roles' => self::role_options(), 'manager_modules' => self::grant_labels() ) );
+		return rest_ensure_response( array( 'has_login' => (bool) $u, 'login' => $u ? $u->user_login : '', 'is_wp_admin' => $u ? user_can( $u, 'manage_options' ) : false, 'role' => $role, 'modules' => $mods, 'roles' => self::role_options(), 'manager_modules' => self::grant_labels(), 'invited' => ( $u && (int) get_user_meta( $u->ID, 'bizycore_team_invited', true ) ) ? gmdate( 'Y-m-d H:i:s', (int) get_user_meta( $u->ID, 'bizycore_team_invited', true ) ) : '', 'email' => $m['email'] ) );
+	}
+
+	/** The roles and manager modules offered when adding a team member (before they have a record). */
+	public static function team_access_options() {
+		return rest_ensure_response( array( 'roles' => self::role_options(), 'manager_modules' => self::grant_labels() ) );
 	}
 
 	public static function team_access_set( \WP_REST_Request $req ) {
@@ -242,6 +249,7 @@ class Collab_Routes {
 		$p    = (array) $req->get_json_params();
 		$role = (string) ( isset( $p['role'] ) ? $p['role'] : '' );
 		$uid  = (int) $m['wp_user_id'];
+		$new  = false;
 		if ( ! $uid || ! get_userdata( $uid ) ) {
 			if ( '' === $role ) {
 				return rest_ensure_response( array( 'ok' => true ) );
@@ -259,13 +267,41 @@ class Collab_Routes {
 					return $uid;
 				}
 				update_user_meta( $uid, 'show_admin_bar_front', 'false' );
-				if ( ! empty( $p['notify'] ) ) {
-					wp_new_user_notification( $uid, null, 'user' );
-				}
+				$new = true;
 			}
 			$wpdb->update( Schema::table( 'bizy_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
 		}
 		$r = Roles::assign( $uid, $role, (array) ( isset( $p['modules'] ) ? $p['modules'] : array() ) );
+		if ( is_wp_error( $r ) ) {
+			return $r;
+		}
+		$invite = ! empty( $p['invite'] ) || ! empty( $p['notify'] );
+		if ( $invite && '' !== $role ) {
+			$sent = \BizyCore\Services\Team_Invite::send( $uid, $new || ! empty( $p['reset'] ) );
+			if ( is_wp_error( $sent ) ) {
+				$req->set_param( 'invite_error', $sent->get_error_message() );
+			}
+		}
+		$res = self::team_access_get( $req );
+		if ( $req->get_param( 'invite_error' ) ) {
+			$d                 = $res->get_data();
+			$d['invite_error'] = (string) $req->get_param( 'invite_error' );
+			$res->set_data( $d );
+		}
+		return $res;
+	}
+
+	/** Send (or send again) the invite to a team member who already has a Bizy role. */
+	public static function team_invite( \WP_REST_Request $req ) {
+		$m = self::member( (int) $req['id'] );
+		if ( ! $m || ! (int) $m['wp_user_id'] || ! get_userdata( (int) $m['wp_user_id'] ) ) {
+			return new \WP_Error( 'bizycore_invite', 'Give this person a role first, then invite them.', array( 'status' => 400 ) );
+		}
+		list( $role ) = Roles::role_of( (int) $m['wp_user_id'] );
+		if ( '' === $role ) {
+			return new \WP_Error( 'bizycore_invite', 'Give this person a role first, then invite them.', array( 'status' => 400 ) );
+		}
+		$r = \BizyCore\Services\Team_Invite::send( (int) $m['wp_user_id'], true );
 		return is_wp_error( $r ) ? $r : self::team_access_get( $req );
 	}
 

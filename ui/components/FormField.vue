@@ -59,6 +59,10 @@ onMounted( async () => {
 
 	<el-switch v-else-if="f.type === 'checkbox'" :model-value="!!values[ f.name ]" :active-text="f.checkLabel" @update:model-value="set( $event )" />
 
+	<el-checkbox-group v-else-if="f.type === 'checks'" :model-value="values[ f.name ] || []" @update:model-value="set( $event )">
+		<el-checkbox v-for="o in opts()" :key="o.value" :value="o.value" :label="o.label" />
+	</el-checkbox-group>
+
 	<el-select v-else-if="f.type === 'select'" :model-value="values[ f.name ] === '' ? null : values[ f.name ]" :clearable="!f.required" :placeholder="f.placeholder || 'Select…'" filterable style="width: 100%" @update:model-value="set( $event ?? '' )">
 		<el-option v-for="o in opts()" :key="o.value" :label="o.label" :value="o.value" />
 	</el-select>

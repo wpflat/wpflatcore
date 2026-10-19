@@ -5,7 +5,7 @@
  * Each extension is { id, module, order?, field | column | filter | type }.
  */
 import { ElMessage } from 'element-plus';
-import { h } from 'vue';
+import { h, reactive } from 'vue';
 import { api, errorMessage } from './api';
 import { sdk } from './sdkInstance';
 import { navigate, store } from './store';
@@ -291,8 +291,23 @@ export const contactsConfig = () => ( {
 
 const KIND_LABEL = { employee: 'Employee', contractor: 'Contractor' };
 
-export const teamFields = () =>
-	merged(
+/** Roles people can be given when added to the team (loaded once; empty for people who cannot manage the team). */
+const teamAccess = reactive( { roles: [], modules: {}, loaded: false } );
+const loadTeamAccess = () => {
+	if ( teamAccess.loaded || ! store.caps.team ) return;
+	teamAccess.loaded = true;
+	api.getPath( 'team/access-options' ).then( ( r ) => {
+		teamAccess.roles = r.roles || [];
+		teamAccess.modules = r.manager_modules || {};
+	} ).catch( () => {
+		teamAccess.loaded = false;
+	} );
+};
+const canGrant = ( v, isNew ) => !! isNew && !! store.caps.team;
+
+export const teamFields = () => {
+	loadTeamAccess();
+	return merged(
 		[
 			{ name: 'name', label: 'Name', required: true, wide: true },
 			{ name: 'email', label: 'Email', type: 'email', required: true },
@@ -304,10 +319,14 @@ export const teamFields = () =>
 			{ name: 'cc_documents', label: 'Document emails', type: 'checkbox', checkLabel: 'Copy (Cc) this person on every document email', wide: true },
 			{ name: 'status', label: 'Status', type: 'select', required: true, options: ACTIVE_STATUSES },
 			{ name: 'notes', label: 'Notes', type: 'textarea', wide: true },
+			{ name: 'access_role', label: 'Access to Bizy', type: 'select', placeholder: 'No access yet (just a record)', wide: true, show: canGrant, options: () => teamAccess.roles.map( ( r ) => ( { value: r.key, label: r.label } ) ), help: ( v ) => ( ( teamAccess.roles.find( ( r ) => r.key === v.access_role ) || {} ).desc || 'Choose a role to give them a login, and invite them to join.' ) },
+			{ name: 'access_modules', label: 'Also lets them manage', type: 'checks', wide: true, options: () => Object.entries( teamAccess.modules ).map( ( [ value, label ] ) => ( { value, label } ) ), show: ( v, isNew ) => canGrant( v, isNew ) && v.access_role === 'bizy_team_manager' },
+			{ name: 'send_invite', label: 'Invite', type: 'checkbox', checkLabel: 'Email them an invite to join and choose their password', wide: true, show: ( v, isNew ) => canGrant( v, isNew ) && !! v.access_role },
 		],
 		'team.fields',
 		'field'
 	);
+};
 
 export const teamConfig = () => ( {
 	title: tp( 'team' ),
@@ -324,7 +343,21 @@ export const teamConfig = () => ( {
 		{ name: 'department_id', label: dept().one, remote: { resource: 'departments', label: ( b ) => b.name, params: { status: 'active' } } },
 		...sdk.extensions( 'team.filters' ).map( ( e ) => e.filter ),
 	],
-	defaults: { status: 'active', kind: 'employee', cc_documents: false },
+	defaults: { status: 'active', kind: 'employee', cc_documents: false, access_role: '', access_modules: [], send_invite: true },
+	// After a new person is saved: give them the chosen role and (optionally) send the invite.
+	afterCreate: async ( member, values ) => {
+		if ( ! values.access_role ) return;
+		try {
+			const r = await api.post( `team/${ member.id }/access`, { role: values.access_role, modules: values.access_modules || [], invite: !! values.send_invite } );
+			if ( r.invite_error ) {
+				ElMessage.warning( `Access given, but the invite could not be sent: ${ r.invite_error } Use "Send invite" on their page.` );
+			} else {
+				ElMessage.success( values.send_invite ? `Invite sent to ${ values.email }.` : 'Access given.' );
+			}
+		} catch ( e ) {
+			ElMessage.warning( `Added, but access could not be set: ${ errorMessage( e ) } You can set it on their page.` );
+		}
+	},
 	onEdit: ( r ) => navigate( `/team/${ r.id }` ),
 	actionsWidth: 110,
 	actions: ( r, ctx ) => [ ! r.is_me ? { label: 'This is me', menu: true, onClick: async () => { try { await api.update( 'team', r.id, { wp_user_id: store.userId } ); ElMessage.success( 'Linked to your login.' ); ctx.reload(); } catch ( e ) { ElMessage.error( errorMessage( e ) ); } } } : null ],

@@ -133,6 +133,9 @@ const saveRecord = async ( values ) => {
 	}
 	const res = drawer.isNew ? await api.create( cfg.value.resource, payload ) : await api.update( cfg.value.resource, drawer.id, payload );
 	ElMessage.success( `${ cfg.value.singular || 'Record' } saved` );
+	if ( drawer.isNew && typeof cfg.value.afterCreate === 'function' ) {
+		await cfg.value.afterCreate( res, values );
+	}
 	return res;
 };
 

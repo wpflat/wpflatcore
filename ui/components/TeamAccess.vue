@@ -9,7 +9,8 @@ const emit = defineEmits( [ 'changed' ] );
 const info = ref( null );
 const role = ref( '' );
 const modules = ref( [] );
-const notify = ref( false );
+const invite = ref( true );
+const sending = ref( false );
 const saving = ref( false );
 
 async function load() {
@@ -22,11 +23,25 @@ async function load() {
 	}
 }
 
+async function resend() {
+	sending.value = true;
+	try {
+		info.value = await api.post( `team/${ props.memberId }/invite`, {} );
+		ElMessage.success( 'Invite sent to ' + ( info.value.email || 'them' ) + '.' );
+	} catch ( e ) {
+		ElMessage.error( errorMessage( e ) );
+	} finally {
+		sending.value = false;
+	}
+}
+
 async function save() {
+	const wasLogin = !! ( info.value && info.value.has_login );
 	saving.value = true;
 	try {
-		info.value = await api.post( `team/${ props.memberId }/access`, { role: role.value, modules: modules.value, notify: notify.value } );
-		ElMessage.success( role.value ? 'Access saved.' : 'Access removed.' );
+		info.value = await api.post( `team/${ props.memberId }/access`, { role: role.value, modules: modules.value, invite: invite.value && ! info.value.has_login } );
+		if ( info.value.invite_error ) ElMessage.warning( 'Access saved, but the invite could not be sent: ' + info.value.invite_error );
+		else ElMessage.success( role.value ? ( invite.value && ! wasLogin ? 'Access saved and invite sent.' : 'Access saved.' ) : 'Access removed.' );
 		emit( 'changed' );
 	} catch ( e ) {
 		ElMessage.error( errorMessage( e ) );
@@ -53,8 +68,12 @@ watch( () => props.memberId, load );
 				<div class="bd-strong bd-small bd-mb-xs">Also lets them manage</div>
 				<el-checkbox-group v-model="modules"><el-checkbox v-for="( label, k ) in info.manager_modules" :key="k" :value="k" :label="label" /></el-checkbox-group>
 			</div>
-			<div v-if="role && !info.has_login" class="bd-mt"><el-checkbox v-model="notify">Email them a link to set their password</el-checkbox></div>
-			<div class="bd-mt"><el-button type="primary" :loading="saving" :disabled="!hasEmail && !info.has_login" @click="save">{{ info.has_login ? 'Save access' : 'Create login' }}</el-button></div>
+			<div v-if="role && !info.has_login" class="bd-mt"><el-checkbox v-model="invite">Email them an invite to join and choose their password</el-checkbox></div>
+			<div class="bd-mt" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+				<el-button type="primary" :loading="saving" :disabled="!hasEmail && !info.has_login" @click="save">{{ info.has_login ? 'Save access' : 'Create login' }}</el-button>
+				<el-button v-if="info.has_login && info.role" :loading="sending" @click="resend">{{ info.invited ? 'Send invite again' : 'Send invite' }}</el-button>
+				<span v-if="info.invited" class="bd-muted bd-small">Invited {{ info.invited.slice( 0, 10 ) }}</span>
+			</div>
 		</template>
 	</el-card>
 </template>
