@@ -1,6 +1,6 @@
 {
   "name": "wpflatcore",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "type": "module",
   "description": "The foundation of the WPFlat suite: clients and contacts, team, departments, groups, roles, settings, activity, notifications, messages, the client portal, backup and restore, stealth mode, the app shell and the module registry that the other WPFlat plugins plug into.",

@@ -78,6 +78,50 @@ class Mail_Settings {
 		return Crypto::decrypt( self::get_full()['smtp_pass_enc'] );
 	}
 
+	/** The domain mail is sent from: the SMTP "From" address, else the SMTP login when it is an address, else the resolved sender. */
+	public static function sender_domain() {
+		$m = self::get_full();
+		foreach ( array( $m['from_email'], 'smtp' === $m['method'] ? $m['smtp_user'] : '' ) as $e ) {
+			if ( is_email( $e ) ) {
+				return strtolower( substr( strrchr( $e, '@' ), 1 ) );
+			}
+		}
+		$f = self::from();
+		return is_email( $f['email'] ) ? strtolower( substr( strrchr( $f['email'], '@' ), 1 ) ) : '';
+	}
+
+	/** Is this the signed-in person's own address, and on the sending domain? Only then may they send as themselves. */
+	public static function may_send_as( $email, $user_id = 0 ) {
+		$user = get_userdata( $user_id ? (int) $user_id : get_current_user_id() );
+		$email = strtolower( trim( (string) $email ) );
+		if ( ! $user || ! is_email( $email ) || strtolower( $user->user_email ) !== $email ) {
+			return false;
+		}
+		$d = self::sender_domain();
+		return '' !== $d && strtolower( substr( strrchr( $email, '@' ), 1 ) ) === $d;
+	}
+
+	/** The From addresses the signed-in person may pick: the business sender, and their own address when it is on the same domain. */
+	public static function sender_choices( $user_id = 0 ) {
+		$def  = self::from();
+		$out  = array( array( 'key' => 'default', 'name' => $def['name'], 'email' => $def['email'], 'label' => trim( $def['name'] . ' <' . $def['email'] . '>' ) ) );
+		$user = get_userdata( $user_id ? (int) $user_id : get_current_user_id() );
+		if ( $user && self::may_send_as( $user->user_email, $user->ID ) && strtolower( $user->user_email ) !== strtolower( $def['email'] ) ) {
+			$out[] = array( 'key' => 'me', 'name' => $user->display_name, 'email' => $user->user_email, 'label' => $user->display_name . ' <' . $user->user_email . '>' );
+		}
+		return $out;
+	}
+
+	/** The sender for one message: the person's own address when they asked for it and may use it, otherwise the business sender. */
+	public static function sender_for( $email = '', $name = '' ) {
+		$def = self::from();
+		if ( '' !== (string) $email && self::may_send_as( $email ) ) {
+			$user = wp_get_current_user();
+			return array( 'name' => $user->display_name ? $user->display_name : (string) $name, 'email' => $user->user_email, 'reply_to' => $user->user_email );
+		}
+		return $def;
+	}
+
 	/** Resolved sender: configured values, falling back to the business profile / site admin. */
 	public static function from() {
 		$m  = self::get_full();
