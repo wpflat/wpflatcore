@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WPFlat Core
  * Description: The foundation of the WPFlat suite — clients, team, departments, portal and backup, plus the connection points that WPFlat Tasks, WPFlat Finance and WPFlat Sign plug into.
- * Version: 0.8.3
+ * Version: 0.8.4
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Digitalzooks
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPFLATCORE_VERSION', '0.8.3' );
+define( 'WPFLATCORE_VERSION', '0.8.4' );
 define( 'WPFLATCORE_FILE', __FILE__ );
 define( 'WPFLATCORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPFLATCORE_URL', plugin_dir_url( __FILE__ ) );

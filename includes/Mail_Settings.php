@@ -101,6 +101,23 @@ class Mail_Settings {
 		return '' !== $d && strtolower( substr( strrchr( $email, '@' ), 1 ) ) === $d;
 	}
 
+	/** Why the signed-in person's own address is (not) offered, in words for the send dialogs. Empty when it is offered. */
+	public static function own_address_note( $user_id = 0 ) {
+		$user = get_userdata( $user_id ? (int) $user_id : get_current_user_id() );
+		$def  = self::from();
+		$dom  = self::sender_domain();
+		if ( ! $user || '' === $dom ) {
+			return '';
+		}
+		if ( strtolower( $user->user_email ) === strtolower( $def['email'] ) ) {
+			return 'You are signed in with the business sender’s own email (' . $def['email'] . '), so there is no separate address of yours to choose. Sign in as yourself, or give your account an email on ' . $dom . ', to send as yourself.';
+		}
+		if ( ! self::may_send_as( $user->user_email, $user->ID ) ) {
+			return 'Your account email (' . $user->user_email . ') is not on ' . $dom . ', the domain of the email settings, so it can’t be used as the sender. Change your account email to an address on ' . $dom . ' to send as yourself.';
+		}
+		return '';
+	}
+
 	/** The From addresses the signed-in person may pick: the business sender, and their own address when it is on the same domain. */
 	public static function sender_choices( $user_id = 0 ) {
 		$def  = self::from();

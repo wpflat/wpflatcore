@@ -6,9 +6,12 @@ import { api } from '../api';
 const props = defineProps( { modelValue: { type: String, default: '' }, label: { type: String, default: 'Send emails from' }, help: { type: String, default: '' } } );
 const emit = defineEmits( [ 'update:modelValue' ] );
 const options = ref( [] );
+const note = ref( '' );
 onMounted( async () => {
 	try {
-		options.value = await api.getPath( 'mail/senders' );
+		const r = await api.getPath( 'mail/senders' );
+		options.value = Array.isArray( r ) ? r : ( r.options || [] );
+		note.value = Array.isArray( r ) ? '' : ( r.note || '' );
 		if ( props.modelValue && ! options.value.some( ( o ) => o.key === 'me' && o.email === props.modelValue ) ) emit( 'update:modelValue', '' ); // no longer allowed
 	} catch ( e ) { options.value = []; }
 } );
@@ -21,6 +24,7 @@ onMounted( async () => {
 			<el-option v-for="o in options" :key="o.key" :value="o.key === 'default' ? '' : o.email" :label="o.label" />
 		</el-select>
 		<div v-else class="bd-muted bd-small">{{ options[ 0 ].label }}</div>
+		<div v-if="options.length < 2 && note" class="bd-help">{{ note }}</div>
 		<div v-if="options.length > 1" class="bd-help">{{ help || 'Pick your own address to send as yourself; replies then come to you. It is offered because it is on the same domain as the email settings.' }}</div>
 	</div>
 </template>
