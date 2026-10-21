@@ -4,6 +4,9 @@ import { routeModule, store } from './store';
 import { sdk } from './sdkInstance';
 import Sidebar from './components/Sidebar.vue';
 import TopBar from './components/TopBar.vue';
+import TabBar from './components/TabBar.vue';
+import AppsSheet from './components/AppsSheet.vue';
+import QuickSheet from './components/QuickSheet.vue';
 import Activity from './views/Activity.vue';
 import ClientDetail from './views/ClientDetail.vue';
 import Clients from './views/Clients.vue';
@@ -21,7 +24,12 @@ import Notifications from './views/Notifications.vue';
 import { api } from './api';
 
 const menuOpen = ref( false );
-watch( () => store.route.path, () => ( menuOpen.value = false ) );
+watch( () => store.route, () => ( store.newConsumed = false ) );
+watch( () => store.route.path, () => {
+	menuOpen.value = false;
+	store.appsOpen = false;
+	store.quickOpen = false;
+} );
 
 /** Core's own screens first; anything else is a module's screen (registered by its bundle) or "module is off". */
 const view = computed( () => {
@@ -82,7 +90,7 @@ onBeforeUnmount( () => clearInterval( unreadTimer ) );
 </script>
 
 <template>
-	<div :class="[ 'bd-app', 'bd-shell', store.theme === 'dark' && 'dark', store.fullscreen && 'is-fullscreen' ]">
+	<div :class="[ 'bd-app', 'bd-shell', store.theme === 'dark' && 'dark', store.fullscreen && 'is-fullscreen', store.isMobile && 'is-phone' ]">
 		<Sidebar :open="menuOpen" @close="menuOpen = false" />
 		<div class="bd-shell__main">
 			<TopBar @menu="menuOpen = !menuOpen" />
@@ -90,5 +98,10 @@ onBeforeUnmount( () => clearInterval( unreadTimer ) );
 				<component :is="view.c" :key="view.key" v-bind="view.props || {}" />
 			</main>
 		</div>
+		<template v-if="store.isMobile">
+			<TabBar />
+			<AppsSheet />
+			<QuickSheet />
+		</template>
 	</div>
 </template>

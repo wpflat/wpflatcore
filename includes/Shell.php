@@ -197,6 +197,7 @@ class Shell {
 			'staffOnly'    => self::is_staff_only(),
 			'user'         => $u->display_name,
 			'appName'      => Settings::app_name(),
+			'workerUrl'    => ( $frontend && Settings::get( 'app_frontend' ) ) ? Pwa::url( 'sw.js' ) : '',
 			'userEmail'    => $u->user_email,
 			'userId'       => get_current_user_id(),
 			'homeUrl'      => home_url( '/' ),

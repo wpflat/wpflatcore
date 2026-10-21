@@ -32,6 +32,7 @@ const trail = computed( () => {
 <template>
 	<header class="bd-top">
 		<button type="button" class="bd-iconbtn bd-top__menu" aria-label="Open menu" @click="emit( 'menu' )"><el-icon :size="20"><Menu :stroke-width="1.75" /></el-icon></button>
+		<a class="bd-top__brand" href="#/" :aria-label="store.appName || 'Home'"><span class="bd-top__mark">{{ ( store.appName || 'W' ).slice( 0, 2 ) }}</span><span class="bd-top__name">{{ store.appName || 'WPFlat' }}</span></a>
 		<div class="bd-top__trail">
 			<template v-for="( t, i ) in trail" :key="t"><span v-if="i" class="bd-top__sep">/</span><span :class="{ 'is-last': i === trail.length - 1 }">{{ t }}</span></template>
 		</div>

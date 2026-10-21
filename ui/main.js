@@ -4,6 +4,7 @@ import * as ElementPlusRuntime from 'element-plus';
 import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import './styles/theme.scss';
+import './styles/mobile.scss';
 import App from './App.vue';
 import { api, errorMessage } from './api';
 import { components } from './components-registry';
@@ -29,6 +30,7 @@ import LinkedRecords from './components/LinkedRecords.vue';
 import BackupRestore from './components/BackupRestore.vue';
 import MigrationCard from './components/MigrationCard.vue';
 import FreshInstall from './components/FreshInstall.vue';
+import { startMobile } from './mobile';
 
 /**
  * Module plugins are built as separate bundles that share this page's Vue and Element Plus (they are not bundled
@@ -54,6 +56,8 @@ sdk.registerSlot( 'settings.admin-tabs', { id: 'backup', label: 'Backup & restor
 sdk.registerSlot( 'settings.admin-tabs', { id: 'migrate', label: 'Move from BizyDash', module: 'core', order: 20, component: MigrationCard } );
 sdk.registerSlot( 'home.top', { id: 'fresh-install', module: 'core', order: 1, component: FreshInstall } );
 
+sdk.registerQuickAdd( 'core', [ { label: 'New ' + sdk.t( 'client' ).toLowerCase(), route: '/clients?new=1' }, { label: 'New team member', route: '/team?new=1' } ] );
+
 const el = document.getElementById( 'wpflatcore-root' );
 if ( el ) {
 	const app = createApp( App );
@@ -64,4 +68,5 @@ if ( el ) {
 	app.config.globalProperties.$tp = sdk.tp;
 	app.config.globalProperties.$fmt = sdk.fmt;
 	app.mount( el );
+	startMobile( el, ( window.wpflatcoreBoot || {} ).workerUrl || '' );
 }

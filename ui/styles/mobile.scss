@@ -1,0 +1,135 @@
+/*
+ * Phone layout and the "calm cards" look (direction A): warm paper background, white cards with soft rings, big status
+ * chips, a bottom tab bar with a raised "+" and an Apps sheet. Desktop keeps its sidebar; only the warmer tokens apply there.
+ */
+
+#wpflatcore-root,
+body.wpflatcore-screen {
+	--bd-bg: #f4f2ee;
+	--bd-surface-2: #faf9f6;
+	--bd-hover: #f1eee8;
+	--bd-ring: #e4e1da;
+	--bd-line: #e4e1da;
+	--bd-ring-strong: #d6d2c8;
+	--bd-muted: #5f6477;
+	--bd-link: #3b4bdb;
+	--bd-radius: 14px;
+	--bd-radius-sm: 10px;
+}
+html.dark #wpflatcore-root,
+html.dark body.wpflatcore-screen {
+	--bd-link: #9aa8ff;
+}
+
+.bd-top__brand { display: none; }
+
+/* ───────────── Bottom tab bar ───────────── */
+.bd-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 200; display: flex; align-items: flex-start; height: calc(84px + env(safe-area-inset-bottom)); padding: 8px 6px env(safe-area-inset-bottom); background: var(--bd-surface); border-top: 1px solid var(--bd-ring); box-sizing: border-box; }
+.bd-tab { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: none; padding: 6px 0 0; color: var(--bd-muted); font: inherit; font-size: 11px; font-weight: 600; line-height: 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bd-tab.is-active { color: var(--bd-link); font-weight: 700; }
+.bd-tab__icon { position: relative; display: flex; }
+.bd-tab__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+.bd-tab__badge { position: absolute; top: -4px; right: -9px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #d93025; color: #fff; font-size: 10px; font-style: normal; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.bd-tab--add { justify-content: center; }
+.bd-tab__plus { width: 56px; height: 56px; margin-top: -22px; border-radius: 50%; background: var(--bd-ink); color: var(--bd-bg); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 18px rgba(30, 34, 48, 0.28); border: 4px solid var(--bd-bg); }
+
+/* ───────────── Sheets (Apps, Create) ───────────── */
+.el-drawer.bd-sheet { --el-drawer-padding-primary: 0; background: var(--bd-bg); border-radius: 28px 28px 0 0; max-height: 90vh; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -12px 30px rgba(30, 34, 48, 0.25); }
+.bd-sheet .el-drawer__body { padding: 10px 20px 24px; overflow-y: auto; }
+.bd-sheet__grab { width: 44px; height: 5px; border-radius: 3px; background: var(--bd-ring-strong); margin: 0 auto 14px; }
+.bd-sheet__head { display: flex; align-items: center; }
+.bd-sheet__head h2 { flex: 1; margin: 0; font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.bd-sheet__done { border: 0; background: none; color: var(--bd-link); font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; padding: 0 4px; cursor: pointer; }
+.bd-sheet__hint { margin: 2px 0 16px; font-size: 13px; color: var(--bd-muted); }
+.bd-apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.bd-app-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 6px 12px; border: 0; border-radius: 20px; background: var(--bd-surface); color: var(--bd-ink); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bd-app-tile.is-current { box-shadow: 0 0 0 2.5px var(--bd-link); }
+.bd-app-tile__icon { width: 48px; height: 48px; border-radius: 16px; background: var(--bd-accent-soft); display: flex; align-items: center; justify-content: center; }
+.bd-app-tile.is-current .bd-app-tile__icon { background: var(--bd-link); color: #fff; }
+.bd-app-tile__label { font-size: 13px; font-weight: 700; line-height: 16px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bd-app-tile__cur { font-size: 11px; font-weight: 700; color: var(--bd-link); }
+.bd-sheet__group { margin-top: 16px; background: var(--bd-surface); border-radius: 20px; padding: 2px 16px; }
+.bd-sheet__title { padding: 12px 0 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--bd-muted); }
+.bd-sheet__row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0; border: 0; border-bottom: 1px solid var(--bd-ring); background: none; color: var(--bd-ink); font: inherit; font-size: 15px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; }
+.bd-sheet__row:last-child { border-bottom: 0; }
+.bd-sheet__row svg { color: var(--bd-muted); flex: none; }
+.bd-sheet__row--note { font-size: 13px; font-weight: 500; color: var(--bd-muted); }
+.bd-sheet__row--out { color: var(--bd-danger); }
+.bd-segmini { display: inline-flex; padding: 3px; border-radius: 12px; background: var(--bd-hover); gap: 2px; }
+.bd-segmini button { width: 44px; height: 34px; border: 0; border-radius: 9px; background: none; color: var(--bd-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.bd-segmini button.is-on { background: var(--bd-surface); color: var(--bd-ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
+
+/* ───────────── Phone-sized screens ───────────── */
+@media (max-width: 760px) {
+	html, body.wpflatcore-screen { overscroll-behavior-y: none; -webkit-text-size-adjust: 100%; }
+	#wpflatcore-root { --el-component-size: 44px; --el-component-size-small: 38px; -webkit-tap-highlight-color: transparent; }
+	.bd-side { display: none !important; }
+	.bd-shell { display: block; }
+	.bd-shell__main { overflow-x: clip; }
+
+	/* top bar: app mark and name, search, bell */
+	.bd-top { height: calc(60px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 12px 0 16px; background: var(--bd-bg); box-shadow: none; gap: 8px; }
+	.bd-top__menu, .bd-top__trail { display: none !important; }
+	#wpflatcore-root a.bd-top__brand { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--bd-ink); text-decoration: none; }
+	.bd-top__mark { flex: none; width: 38px; height: 38px; border-radius: 12px; background: var(--bd-ink); color: var(--bd-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; text-transform: uppercase; }
+	.bd-top__name { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.bd-top__tools { gap: 8px; }
+	.bd-top__tools > .el-dropdown { display: none; }
+	.bd-top .bd-iconbtn { width: 44px; height: 44px; border-radius: 14px; background: var(--bd-surface); }
+
+	.bd-main { padding: 2px 16px calc(112px + env(safe-area-inset-bottom)); max-width: none; }
+
+	/* page title and actions */
+	.bd-pagehead { flex-wrap: wrap; align-items: flex-start; gap: 12px; margin: 14px 0 14px; }
+	.bd-pagehead h1 { font-size: 28px; line-height: 34px; font-weight: 800; letter-spacing: -0.02em; }
+	.bd-pagehead__actions { width: 100%; justify-content: flex-start; }
+	.bd-pagehead__actions .el-button { flex: 1 1 auto; }
+
+	/* toolbars wrap into tidy rows */
+	.bd-toolbar { gap: 8px; margin-bottom: 12px; }
+	.bd-toolbar__search { width: 100% !important; }
+	.bd-toolbar .bd-toolbar__filter, .bd-toolbar .el-select.bd-toolbar__filter { width: calc(50% - 4px) !important; flex: 1 1 calc(50% - 4px); }
+	.bd-toolbar__spacer { display: none; }
+	.bd-toolbar__end { width: 100%; margin-left: 0; justify-content: flex-start; }
+
+	/* inputs stay at 16px so iOS does not zoom */
+	#wpflatcore-root .el-input__inner, #wpflatcore-root .el-textarea__inner, body.wpflatcore-screen .el-select__input { font-size: 16px; }
+	.el-form-item { margin-bottom: 16px; }
+	.el-form--label-left .el-form-item__label { float: none; justify-content: flex-start; }
+
+	/* tables become one card per row */
+	.bd-tablecard { background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
+	.el-table:not(.bd-keep-table .el-table) .el-table__header-wrapper, .el-table:not(.bd-keep-table .el-table) .el-table__footer-wrapper { display: none; }
+	.el-table:not(.bd-keep-table .el-table) { --el-table-bg-color: transparent; --el-table-tr-bg-color: transparent; background: transparent; overflow: visible; }
+	.el-table:not(.bd-keep-table .el-table) .el-table__inner-wrapper, .el-table:not(.bd-keep-table .el-table) .el-table__body-wrapper, .el-table:not(.bd-keep-table .el-table) .el-scrollbar, .el-table:not(.bd-keep-table .el-table) .el-scrollbar__wrap, .el-table:not(.bd-keep-table .el-table) .el-scrollbar__view { display: block; width: 100% !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+	.el-table:not(.bd-keep-table .el-table) .el-table__body { display: block; width: 100% !important; }
+	.el-table:not(.bd-keep-table .el-table) colgroup { display: none; }
+	.el-table:not(.bd-keep-table .el-table) tbody { display: block; }
+	.el-table:not(.bd-keep-table .el-table) tr.el-table__row { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding: 14px 16px; margin: 0 0 10px; background: var(--bd-surface); border-radius: var(--bd-radius); box-shadow: 0 0 0 1px var(--bd-ring); }
+	.el-table:not(.bd-keep-table .el-table) td.el-table__cell { display: block; min-width: 0; padding: 0 !important; border: 0 !important; background: transparent !important; position: static !important; left: auto !important; right: auto !important; }
+	.el-table:not(.bd-keep-table .el-table) td.el-table__cell .cell { padding: 0 !important; line-height: 20px; overflow: visible; white-space: normal; }
+	.el-table:not(.bd-keep-table .el-table) td.el-table__cell::before { content: attr(data-label); display: block; margin-bottom: 1px; font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.02em; color: var(--bd-muted); }
+	.el-table:not(.bd-keep-table .el-table) td.el-table__cell[data-label=""]::before, .el-table:not(.bd-keep-table .el-table) td.bd-cell-title::before { display: none; }
+	.el-table:not(.bd-keep-table .el-table) td.bd-cell-empty { display: none; }
+	.el-table:not(.bd-keep-table .el-table) td.bd-cell-title { grid-column: 1 / -1; font-size: 15px; font-weight: 600; padding-right: 32px !important; }
+	.el-table:not(.bd-keep-table .el-table) td.el-table-column--selection { position: absolute !important; right: 12px !important; left: auto !important; top: 12px !important; z-index: 1; }
+	.el-table:not(.bd-keep-table .el-table) td.bd-cell-actions { grid-column: 1 / -1; padding-top: 6px !important; border-top: 1px solid var(--bd-ring) !important; }
+	.el-table:not(.bd-keep-table .el-table) .bd-rowactions { justify-content: flex-end; }
+	.el-table:not(.bd-keep-table .el-table) .el-table__empty-block { min-height: 0; }
+	.bd-pager { flex-direction: column; align-items: flex-start; box-shadow: none; padding: 8px 0; }
+
+	/* overlays fill the screen */
+	.el-drawer.rtl, .el-drawer.ltr { width: 100% !important; max-width: 100%; }
+	.el-drawer.btt.bd-sheet { height: auto !important; }
+	.el-dialog { width: calc(100% - 24px) !important; max-width: none; margin: 12px auto !important; border-radius: 20px; }
+	.el-message-box { width: calc(100% - 32px) !important; }
+	.el-overlay-dialog { padding: 0; }
+	.el-drawer__header { padding: 16px 16px 8px; margin-bottom: 0; }
+	.el-drawer__body { padding: 8px 16px 16px; }
+	.el-drawer__footer { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+
+	/* cards and grids */
+	.el-card { border-radius: var(--bd-radius); }
+	.el-tabs__nav-wrap { overflow-x: auto; }
+	.el-col { max-width: 100%; }
+}

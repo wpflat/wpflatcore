@@ -19,6 +19,7 @@ export function createSdk( boot = {} ) {
 		icons: {},
 		fieldTypes: {},
 		formatters: {},
+		quick: {},
 	} );
 
 	const enabled = ( id ) => id === 'core' || state.modules.some( ( m ) => m.id === id && m.enabled !== false );
@@ -127,6 +128,12 @@ export function createSdk( boot = {} ) {
 		state.icons[ name ] = markRaw( component );
 	};
 
+	/** What the "+" button in the phone's bottom bar offers while a module is open: registerQuickAdd( 'finance', [ { label: 'New invoice', route: '/billing/invoices/new' } ] ). */
+	const registerQuickAdd = ( module, actions ) => {
+		state.quick[ module ] = ( actions || [] ).map( ( a ) => ( { ...a } ) );
+	};
+	const quickFor = ( module ) => ( state.quick[ module ] || [] );
+
 	/** Teach forms a new field type: registerFieldType( 'richtext', Component ). The component gets modelValue and the field. */
 	const registerFieldType = ( type, component ) => {
 		state.fieldTypes[ type ] = markRaw( component );
@@ -139,5 +146,5 @@ export function createSdk( boot = {} ) {
 	/** Show a value the way its module wants, or as a plain number when nobody registered a formatter. */
 	const format = ( kind, value, ...rest ) => ( state.formatters[ kind ] ? state.formatters[ kind ]( value, ...rest ) : Number( value ).toLocaleString() );
 
-	return { state, enabled, t, tp, fmt, registerFormatter, format, registerRoute, resolve, registerSlot, slot, extend, extensions, registerIcon, registerFieldType };
+	return { state, enabled, t, tp, fmt, registerFormatter, format, registerRoute, resolve, registerSlot, slot, extend, extensions, registerIcon, registerFieldType, registerQuickAdd, quickFor };
 }

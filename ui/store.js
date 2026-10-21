@@ -39,7 +39,18 @@ export const store = reactive( {
 	themePref: [ 'light', 'dark', 'auto' ].includes( boot.theme ) ? boot.theme : 'light', // what the person chose
 	theme: 'light', // what is shown right now: light | dark
 	route: parseHash(),
+	isMobile: false, // a phone-sized screen: bottom tab bar, cards instead of tables
+	appsOpen: false,
+	quickOpen: false,
+	installPrompt: null,
+	newConsumed: false,
 } );
+
+const phone = window.matchMedia ? window.matchMedia( '(max-width: 760px)' ) : null;
+if ( phone ) {
+	store.isMobile = phone.matches;
+	phone.addEventListener( 'change', ( e ) => ( store.isMobile = e.matches ) );
+}
 
 const systemDark = () => !! ( window.matchMedia && window.matchMedia( '(prefers-color-scheme: dark)' ).matches );
 const resolveTheme = ( pref ) => ( pref === 'auto' ? ( systemDark() ? 'dark' : 'light' ) : pref );

@@ -87,7 +87,16 @@ watch( search, () => {
 	}, 300 );
 } );
 watch( () => JSON.stringify( filters ), () => ( page.value = 1 ) );
-onMounted( load );
+onMounted( () => {
+	load();
+	// "?new=1" in the address opens the new-record form (the phone's + button uses it).
+	if ( store.route.query.new && ! store.newConsumed && ! readOnly.value ) {
+		store.newConsumed = true; // only the first list on the page opens it
+		openNew();
+		const q = window.location.hash.replace( /([?&])new=[^&]*&?/, '$1' ).replace( /[?&]$/, '' );
+		window.history.replaceState( null, '', window.location.pathname + window.location.search + q );
+	}
+} );
 // Pages that take their filters from the address (e.g. a "View all" link) follow it when it changes without remounting.
 let lastQuery = props.useRouteFilters ? { ...store.route.query } : {};
 watch( () => JSON.stringify( store.route.query ), () => {

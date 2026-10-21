@@ -22,6 +22,7 @@ class App_Page {
 	public static function init() {
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_render' ), 0 );
 		App_Login::init();
+		Pwa::init();
 	}
 
 	private static function requested() {
@@ -95,8 +96,9 @@ class App_Page {
 <html <?php language_attributes(); ?> class="bd-frontend">
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<?php echo Pwa::head_tags(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 <title><?php echo esc_html( Settings::app_name() ); ?></title>
 <link rel="preload" href="<?php echo esc_url( Assets::font_base() . 'google-sans-latin.woff2' ); ?>" as="font" type="font/woff2" crossorigin>
 <style><?php echo Shell::font_face_css(); // phpcs:ignore WordPress.Security.EscapeOutput ?></style>

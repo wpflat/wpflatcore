@@ -310,7 +310,7 @@ class App_Login {
 <script>try{var t=localStorage.getItem('bd-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
 <style>
 @font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url('<?php echo esc_url( $base . 'google-sans-latin.woff2' ); ?>') format('woff2');}
-:root{--bg:#f6f7f9;--card:#fff;--ink:#101828;--muted:#667085;--ring:#e4e7ec;--ring-strong:#cfd4dc;--accent:#14161d;--on-accent:#fff;--danger:#b42318;--danger-bg:#fef3f2;--ok:#067647;--ok-bg:#ecfdf3;--focus:rgba(20,22,29,.16);--logo-bg:transparent;--logo-pad:0}
+:root{--bg:#f4f2ee;--card:#fff;--ink:#101828;--muted:#667085;--ring:#e4e1da;--ring-strong:#cfd4dc;--accent:#14161d;--on-accent:#fff;--danger:#b42318;--danger-bg:#fef3f2;--ok:#067647;--ok-bg:#ecfdf3;--focus:rgba(20,22,29,.16);--logo-bg:transparent;--logo-pad:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1014;--card:#16181d;--ink:#f2f4f7;--muted:#98a2b3;--ring:#262a31;--ring-strong:#363b44;--accent:#f2f4f7;--on-accent:#101828;--danger:#fda29b;--danger-bg:#2a1513;--ok:#75e0a7;--ok-bg:#0f2a1c;--focus:rgba(242,244,247,.2);--logo-bg:#fff;--logo-pad:8px 14px}}
 :root[data-theme=dark]{--bg:#0e1014;--card:#16181d;--ink:#f2f4f7;--muted:#98a2b3;--ring:#262a31;--ring-strong:#363b44;--accent:#f2f4f7;--on-accent:#101828;--danger:#fda29b;--danger-bg:#2a1513;--ok:#75e0a7;--ok-bg:#0f2a1c;--focus:rgba(242,244,247,.2);--logo-bg:#fff;--logo-pad:8px 14px}
 *{box-sizing:border-box}
