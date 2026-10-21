@@ -18,6 +18,7 @@ import PageHeader from './components/PageHeader.vue';
 import RecordDrawer from './components/RecordDrawer.vue';
 import RemoteSelect from './components/RemoteSelect.vue';
 import ResourceTable from './components/ResourceTable.vue';
+import SenderPicker from './components/SenderPicker.vue';
 import SlotOutlet from './components/SlotOutlet.vue';
 import StatCard from './components/StatCard.vue';
 import StatusTag from './components/StatusTag.vue';
@@ -48,7 +49,7 @@ window.WPFlatCore = {
 	navigate,
 	util,
 	ui,
-	components: { Badge, ChartCard, FormField, PageHeader, RecordDrawer, RemoteSelect, ResourceTable, SlotOutlet, StatCard, StatusTag, ViewSwitch, AnalyticsBar, Chart, AttachmentField, LinkPicker, LinkedRecords },
+	components: { Badge, ChartCard, FormField, PageHeader, RecordDrawer, RemoteSelect, ResourceTable, SenderPicker, SlotOutlet, StatCard, StatusTag, ViewSwitch, AnalyticsBar, Chart, AttachmentField, LinkPicker, LinkedRecords },
 };
 
 // Core's own additions to the shared places modules also use.

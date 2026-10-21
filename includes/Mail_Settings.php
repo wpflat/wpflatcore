@@ -113,10 +113,10 @@ class Mail_Settings {
 	}
 
 	/** The sender for one message: the person's own address when they asked for it and may use it, otherwise the business sender. */
-	public static function sender_for( $email = '', $name = '' ) {
+	public static function sender_for( $email = '', $name = '', $user_id = 0 ) {
 		$def = self::from();
-		if ( '' !== (string) $email && self::may_send_as( $email ) ) {
-			$user = wp_get_current_user();
+		if ( '' !== (string) $email && self::may_send_as( $email, $user_id ) ) {
+			$user = $user_id ? get_userdata( (int) $user_id ) : wp_get_current_user();
 			return array( 'name' => $user->display_name ? $user->display_name : (string) $name, 'email' => $user->user_email, 'reply_to' => $user->user_email );
 		}
 		return $def;

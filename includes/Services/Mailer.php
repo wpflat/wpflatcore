@@ -37,12 +37,12 @@ class Mailer {
 	}
 
 	/**
-	 * @param array $m to[], cc[], bcc[] (email strings), subject, html, text, and optionally from_email (honoured only for the signed-in person's own address on the sending domain).
+	 * @param array $m to[], cc[], bcc[] (email strings), subject, html, text, and optionally from_email (honoured only for that person's own address on the sending domain) with from_user, the person it belongs to (default: the signed-in one; automatic emails use the staff member who chose it).
 	 * @return array{ok: bool, error?: string}
 	 */
 	public static function send( array $m ) {
 		$cfg  = Mail_Settings::get_full();
-		$from = ! empty( $m['from_email'] ) ? Mail_Settings::sender_for( $m['from_email'] ) : Mail_Settings::from(); // another address only when it is the sender's own, on the SMTP domain
+		$from = ! empty( $m['from_email'] ) ? Mail_Settings::sender_for( $m['from_email'], '', isset( $m['from_user'] ) ? (int) $m['from_user'] : 0 ) : Mail_Settings::from(); // another address only when it is the sender's own, on the SMTP domain
 		if ( empty( $m['to'] ) ) {
 			return array( 'ok' => false, 'error' => 'No recipient.' );
 		}

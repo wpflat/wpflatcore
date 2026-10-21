@@ -63,6 +63,9 @@ class System_Routes {
 				return rest_ensure_response( Mail_Settings::update( (array) $r->get_json_params() ) );
 			}, 'permission_callback' => $admin ),
 		) );
+		register_rest_route( self::NS, '/mail/senders', array( 'methods' => 'GET', 'callback' => function () {
+			return rest_ensure_response( Mail_Settings::sender_choices() );
+		}, 'permission_callback' => $use ) );
 		register_rest_route( self::NS, '/mail-settings/test', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'mail_test' ), 'permission_callback' => $admin ) );
 		// The WordPress Media Library, for pickers such as the logo fields: list images, and add to the library.
 		register_rest_route( self::NS, '/media-library', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'library_list' ), 'permission_callback' => $use ) );
