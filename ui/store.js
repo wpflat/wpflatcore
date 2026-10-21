@@ -44,6 +44,7 @@ export const store = reactive( {
 	quickOpen: false,
 	installPrompt: null,
 	newConsumed: false,
+	hideTabs: false, // a page with its own bottom action bar (the invoice editor) borrows the tab bar's place
 } );
 
 const phone = window.matchMedia ? window.matchMedia( '(max-width: 760px)' ) : null;

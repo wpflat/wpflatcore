@@ -99,7 +99,7 @@ onBeforeUnmount( () => clearInterval( unreadTimer ) );
 			</main>
 		</div>
 		<template v-if="store.isMobile">
-			<TabBar />
+			<TabBar v-if="!store.hideTabs" />
 			<AppsSheet />
 			<QuickSheet />
 		</template>

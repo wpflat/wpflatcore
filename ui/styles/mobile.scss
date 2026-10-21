@@ -59,6 +59,12 @@ html.dark body.wpflatcore-screen {
 .bd-segmini button { width: 44px; height: 34px; border: 0; border-radius: 9px; background: none; color: var(--bd-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .bd-segmini button.is-on { background: var(--bd-surface); color: var(--bd-ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
 
+/* A page's own action bar (invoice editor): fixed to the bottom, in place of the tab bar */
+.bd-ie__bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 200; display: flex; align-items: center; gap: 10px; padding: 22px 16px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(244, 242, 238, 0), var(--bd-bg) 30%); }
+html.dark .bd-ie__bar { background: linear-gradient(180deg, rgba(17, 23, 29, 0), var(--bd-bg) 30%); }
+.bd-ie__bar .el-button { flex: 1; height: 50px; margin: 0; border-radius: 16px; font-size: 15px; font-weight: 700; }
+.bd-ie__bar .el-button.is-circle { flex: none; width: 50px; }
+
 /* ───────────── Phone-sized screens ───────────── */
 @media (max-width: 760px) {
 	html, body.wpflatcore-screen { overscroll-behavior-y: none; -webkit-text-size-adjust: 100%; }
@@ -84,6 +90,8 @@ html.dark body.wpflatcore-screen {
 	.bd-pagehead h1 { font-size: 28px; line-height: 34px; font-weight: 800; letter-spacing: -0.02em; }
 	.bd-pagehead__actions { width: 100%; justify-content: flex-start; }
 	.bd-pagehead__actions .el-button { flex: 1 1 auto; }
+
+	.bd-ie .bd-pagehead__actions { display: none; }
 
 	/* toolbars wrap into tidy rows */
 	.bd-toolbar { gap: 8px; margin-bottom: 12px; }
