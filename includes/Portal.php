@@ -1,7 +1,7 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
-use BizyCore\Services\Portal_Users;
+use WPFlatCore\Services\Portal_Users;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -20,7 +20,7 @@ class Portal {
 	private static $pages = array();
 
 	/**
-	 * Add a portal page. Call from the `bizycore_register_portal` action.
+	 * Add a portal page. Call from the `wpflatcore_register_portal` action.
 	 *
 	 * @param string $slug  address segment and nav key, e.g. 'billing'
 	 * @param array  $def   module (id), label, order, render( $ctx, $id, $sub ) (echo-free: return the page body HTML, or exit itself),
@@ -56,7 +56,7 @@ class Portal {
 	/** The core client row the portal shows. */
 	public static function client( $id ) {
 		global $wpdb;
-		return $wpdb->get_row( $wpdb->prepare( 'SELECT id, name, contact_person, email FROM ' . Database\Schema::table( 'bizy_clients' ) . ' WHERE id=%d', $id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT id, name, contact_person, email FROM ' . Database\Schema::table( 'wpflat_clients' ) . ' WHERE id=%d', $id ), ARRAY_A ); // phpcs:ignore WordPress.DB
 	}
 
 	/** The request being served: user, ids, client, preview. For module render callbacks. */
@@ -95,7 +95,7 @@ class Portal {
 
 	public static function init() {
 		// A page's on/off switch and its options are real settings, on by default.
-		add_filter( 'bizycore_settings_defaults', function ( $d ) {
+		add_filter( 'wpflatcore_settings_defaults', function ( $d ) {
 			foreach ( self::$pages as $slug => $p ) {
 				$d[ 'portal_show_' . str_replace( '-', '_', $slug ) ] = true;
 				foreach ( (array) $p['options'] as $o ) {
@@ -104,7 +104,7 @@ class Portal {
 			}
 			return $d;
 		} );
-		add_filter( 'bizycore_meta', function ( $m ) {
+		add_filter( 'wpflatcore_meta', function ( $m ) {
 			$m['portal_pages'] = self::settings_pages();
 			return $m;
 		} );
@@ -113,8 +113,8 @@ class Portal {
 	}
 
 	public static function note_login( $login, $user ) {
-		if ( $user instanceof \WP_User && user_can( $user, 'bizycore_portal' ) ) {
-			update_user_meta( $user->ID, 'bizycore_last_login', time() );
+		if ( $user instanceof \WP_User && user_can( $user, 'wpflatcore_portal' ) ) {
+			update_user_meta( $user->ID, 'wpflatcore_last_login', time() );
 		}
 	}
 
@@ -137,7 +137,7 @@ class Portal {
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
 			define( 'DONOTCACHEPAGE', true );
 		}
-		do_action( 'litespeed_control_set_nocache', 'bizycore portal' );
+		do_action( 'litespeed_control_set_nocache', 'wpflatcore portal' );
 		nocache_headers();
 		header( 'X-Robots-Tag: noindex, nofollow' );
 		header( 'X-Frame-Options: DENY' );
@@ -148,7 +148,7 @@ class Portal {
 
 		if ( ! is_user_logged_in() ) {
 			if ( ! self::enabled() ) {
-				self::message_page( \BizyCore\Terminology::fmt( 'The {client} portal is not available' ), 'Please contact us if you need access.', 404 );
+				self::message_page( \WPFlatCore\Terminology::fmt( 'The {client} portal is not available' ), 'Please contact us if you need access.', 404 );
 			}
 			App_Login::route_for_portal( self::url() );
 			exit;
@@ -156,20 +156,20 @@ class Portal {
 		$user    = wp_get_current_user();
 		$as      = isset( $_GET['as'] ) ? absint( $_GET['as'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
 		$preview = false;
-		if ( $as && current_user_can( 'manage_bizycore' ) && current_user_can( 'bizycore_clients' ) ) {
+		if ( $as && current_user_can( 'manage_wpflatcore' ) && current_user_can( 'wpflatcore_clients' ) ) {
 			$ids     = array( $as );
 			$preview = true;
-		} elseif ( user_can( $user, 'bizycore_portal' ) || Portal_Users::client_ids( $user->ID ) ) {
-			if ( current_user_can( 'manage_bizycore' ) ) { // staff who are also somebody's contact use the team app
+		} elseif ( user_can( $user, 'wpflatcore_portal' ) || Portal_Users::client_ids( $user->ID ) ) {
+			if ( current_user_can( 'manage_wpflatcore' ) ) { // staff who are also somebody's contact use the team app
 				wp_safe_redirect( Urls::app() );
 				exit;
 			}
 			$ids = Portal_Users::client_ids( $user->ID );
 		} else {
-			self::message_page( \BizyCore\Terminology::fmt( 'This is the {client} portal' ), 'Your account is not set up for the portal.' . ( current_user_can( 'manage_bizycore' ) ? ' Team members: open a client in the app and choose “View portal as client”.' : '' ), 403, true );
+			self::message_page( \WPFlatCore\Terminology::fmt( 'This is the {client} portal' ), 'Your account is not set up for the portal.' . ( current_user_can( 'manage_wpflatcore' ) ? ' Team members: open a client in the app and choose “View portal as client”.' : '' ), 403, true );
 		}
 		if ( ! self::enabled() && ! $preview ) {
-			self::message_page( \BizyCore\Terminology::fmt( 'The {client} portal is not available' ), 'Please contact us if you need access.', 404, true );
+			self::message_page( \WPFlatCore\Terminology::fmt( 'The {client} portal is not available' ), 'Please contact us if you need access.', 404, true );
 		}
 		if ( ! $ids ) {
 			self::message_page( 'No organisation linked yet', 'Your login is not linked to a client yet. Please contact us and we will sort it out.', 200, true );
@@ -177,11 +177,11 @@ class Portal {
 		// Which organisation is being looked at.
 		$cur = (int) $ids[0];
 		if ( count( $ids ) > 1 ) {
-			$want = isset( $_GET['org'] ) ? absint( $_GET['org'] ) : (int) get_user_meta( $user->ID, 'bizycore_portal_org', true ); // phpcs:ignore WordPress.Security.NonceVerification
+			$want = isset( $_GET['org'] ) ? absint( $_GET['org'] ) : (int) get_user_meta( $user->ID, 'wpflatcore_portal_org', true ); // phpcs:ignore WordPress.Security.NonceVerification
 			if ( $want && in_array( $want, $ids, true ) ) {
 				$cur = $want;
-				if ( ! $preview && (int) get_user_meta( $user->ID, 'bizycore_portal_org', true ) !== $want ) {
-					update_user_meta( $user->ID, 'bizycore_portal_org', $want );
+				if ( ! $preview && (int) get_user_meta( $user->ID, 'wpflatcore_portal_org', true ) !== $want ) {
+					update_user_meta( $user->ID, 'wpflatcore_portal_org', $want );
 				}
 			}
 		}
@@ -302,8 +302,8 @@ class Portal {
 				exit;
 			}
 		}
-		$msg = isset( $_GET['bizycore_msg'] ) ? sanitize_key( wp_unslash( $_GET['bizycore_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-		$h   = '<div class="head"><h1>Notifications</h1><form method="post" action="' . esc_url( self::link( 'notifications' ) ) . '">' . wp_nonce_field( 'bizycore_portal_notif', '_wpnonce', true, false ) . '<input type="hidden" name="do" value="read_all"><button class="btn btn--ghost" type="submit">Mark all as read</button></form></div><p class="lead">What has happened on your account.</p>';
+		$msg = isset( $_GET['wpflatcore_msg'] ) ? sanitize_key( wp_unslash( $_GET['wpflatcore_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$h   = '<div class="head"><h1>Notifications</h1><form method="post" action="' . esc_url( self::link( 'notifications' ) ) . '">' . wp_nonce_field( 'wpflatcore_portal_notif', '_wpnonce', true, false ) . '<input type="hidden" name="do" value="read_all"><button class="btn btn--ghost" type="submit">Mark all as read</button></form></div><p class="lead">What has happened on your account.</p>';
 		if ( 'saved' === $msg ) {
 			$h .= '<div class="notice notice--ok">Your notification settings are saved.</div>';
 		}
@@ -315,7 +315,7 @@ class Portal {
 		foreach ( $items as $n ) {
 			$h .= '<a class="nitem' . ( $n['read'] ? '' : ' is-unread' ) . '" href="' . esc_url( self::link( 'notifications', array( 'go' => $n['id'] ) ) ) . '"><span class="ndot"></span><span><strong>' . self::e( $n['title'] ) . '</strong>' . ( $n['body'] ? '<span class="muted" style="display:block">' . self::e( $n['body'] ) . '</span>' : '' ) . '<span class="muted" style="display:block;font-size:12.5px">' . self::e( $n['group'] ) . ' · ' . self::e( wp_date( get_option( 'date_format' ) . ' H:i', strtotime( $n['at'] . ' UTC' ) ) ) . '</span></span></a>';
 		}
-		$h .= '</section><section class="panel"><h2>How you hear from us</h2><p class="muted">For each kind of update, choose whether it shows here and whether you also get an email.</p><form method="post" action="' . esc_url( self::link( 'notifications' ) ) . '">' . wp_nonce_field( 'bizycore_portal_notif', '_wpnonce', true, false ) . '<input type="hidden" name="do" value="prefs">';
+		$h .= '</section><section class="panel"><h2>How you hear from us</h2><p class="muted">For each kind of update, choose whether it shows here and whether you also get an email.</p><form method="post" action="' . esc_url( self::link( 'notifications' ) ) . '">' . wp_nonce_field( 'wpflatcore_portal_notif', '_wpnonce', true, false ) . '<input type="hidden" name="do" value="prefs">';
 		foreach ( Services\Notifications::prefs_for( $u->ID ) as $p ) {
 			$h .= '<div class="prefrow"><span>' . self::e( $p['label'] ) . '</span><label><input type="checkbox" name="app[' . esc_attr( $p['type'] ) . ']" value="1" ' . checked( $p['app'], true, false ) . '> Show here</label>' . ( $p['external_email'] ? '<span class="muted">Email is sent separately</span>' : '<select name="email[' . esc_attr( $p['type'] ) . ']"><option value="instant" ' . selected( $p['email'], 'instant', false ) . '>Email me straight away</option><option value="digest" ' . selected( $p['email'], 'digest', false ) . '>Email me a daily summary</option><option value="off" ' . selected( $p['email'], 'off', false ) . '>Do not email me</option></select>' ) . '</div>';
 		}
@@ -325,7 +325,7 @@ class Portal {
 
 	private static function notifications_post() {
 		$u = self::$ctx['user'];
-		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'bizycore_portal_notif' ) ) {
+		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'wpflatcore_portal_notif' ) ) {
 			wp_safe_redirect( self::link( 'notifications' ) );
 			exit;
 		}
@@ -340,7 +340,7 @@ class Portal {
 				$out[ $p['type'] ] = array( 'app' => isset( $app[ $p['type'] ] ), 'email' => $p['external_email'] ? $p['email'] : ( $em[ $p['type'] ] ?? 'off' ) );
 			}
 			Services\Notifications::save_prefs( $u->ID, $out );
-			wp_safe_redirect( self::link( 'notifications', array( 'bizycore_msg' => 'saved' ) ) );
+			wp_safe_redirect( self::link( 'notifications', array( 'wpflatcore_msg' => 'saved' ) ) );
 			exit;
 		}
 		wp_safe_redirect( self::link( 'notifications' ) );
@@ -349,25 +349,25 @@ class Portal {
 
 	private static function page_account() {
 		$u   = self::$ctx['user'];
-		$msg = isset( $_GET['bizycore_msg'] ) ? sanitize_key( wp_unslash( $_GET['bizycore_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$msg = isset( $_GET['wpflatcore_msg'] ) ? sanitize_key( wp_unslash( $_GET['wpflatcore_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$h   = '<h1>Your account</h1>';
 		if ( 'reset' === $msg ) {
 			$h .= '<div class="notice notice--ok">If your email is registered, a link to choose a new password is on its way.</div>';
 		}
 		$h .= '<section class="panel"><h2>Details</h2><dl class="dl"><dt>Name</dt><dd>' . self::e( self::$ctx['preview'] ? ( self::$ctx['client']['contact_person'] ?: '—' ) : $u->display_name ) . '</dd><dt>Email</dt><dd>' . self::e( self::$ctx['preview'] ? '—' : $u->user_email ) . '</dd><dt>Organisation</dt><dd>' . self::e( self::$ctx['client']['name'] ) . '</dd></dl></section>';
 		if ( ! self::$ctx['preview'] ) {
-			$h .= '<section class="panel"><h2>Password</h2><p class="muted">We will email you a link to choose a new password.</p><form method="post" action="' . esc_url( self::link( 'account' ) ) . '">' . wp_nonce_field( 'bizycore_portal_pw', '_wpnonce', true, false ) . '<button class="btn" type="submit">Email me a password link</button></form></section>';
+			$h .= '<section class="panel"><h2>Password</h2><p class="muted">We will email you a link to choose a new password.</p><form method="post" action="' . esc_url( self::link( 'account' ) ) . '">' . wp_nonce_field( 'wpflatcore_portal_pw', '_wpnonce', true, false ) . '<button class="btn" type="submit">Email me a password link</button></form></section>';
 		}
 		self::layout( 'Account', $h, 'account' );
 	}
 
 	private static function account_post() {
-		if ( self::$ctx['preview'] || ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'bizycore_portal_pw' ) ) {
+		if ( self::$ctx['preview'] || ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'wpflatcore_portal_pw' ) ) {
 			wp_safe_redirect( self::link( 'account' ) );
 			exit;
 		}
 		App_Login::send_portal_reset( self::$ctx['user']->user_login );
-		wp_safe_redirect( self::link( 'account', array( 'bizycore_msg' => 'reset' ) ) );
+		wp_safe_redirect( self::link( 'account', array( 'wpflatcore_msg' => 'reset' ) ) );
 		exit;
 	}
 
@@ -446,7 +446,7 @@ CSS;
 </head>
 <body>
 		<?php if ( self::$ctx['preview'] ) : ?>
-<div class="preview">Preview: this is what <?php echo esc_html( $c['name'] ); ?> sees. <a href="<?php echo esc_url( Urls::app( '/clients/' . (int) $c['id'] ) ); ?>">Back to Bizy</a></div>
+<div class="preview">Preview: this is what <?php echo esc_html( $c['name'] ); ?> sees. <a href="<?php echo esc_url( Urls::app( '/clients/' . (int) $c['id'] ) ); ?>">Back to WPFlat</a></div>
 		<?php endif; ?>
 <header class="top"><div class="bar-in">
 	<a class="brand" href="<?php echo esc_url( self::link() ); ?>"><?php echo self::brand(); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
@@ -468,7 +468,7 @@ CSS;
 		<?php if ( ! self::$ctx['preview'] ) : $nn = Services\Notifications::unread_count( self::$ctx['user']->ID ); ?>
 		<a href="<?php echo esc_url( self::link( 'notifications' ) ); ?>" aria-label="Notifications">🔔<?php if ( $nn ) : ?> <span class="navbadge"><?php echo (int) $nn; ?></span><?php endif; ?></a>
 		<a href="<?php echo esc_url( self::link( 'account' ) ); ?>">Account</a>
-		<a href="<?php echo esc_url( wp_logout_url( self::url( '', array( 'bizycore_msg' => 'out' ) ) ) ); ?>">Sign out</a>
+		<a href="<?php echo esc_url( wp_logout_url( self::url( '', array( 'wpflatcore_msg' => 'out' ) ) ) ); ?>">Sign out</a>
 		<?php endif; ?>
 	</div>
 </div></header>
@@ -500,8 +500,8 @@ CSS;
 	/** Email a client contact their portal address with a link to choose a password. @return true|\WP_Error */
 	public static function invite( $user_id ) {
 		$u = get_userdata( (int) $user_id );
-		if ( ! $u || ! user_can( $u, 'bizycore_portal' ) ) {
-			return new \WP_Error( 'bizycore_invite', 'That person does not have a client login.', array( 'status' => 400 ) );
+		if ( ! $u || ! user_can( $u, 'wpflatcore_portal' ) ) {
+			return new \WP_Error( 'wpflatcore_invite', 'That person does not have a client login.', array( 'status' => 400 ) );
 		}
 		$name = (string) Settings::get( 'business_name' );
 		$name = $name ? $name : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
@@ -513,9 +513,9 @@ CSS;
 		$html = '<p>Hi ' . esc_html( $u->first_name ?: $u->display_name ) . ',</p><p>' . esc_html( $name ) . ' has set up a ' . Terminology::fmt( '{client} portal' ) . ' for you. There you can follow your projects and tasks, see your invoices and what is coming up, and download signed contracts.</p><p><a href="' . esc_url( $link ) . '">Choose your password and sign in</a></p><p>Your username is <strong>' . esc_html( $u->user_login ) . '</strong>, or you can use your email address. This link works for a limited time; after that you can always use “Forgot password” on the sign-in page: ' . esc_url( self::url() ) . '</p>';
 		$r = Services\Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'Your ' . $name . ' ' . Terminology::fmt( '{client} portal' ), 'heading' => 'Your ' . Terminology::fmt( '{client} portal' ) . ' is ready', 'html' => $html, 'text' => "Hi,\n\n{$name} has set up a " . Terminology::fmt( '{client} portal' ) . " for you.\nChoose your password and sign in: {$link}\n" ) );
 		if ( empty( $r['ok'] ) ) {
-			return new \WP_Error( 'bizycore_mail', $r['error'] ?? 'The email could not be sent.', array( 'status' => 500 ) );
+			return new \WP_Error( 'wpflatcore_mail', $r['error'] ?? 'The email could not be sent.', array( 'status' => 500 ) );
 		}
-		update_user_meta( $u->ID, 'bizycore_portal_invited', time() );
+		update_user_meta( $u->ID, 'wpflatcore_portal_invited', time() );
 		return true;
 	}
 }

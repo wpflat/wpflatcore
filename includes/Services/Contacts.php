@@ -1,7 +1,7 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Database\Schema;
+use WPFlatCore\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,7 +10,7 @@ class Contacts {
 
 	public static function for_client( $client_id ) {
 		global $wpdb;
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT id, client_id, name, email, phone, job_title, kind, sort_order FROM ' . Schema::table( 'bizy_client_contacts' ) . " WHERE client_id=%d ORDER BY kind='primary' DESC, sort_order ASC, id ASC", $client_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT id, client_id, name, email, phone, job_title, kind, sort_order FROM ' . Schema::table( 'wpflat_client_contacts' ) . " WHERE client_id=%d ORDER BY kind='primary' DESC, sort_order ASC, id ASC", $client_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
 		foreach ( (array) $rows as &$r ) {
 			$r['id']        = (int) $r['id'];
 			$r['client_id'] = (int) $r['client_id'];
@@ -33,11 +33,11 @@ class Contacts {
 			$primary = $list[0];
 		}
 		$wpdb->update(
-			Schema::table( 'bizy_clients' ),
+			Schema::table( 'wpflat_clients' ),
 			array( 'contact_person' => $primary ? $primary['name'] : '', 'email' => $primary ? $primary['email'] : '', 'phone' => $primary ? $primary['phone'] : '' ),
 			array( 'id' => (int) $client_id )
 		);
-		do_action( 'bizycore_client_contacts_changed', (int) $client_id );
+		do_action( 'wpflatcore_client_contacts_changed', (int) $client_id );
 	}
 
 	/**
@@ -62,7 +62,7 @@ class Contacts {
 			}
 		}
 		if ( ! $to ) {
-			$cl = $wpdb->get_row( $wpdb->prepare( 'SELECT contact_person, email FROM ' . Schema::table( 'bizy_clients' ) . ' WHERE id=%d', $client_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+			$cl = $wpdb->get_row( $wpdb->prepare( 'SELECT contact_person, email FROM ' . Schema::table( 'wpflat_clients' ) . ' WHERE id=%d', $client_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
 			if ( $cl && '' !== $cl['email'] ) {
 				$to[] = array( 'name' => $cl['contact_person'], 'email' => $cl['email'], 'job_title' => '' );
 			}
@@ -74,6 +74,6 @@ class Contacts {
 	public static function team( $only_cc = false ) {
 		global $wpdb;
 		$where = "status='active'" . ( $only_cc ? ' AND cc_documents=1' : '' );
-		return (array) $wpdb->get_results( 'SELECT id, name, email, role, cc_documents FROM ' . Schema::table( 'bizy_team_members' ) . " WHERE $where ORDER BY name", ARRAY_A ); // phpcs:ignore WordPress.DB
+		return (array) $wpdb->get_results( 'SELECT id, name, email, role, cc_documents FROM ' . Schema::table( 'wpflat_team_members' ) . " WHERE $where ORDER BY name", ARRAY_A ); // phpcs:ignore WordPress.DB
 	}
 }

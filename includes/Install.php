@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -7,11 +7,11 @@ class Install {
 
 	/** Bump when the SQL changes. */
 	const DB_VERSION = '5';
-	const OPTION     = 'bizycore_db_version';
+	const OPTION     = 'wpflatcore_db_version';
 
 	public static function activate() {
 		if ( false === get_option( self::OPTION ) ) {
-			update_option( 'bizycore_fresh_install', 1, false ); // a brand-new install: Home offers to restore a backup
+			update_option( 'wpflatcore_fresh_install', 1, false ); // a brand-new install: Home offers to restore a backup
 		}
 		self::install_tables();
 	}

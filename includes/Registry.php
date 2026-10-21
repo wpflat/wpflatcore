@@ -1,23 +1,23 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The list of installed Bizy modules and what each contributes. Replaces the hard-coded module, resource, menu,
+ * The list of installed WPFlat modules and what each contributes. Replaces the hard-coded module, resource, menu,
  * capability and portal arrays of the old single plugin: Core never names a module, it only reads this registry.
  *
  * A definition (all keys optional except id, label, version):
  *   id            slug, lowercase letters/digits/dashes — 'tasks', 'money', 'doc'
  *   label         'Tasks'
  *   version       the module plugin's version
- *   requires_core minimum BizyCore version, e.g. '0.1.0'
+ *   requires_core minimum WPFlat Core version, e.g. '0.1.0'
  *   desc, icon    shown in Settings → Modules and the sidebar
  *   route         first screen, e.g. '/tasks'
  *   routes        first path segments that belong to this module, e.g. array( 'tasks', 'projects' )
  *   menu          sub-menu: array( array( label, route, cap?, url? ) )
- *   cap           capability that opens the module (empty = every Bizy user)
- *   caps          capabilities the module adds, e.g. array( 'bizyfinance_billing' )
+ *   cap           capability that opens the module (empty = every WPFlat user)
+ *   caps          capabilities the module adds, e.g. array( 'wpflatfinance_billing' )
  *   resources     REST resource names the module owns, e.g. array( 'projects', 'tasks' )
  *   tables        table names (without prefix) the module owns — used by backup
  *   options       WordPress options the module owns — used by backup
@@ -32,13 +32,13 @@ defined( 'ABSPATH' ) || exit;
  *   client_manager_caps / team_manager_caps   capabilities the Client Manager / Team Manager roles get
  *   manager_grants   what a Team Manager can be given per person: array( id => array( label, caps ) )
  *   portal_tabs   array( array( id, label, order, cap ) ) shown in the client portal
- *   assets        array( 'script' => 'bizytasks.js', 'style' => 'bizytasks.css' ) file names loaded after the Core app
+ *   assets        array( 'script' => 'wpflattasks.js', 'style' => 'wpflattasks.css' ) file names loaded after the Core app
  *   assets_dir    absolute folder holding those files (Core serves them under a neutral /bd/a/… address)
  *   wp            array( dashicon, position ) for the WordPress admin menu
  */
 class Registry {
 
-	const OFF_OPTION = 'bizycore_modules_off';
+	const OFF_OPTION = 'wpflatcore_modules_off';
 
 	/** @var array id => definition (+ 'status' and 'reason') */
 	private static $mods = array();
@@ -49,13 +49,13 @@ class Registry {
 	public static function register( array $def ) {
 		$id = isset( $def['id'] ) ? (string) $def['id'] : '';
 		if ( ! preg_match( '/^[a-z][a-z0-9-]{1,30}$/', $id ) || 'core' === $id ) {
-			return new \WP_Error( 'bizycore_module_id', 'A module needs a lowercase id such as "tasks".' );
+			return new \WP_Error( 'wpflatcore_module_id', 'A module needs a lowercase id such as "tasks".' );
 		}
 		if ( empty( $def['label'] ) || empty( $def['version'] ) ) {
-			return new \WP_Error( 'bizycore_module_def', 'A module needs a label and a version.' );
+			return new \WP_Error( 'wpflatcore_module_def', 'A module needs a label and a version.' );
 		}
 		if ( isset( self::$mods[ $id ] ) ) {
-			return new \WP_Error( 'bizycore_module_dup', 'A module called "' . $id . '" is already registered.' );
+			return new \WP_Error( 'wpflatcore_module_dup', 'A module called "' . $id . '" is already registered.' );
 		}
 		$def += array(
 			'requires_core' => '0.0.0',
@@ -98,14 +98,14 @@ class Registry {
 	/** Called once every module has had its chance to register: mark the ones this Core cannot run. */
 	public static function settle() {
 		foreach ( self::$mods as $id => $m ) {
-			if ( version_compare( BIZYCORE_VERSION, $m['requires_core'], '<' ) ) {
+			if ( version_compare( WPFLATCORE_VERSION, $m['requires_core'], '<' ) ) {
 				self::$mods[ $id ]['status'] = 'blocked';
-				self::$mods[ $id ]['reason'] = sprintf( '%s needs BizyCore %s or newer (this site has %s). Update BizyCore.', $m['label'], $m['requires_core'], BIZYCORE_VERSION );
+				self::$mods[ $id ]['reason'] = sprintf( '%s needs WPFlat Core %s or newer (this site has %s). Update WPFlat Core.', $m['label'], $m['requires_core'], WPFLATCORE_VERSION );
 				self::$problems[]            = self::$mods[ $id ]['reason'];
 			}
 		}
 		/** Last chance for add-ons to adjust a module (e.g. extend its menu). */
-		self::$mods = apply_filters( 'bizycore_modules', self::$mods );
+		self::$mods = apply_filters( 'wpflatcore_modules', self::$mods );
 	}
 
 	public static function problems() {
@@ -153,14 +153,14 @@ class Registry {
 	/** Switch a module on or off from Settings. Never deletes data. */
 	public static function set_enabled( $id, $on ) {
 		if ( ! isset( self::$mods[ $id ] ) ) {
-			return new \WP_Error( 'bizycore_module_unknown', 'That module is not installed.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_module_unknown', 'That module is not installed.', array( 'status' => 404 ) );
 		}
 		$off = array_values( array_diff( self::switched_off(), array( $id ) ) );
 		if ( ! $on ) {
 			$off[] = $id;
 		}
 		update_option( self::OFF_OPTION, array_values( array_unique( $off ) ), false );
-		do_action( $on ? 'bizycore_module_enabled' : 'bizycore_module_disabled', $id );
+		do_action( $on ? 'wpflatcore_module_enabled' : 'wpflatcore_module_disabled', $id );
 		do_action( 'litespeed_purge_all' ); // public pages appear or vanish with their module
 		return true;
 	}
@@ -249,7 +249,7 @@ class Registry {
 			array( 'label' => Terminology::label( 'group', true ), 'route' => '/groups', 'icon' => 'groups' ),
 		);
 		return array(
-			'core'    => apply_filters( 'bizycore_nav_core', $core ),
+			'core'    => apply_filters( 'wpflatcore_nav_core', $core ),
 			'modules' => $mods,
 			'footer'  => array(
 				array( 'label' => 'Activity', 'route' => '/activity', 'icon' => 'activity' ),

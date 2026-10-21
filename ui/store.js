@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 
-const boot = window.bizycoreBoot || {};
+const boot = window.wpflatcoreBoot || {};
 
 function parseHash() {
 	const raw = ( window.location.hash || '#/' ).slice( 1 ) || '/';
@@ -70,7 +70,7 @@ export const routeModule = ( first ) => {
 	return hit ? hit.id : 'core';
 };
 
-// Opening from a WordPress menu entry (e.g. "Bizy Tasks") lands on that module's overview.
+// Opening from a WordPress menu entry (e.g. "WPFlat Tasks") lands on that module's overview.
 if ( ! window.location.hash && boot.initialRoute && boot.initialRoute !== '/' ) {
 	window.location.hash = boot.initialRoute;
 	store.route = parseHash();

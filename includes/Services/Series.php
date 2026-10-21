@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
 defined( 'ABSPATH' ) || exit;
 

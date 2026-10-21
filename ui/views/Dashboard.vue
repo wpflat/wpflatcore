@@ -39,10 +39,10 @@ const groups = computed( () => {
 
 const setup = computed( () => ( data.value ? data.value.setup : [] ) );
 const setupDone = computed( () => setup.value.filter( ( s ) => s.done ).length );
-const dismissed = ref( ( () => { try { return localStorage.getItem( 'bizycore_setup_dismissed' ) === '1'; } catch ( e ) { return false; } } )() );
+const dismissed = ref( ( () => { try { return localStorage.getItem( 'wpflatcore_setup_dismissed' ) === '1'; } catch ( e ) { return false; } } )() );
 const dismissSetup = () => {
 	dismissed.value = true;
-	try { localStorage.setItem( 'bizycore_setup_dismissed', '1' ); } catch ( e ) { /* ignore */ }
+	try { localStorage.setItem( 'wpflatcore_setup_dismissed', '1' ); } catch ( e ) { /* ignore */ }
 };
 const showSetup = computed( () => data.value && ! dismissed.value && setupDone.value < setup.value.length );
 const ctx = computed( () => ( { home: data.value, reload: load } ) );

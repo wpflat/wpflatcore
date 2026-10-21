@@ -1,7 +1,7 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
-use BizyCore\Database\Schema;
+use WPFlatCore\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
 

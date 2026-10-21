@@ -184,7 +184,7 @@ const summaryLine = ( id ) => {
 			<el-alert type="warning" show-icon :closable="false" class="bd-mb" title="This replaces the parts below on this site.">
 				<ul class="bd-rlist"><li v-for="id in selected" :key="id">{{ summaryLine( id ) }}</li></ul>
 			</el-alert>
-			<p class="bd-small">Before anything changes, Bizy makes and verifies a safety copy of your current data. If anything goes wrong while restoring, your data is left exactly as it was. You can also undo a finished restore from that safety copy.</p>
+			<p class="bd-small">Before anything changes, WPFlat makes and verifies a safety copy of your current data. If anything goes wrong while restoring, your data is left exactly as it was. You can also undo a finished restore from that safety copy.</p>
 			<p class="bd-small bd-mt">Records come back exactly as backed up. Visitors opening a public page (an invoice or signing link, say) will see a short “back shortly” notice while this runs.</p>
 			<p class="bd-mt bd-strong">Type RESTORE to continue</p>
 			<el-input v-model="typed" placeholder="RESTORE" autocomplete="off" @keyup.enter="canRun && run()" />

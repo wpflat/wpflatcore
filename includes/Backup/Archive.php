@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -37,15 +37,15 @@ class Archive {
 	 */
 	public static function inspect( $path ) {
 		if ( ! class_exists( '\ZipArchive' ) ) {
-			return new \WP_Error( 'bizycore_zip', 'This server has no zip support (PHP ZipArchive), so backups cannot be read.' );
+			return new \WP_Error( 'wpflatcore_zip', 'This server has no zip support (PHP ZipArchive), so backups cannot be read.' );
 		}
 		$zip = new \ZipArchive();
 		if ( true !== $zip->open( $path ) ) {
-			return new \WP_Error( 'bizycore_format', 'This file is not a valid Bizy backup (it could not be opened as an archive).' );
+			return new \WP_Error( 'wpflatcore_format', 'This file is not a valid WPFlat backup (it could not be opened as an archive).' );
 		}
 		if ( $zip->numFiles > self::MAX_ENTRIES ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_limits', 'This backup has too many files to be a normal Bizy backup.' );
+			return new \WP_Error( 'wpflatcore_limits', 'This backup has too many files to be a normal WPFlat backup.' );
 		}
 		$entries = array();
 		$total   = 0;
@@ -57,28 +57,28 @@ class Archive {
 			}
 			if ( ! self::entry_ok( $n ) ) {
 				$zip->close();
-				return new \WP_Error( 'bizycore_unsafe', 'This backup contains an entry that is not allowed (“' . substr( $n, 0, 80 ) . '”), so it was not opened.' );
+				return new \WP_Error( 'wpflatcore_unsafe', 'This backup contains an entry that is not allowed (“' . substr( $n, 0, 80 ) . '”), so it was not opened.' );
 			}
 			$total += (int) $st['size'];
 			$entries[ $n ] = (int) $st['size'];
 		}
 		if ( $total > self::MAX_BYTES ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_limits', 'This backup is larger than the size this plugin will restore.' );
+			return new \WP_Error( 'wpflatcore_limits', 'This backup is larger than the size this plugin will restore.' );
 		}
 		$raw = $zip->getFromName( 'manifest.json' );
 		$man = is_string( $raw ) ? json_decode( $raw, true ) : null;
 		if ( ! is_array( $man ) || empty( $man['format_version'] ) || ! isset( $man['modules'] ) ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_format', 'This archive is not a Bizy backup (its manifest is missing or unreadable).' );
+			return new \WP_Error( 'wpflatcore_format', 'This archive is not a WPFlat backup (its manifest is missing or unreadable).' );
 		}
 		if ( empty( $man['suite'] ) ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_legacy', 'This backup was made by the old single BizyDash plugin. Use Settings → Backup & restore → Move from BizyDash to bring it in.' );
+			return new \WP_Error( 'wpflatcore_legacy', 'This backup was made by the old single BizyDash plugin. Use Settings → Backup & restore → Move from BizyDash to bring it in.' );
 		}
 		if ( (int) ( $man['min_reader_version'] ?? 1 ) > Exporter::FORMAT ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_newer', 'This backup was made by a newer version of Bizy. Update the plugin, then try again.' );
+			return new \WP_Error( 'wpflatcore_newer', 'This backup was made by a newer version of WPFlat. Update the plugin, then try again.' );
 		}
 		return array( $zip, $man, $entries );
 	}

@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore\Migration;
+namespace WPFlatCore\Migration;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -39,11 +39,11 @@ class Reader {
 	/** @return Reader|\WP_Error */
 	public static function open( $path ) {
 		if ( ! class_exists( '\ZipArchive' ) ) {
-			return new \WP_Error( 'bizycore_zip', 'This server has no zip support (PHP ZipArchive), so backups cannot be read.' );
+			return new \WP_Error( 'wpflatcore_zip', 'This server has no zip support (PHP ZipArchive), so backups cannot be read.' );
 		}
 		$zip = new \ZipArchive();
 		if ( true !== $zip->open( $path ) ) {
-			return new \WP_Error( 'bizycore_format', 'This file is not a valid BizyDash backup (it could not be opened as an archive).' );
+			return new \WP_Error( 'wpflatcore_format', 'This file is not a valid BizyDash backup (it could not be opened as an archive).' );
 		}
 		$r          = new self();
 		$r->zip     = $zip;
@@ -51,7 +51,7 @@ class Reader {
 		$total      = 0;
 		if ( $zip->numFiles > 20000 ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_limits', 'This backup has too many files to be a normal BizyDash backup.' );
+			return new \WP_Error( 'wpflatcore_limits', 'This backup has too many files to be a normal BizyDash backup.' );
 		}
 		for ( $i = 0; $i < $zip->numFiles; $i++ ) {
 			$st = $zip->statIndex( $i );
@@ -60,19 +60,19 @@ class Reader {
 			}
 			if ( ! self::entry_ok( $st['name'] ) ) {
 				$zip->close();
-				return new \WP_Error( 'bizycore_unsafe', 'This backup contains an entry that is not allowed (“' . substr( $st['name'], 0, 80 ) . '”), so it was not opened.' );
+				return new \WP_Error( 'wpflatcore_unsafe', 'This backup contains an entry that is not allowed (“' . substr( $st['name'], 0, 80 ) . '”), so it was not opened.' );
 			}
 			$total                     += (int) $st['size'];
 			$r->entries[ $st['name'] ] = (int) $st['size'];
 		}
 		if ( $total > 4294967296 ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_limits', 'This backup is larger than the size this plugin will read.' );
+			return new \WP_Error( 'wpflatcore_limits', 'This backup is larger than the size this plugin will read.' );
 		}
 		$man = json_decode( (string) $zip->getFromName( 'manifest.json' ), true );
 		if ( ! is_array( $man ) || empty( $man['format_version'] ) || ! isset( $man['modules'] ) ) {
 			$zip->close();
-			return new \WP_Error( 'bizycore_format', 'This archive is not a BizyDash backup (its manifest is missing or unreadable).' );
+			return new \WP_Error( 'wpflatcore_format', 'This archive is not a BizyDash backup (its manifest is missing or unreadable).' );
 		}
 		$r->manifest = $man;
 		$opt         = json_decode( (string) $zip->getFromName( 'options.json' ), true );

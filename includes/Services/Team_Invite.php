@@ -1,12 +1,12 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\App_Login;
-use BizyCore\App_Page;
-use BizyCore\Database\Schema;
-use BizyCore\Roles;
-use BizyCore\Settings;
-use BizyCore\Terminology;
+use WPFlatCore\App_Login;
+use WPFlatCore\App_Page;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Roles;
+use WPFlatCore\Settings;
+use WPFlatCore\Terminology;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -17,12 +17,12 @@ defined( 'ABSPATH' ) || exit;
  */
 class Team_Invite {
 
-	const OPTION = 'bizycore_team_invites';
+	const OPTION = 'wpflatcore_team_invites';
 	const DAYS   = 7;
 
 	public static function init() {
 		add_action( 'template_redirect', array( __CLASS__, 'maybe_serve' ), 0 );
-		add_action( 'bizycore_ready', array( __CLASS__, 'convert_old' ), 9 );
+		add_action( 'wpflatcore_ready', array( __CLASS__, 'convert_old' ), 9 );
 	}
 
 	/* ───────────── Pending invites ───────────── */
@@ -58,7 +58,7 @@ class Team_Invite {
 
 	private static function member( $id ) {
 		global $wpdb;
-		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'bizy_team_members' ) . ' WHERE id=%d', (int) $id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'wpflat_team_members' ) . ' WHERE id=%d', (int) $id ), ARRAY_A ); // phpcs:ignore WordPress.DB
 	}
 
 	private static function business() {
@@ -85,11 +85,11 @@ class Team_Invite {
 	public static function send( $member_id ) {
 		$m = self::member( $member_id );
 		if ( ! $m || ! is_email( $m['email'] ) ) {
-			return new \WP_Error( 'bizycore_invite', 'That person has no valid email address to invite.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_invite', 'That person has no valid email address to invite.', array( 'status' => 400 ) );
 		}
 		$p = self::pending( $member_id );
 		if ( ! $p || '' === $p['role'] ) {
-			return new \WP_Error( 'bizycore_invite', 'Choose a role for this person first, then invite them.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_invite', 'Choose a role for this person first, then invite them.', array( 'status' => 400 ) );
 		}
 		$token = wp_generate_password( 40, false, false );
 		$all   = self::all();
@@ -104,13 +104,13 @@ class Team_Invite {
 		$first   = '' !== trim( (string) $m['name'] ) ? trim( explode( ' ', trim( $m['name'] ) )[0] ) : 'there';
 		$link    = self::accept_url( $token );
 		$who     = '' !== $by_name ? esc_html( $by_name ) . ' has' : esc_html( $biz ) . ' has';
-		$intro   = $who . ' invited you to join ' . esc_html( $biz ) . ' on Bizy' . ( '' !== $role ? ' as <strong>' . esc_html( $role ) . '</strong>' : '' ) . '.';
-		$ti      = ( '' !== $by_name ? $by_name : $biz ) . ' has invited you to join ' . $biz . ' on Bizy' . ( '' !== $role ? ' as ' . $role : '' ) . '.';
+		$intro   = $who . ' invited you to join ' . esc_html( $biz ) . ' on WPFlat' . ( '' !== $role ? ' as <strong>' . esc_html( $role ) . '</strong>' : '' ) . '.';
+		$ti      = ( '' !== $by_name ? $by_name : $biz ) . ' has invited you to join ' . $biz . ' on WPFlat' . ( '' !== $role ? ' as ' . $role : '' ) . '.';
 		$html    = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . $intro . ' It is where the team works on ' . esc_html( strtolower( Terminology::label( 'client', true ) ) ) . ', projects and files.</p><p><a href="' . esc_url( $link ) . '">Accept the invite</a></p><p>You will choose your own username and password. You can use your email address as your username if you prefer. This invite works for ' . self::DAYS . ' days; if it has expired, ask ' . ( '' !== $by_name ? esc_html( $by_name ) : 'the person who invited you' ) . ' to send it again.</p>';
 		$text    = "Hi {$first},\n\n{$ti}\nAccept the invite: {$link}\n\nYou will choose your own username and password (you can use your email address as your username). The invite works for " . self::DAYS . " days.\n";
-		$r       = Mailer::send( array( 'to' => array( $m['email'] ), 'subject' => 'You are invited to join ' . $biz . ' on Bizy', 'heading' => 'You are invited to join ' . $biz, 'preheader' => $ti, 'html' => $html, 'text' => $text ) );
+		$r       = Mailer::send( array( 'to' => array( $m['email'] ), 'subject' => 'You are invited to join ' . $biz . ' on WPFlat', 'heading' => 'You are invited to join ' . $biz, 'preheader' => $ti, 'html' => $html, 'text' => $text ) );
 		if ( empty( $r['ok'] ) ) {
-			return new \WP_Error( 'bizycore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) );
+			return new \WP_Error( 'wpflatcore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) );
 		}
 		self::save( $all ); // only now: the new link is the one that was emailed
 		return true;
@@ -120,7 +120,7 @@ class Team_Invite {
 	public static function notify_existing( $user_id ) {
 		$u = get_userdata( (int) $user_id );
 		if ( ! $u || ! is_email( $u->user_email ) ) {
-			return new \WP_Error( 'bizycore_invite', 'That person has no email address.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_invite', 'That person has no email address.', array( 'status' => 400 ) );
 		}
 		list( $rk ) = Roles::role_of( $u->ID );
 		$role       = self::role_label( $rk );
@@ -129,10 +129,10 @@ class Team_Invite {
 		$by_name    = ( $by && $by->ID ) ? $by->display_name : $biz;
 		$app        = App_Page::url();
 		$first      = $u->first_name ? $u->first_name : $u->display_name;
-		$line       = $by_name . ' has given you access to ' . $biz . ' on Bizy' . ( '' !== $role ? ' as ' . $role : '' ) . '.';
-		$html       = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . esc_html( $line ) . ' You can sign in with your existing login.</p><p><a href="' . esc_url( $app ) . '">Open ' . esc_html( $biz ) . ' on Bizy</a></p>';
-		$r          = Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'You now have access to ' . $biz . ' on Bizy', 'heading' => 'You have been added to ' . $biz, 'html' => $html, 'text' => "Hi {$first},\n\n{$line}\nSign in with your existing login: {$app}\n" ) );
-		return empty( $r['ok'] ) ? new \WP_Error( 'bizycore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) ) : true;
+		$line       = $by_name . ' has given you access to ' . $biz . ' on WPFlat' . ( '' !== $role ? ' as ' . $role : '' ) . '.';
+		$html       = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . esc_html( $line ) . ' You can sign in with your existing login.</p><p><a href="' . esc_url( $app ) . '">Open ' . esc_html( $biz ) . ' on WPFlat</a></p>';
+		$r          = Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'You now have access to ' . $biz . ' on WPFlat', 'heading' => 'You have been added to ' . $biz, 'html' => $html, 'text' => "Hi {$first},\n\n{$line}\nSign in with your existing login: {$app}\n" ) );
+		return empty( $r['ok'] ) ? new \WP_Error( 'wpflatcore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) ) : true;
 	}
 
 	/* ───────────── Accepting ───────────── */
@@ -162,7 +162,7 @@ class Team_Invite {
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
 			define( 'DONOTCACHEPAGE', true );
 		}
-		do_action( 'litespeed_control_set_nocache', 'bizycore invite' );
+		do_action( 'litespeed_control_set_nocache', 'wpflatcore invite' );
 		nocache_headers();
 		header( 'X-Robots-Tag: noindex, nofollow' );
 		$token = sanitize_text_field( wp_unslash( $_GET['bd_invite'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
@@ -190,7 +190,7 @@ class Team_Invite {
 	private static function accept_post( array $found ) {
 		global $wpdb;
 		$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-		$key = 'bizy_inv_' . md5( $ip );
+		$key = 'wpflat_inv_' . md5( $ip );
 		$n   = (int) get_transient( $key );
 		if ( $n >= 12 ) {
 			return 'rate';
@@ -237,11 +237,11 @@ class Team_Invite {
 			wp_delete_user( $uid );
 			return 'role';
 		}
-		$wpdb->update( Schema::table( 'bizy_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
-		update_user_meta( $uid, 'bizycore_team_joined', time() );
-		update_user_meta( $uid, 'bizycore_last_login', time() );
+		$wpdb->update( Schema::table( 'wpflat_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
+		update_user_meta( $uid, 'wpflatcore_team_joined', time() );
+		update_user_meta( $uid, 'wpflatcore_last_login', time() );
 		self::forget( (int) $m['id'] );
-		do_action( 'bizycore_team_joined', $uid, (int) $m['id'] );
+		do_action( 'wpflatcore_team_joined', $uid, (int) $m['id'] );
 		wp_set_current_user( $uid );
 		wp_set_auth_cookie( $uid, true );
 		return true;
@@ -253,17 +253,17 @@ class Team_Invite {
 	 */
 	public static function convert_old() {
 		global $wpdb;
-		if ( get_option( 'bizycore_team_invites_converted' ) ) {
+		if ( get_option( 'wpflatcore_team_invites_converted' ) ) {
 			return;
 		}
-		update_option( 'bizycore_team_invites_converted', 1, false );
-		foreach ( (array) $wpdb->get_results( 'SELECT id, wp_user_id FROM ' . Schema::table( 'bizy_team_members' ) . ' WHERE wp_user_id>0', ARRAY_A ) as $m ) { // phpcs:ignore WordPress.DB
+		update_option( 'wpflatcore_team_invites_converted', 1, false );
+		foreach ( (array) $wpdb->get_results( 'SELECT id, wp_user_id FROM ' . Schema::table( 'wpflat_team_members' ) . ' WHERE wp_user_id>0', ARRAY_A ) as $m ) { // phpcs:ignore WordPress.DB
 			$uid = (int) $m['wp_user_id'];
 			$u   = get_userdata( $uid );
-			if ( ! $u || user_can( $u, 'manage_options' ) || ! get_user_meta( $uid, 'bizycore_team_invited', true ) ) {
+			if ( ! $u || user_can( $u, 'manage_options' ) || ! get_user_meta( $uid, 'wpflatcore_team_invited', true ) ) {
 				continue;
 			}
-			if ( (int) get_user_meta( $uid, 'bizycore_last_login', true ) > 0 || get_user_meta( $uid, 'session_tokens', true ) || (int) count_user_posts( $uid ) > 0 ) {
+			if ( (int) get_user_meta( $uid, 'wpflatcore_last_login', true ) > 0 || get_user_meta( $uid, 'session_tokens', true ) || (int) count_user_posts( $uid ) > 0 ) {
 				continue; // they have already joined or have content: leave the login alone
 			}
 			list( $role, $mods ) = Roles::role_of( $uid );
@@ -271,7 +271,7 @@ class Team_Invite {
 				continue;
 			}
 			self::set_pending( (int) $m['id'], $role, (array) $mods );
-			$wpdb->update( Schema::table( 'bizy_team_members' ), array( 'wp_user_id' => 0 ), array( 'id' => (int) $m['id'] ) );
+			$wpdb->update( Schema::table( 'wpflat_team_members' ), array( 'wp_user_id' => 0 ), array( 'id' => (int) $m['id'] ) );
 			require_once ABSPATH . 'wp-admin/includes/user.php';
 			wp_delete_user( $uid );
 		}

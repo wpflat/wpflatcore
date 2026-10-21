@@ -1,16 +1,16 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The owner's words for the things Bizy talks about: Clients can be Customers, Students, Learners, Employees,
+ * The owner's words for the things WPFlat talks about: Clients can be Customers, Students, Learners, Employees,
  * Contractors…; Departments and the Team can be renamed too. Modules add their own keys (project, invoice…).
  * Everything the person reads — the app, portal, emails, PDFs, notifications — goes through here.
  */
 class Terminology {
 
-	const OPTION = 'bizycore_terms';
+	const OPTION = 'wpflatcore_terms';
 
 	/** @var array key => array( singular, plural ) defaults, filled by init() and by modules */
 	private static $defaults = array();
@@ -61,12 +61,12 @@ class Terminology {
 			'group'      => array( 'Group', 'Groups' ),
 			'home'       => array( 'Home', 'Home' ),
 		);
-		add_action( 'bizycore_ready', array( __CLASS__, 'collect' ), 4 );
+		add_action( 'wpflatcore_ready', array( __CLASS__, 'collect' ), 4 );
 	}
 
 	public static function collect() {
 		/** Modules hook here and call Terminology::register( 'project', 'Project', 'Projects' ). */
-		do_action( 'bizycore_register_terms' );
+		do_action( 'wpflatcore_register_terms' );
 	}
 
 	/** A module declares a word it uses. Owners can rename it only if $renamable. */

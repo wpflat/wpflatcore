@@ -1,8 +1,8 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
-use BizyCore\Database\Schema;
-use BizyCore\Registry;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Registry;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Module_Map {
 
-	const CORE_TABLES = array( 'bizy_departments', 'bizy_lookups', 'bizy_clients', 'bizy_groups', 'bizy_group_members', 'bizy_group_roles', 'bizy_client_departments', 'bizy_client_contacts', 'bizy_team_members', 'bizy_activity', 'bizy_threads', 'bizy_messages', 'bizy_message_files', 'bizy_thread_reads', 'bizy_links' );
+	const CORE_TABLES = array( 'wpflat_departments', 'wpflat_lookups', 'wpflat_clients', 'wpflat_groups', 'wpflat_group_members', 'wpflat_group_roles', 'wpflat_client_departments', 'wpflat_client_contacts', 'wpflat_team_members', 'wpflat_activity', 'wpflat_threads', 'wpflat_messages', 'wpflat_message_files', 'wpflat_thread_reads', 'wpflat_links' );
 
 	/** Tables per module (without the WordPress prefix). `optional` ones can be left out; `excluded` ones are never saved. */
 	public static function modules() {
@@ -22,8 +22,8 @@ class Module_Map {
 				'label'    => 'Clients, departments & team',
 				'desc'     => 'Departments, clients and their contacts, team members, client messages and files, links between records, lists & options, and your settings.',
 				'tables'   => self::CORE_TABLES,
-				'optional' => array( 'bizy_activity' ),
-				'excluded' => array( 'bizy_notifications' ),
+				'optional' => array( 'wpflat_activity' ),
+				'excluded' => array( 'wpflat_notifications' ),
 			),
 		);
 		foreach ( Registry::all() as $id => $m ) {
@@ -61,9 +61,9 @@ class Module_Map {
 		return '';
 	}
 
-	/** Option name => owning module. The SMTP password in `bizycore_mail` is stripped on export. */
+	/** Option name => owning module. The SMTP password in `wpflatcore_mail` is stripped on export. */
 	public static function options() {
-		$out = array( 'bizycore_settings' => 'core', 'bizycore_mail' => 'core', 'bizycore_modules_off' => 'core', 'bizycore_terms' => 'core', 'bizycore_team_invites' => 'core' );
+		$out = array( 'wpflatcore_settings' => 'core', 'wpflatcore_mail' => 'core', 'wpflatcore_modules_off' => 'core', 'wpflatcore_terms' => 'core', 'wpflatcore_team_invites' => 'core' );
 		foreach ( Registry::all() as $id => $m ) {
 			foreach ( (array) $m['options'] as $o ) {
 				$out[ $o ] = $id;
@@ -72,7 +72,7 @@ class Module_Map {
 		return $out;
 	}
 
-	/** Keys of the `bizycore_settings` option that a module owns (Core owns the rest). */
+	/** Keys of the `wpflatcore_settings` option that a module owns (Core owns the rest). */
 	public static function settings_keys( $module ) {
 		$m = Registry::get( $module );
 		return $m ? (array) $m['settings_keys'] : array();
@@ -89,7 +89,7 @@ class Module_Map {
 
 	/** Columns that hold media-library attachment ids: table => columns. */
 	public static function attachment_columns() {
-		$out = array( 'bizy_departments' => array( 'logo_attachment_id' ) );
+		$out = array( 'wpflat_departments' => array( 'logo_attachment_id' ) );
 		foreach ( Registry::all() as $m ) {
 			foreach ( (array) $m['attachment_columns'] as $t => $cols ) {
 				$out[ $t ] = array_merge( isset( $out[ $t ] ) ? $out[ $t ] : array(), (array) $cols );
@@ -101,14 +101,14 @@ class Module_Map {
 	/** Child table => array( column => parent table ), used to spot orphaned rows after a partial restore. */
 	public static function refs() {
 		$out = array(
-			'bizy_client_departments' => array( 'client_id' => 'bizy_clients', 'department_id' => 'bizy_departments' ),
-			'bizy_group_members'      => array( 'group_id' => 'bizy_groups', 'client_id' => 'bizy_clients' ),
-			'bizy_group_roles'        => array( 'group_id' => 'bizy_groups' ),
-			'bizy_client_contacts'    => array( 'client_id' => 'bizy_clients' ),
-			'bizy_threads'            => array( 'client_id' => 'bizy_clients' ),
-			'bizy_messages'           => array( 'thread_id' => 'bizy_threads' ),
-			'bizy_message_files'      => array( 'message_id' => 'bizy_messages' ),
-			'bizy_thread_reads'       => array( 'thread_id' => 'bizy_threads' ),
+			'wpflat_client_departments' => array( 'client_id' => 'wpflat_clients', 'department_id' => 'wpflat_departments' ),
+			'wpflat_group_members'      => array( 'group_id' => 'wpflat_groups', 'client_id' => 'wpflat_clients' ),
+			'wpflat_group_roles'        => array( 'group_id' => 'wpflat_groups' ),
+			'wpflat_client_contacts'    => array( 'client_id' => 'wpflat_clients' ),
+			'wpflat_threads'            => array( 'client_id' => 'wpflat_clients' ),
+			'wpflat_messages'           => array( 'thread_id' => 'wpflat_threads' ),
+			'wpflat_message_files'      => array( 'message_id' => 'wpflat_messages' ),
+			'wpflat_thread_reads'       => array( 'thread_id' => 'wpflat_threads' ),
 		);
 		foreach ( Registry::all() as $m ) {
 			foreach ( (array) $m['refs'] as $child => $edges ) {

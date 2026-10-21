@@ -1,11 +1,11 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Where finished backups live. Only the local (this site) store exists today; an S3 / Google Drive / Dropbox
- * store can implement the same four methods later and be pushed to from the `bizycore_backup_created` action.
+ * store can implement the same four methods later and be pushed to from the `wpflatcore_backup_created` action.
  */
 interface Backup_Store {
 

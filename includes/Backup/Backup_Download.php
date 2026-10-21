@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,7 +14,7 @@ class Backup_Download {
 
 	public static function filename( array $meta ) {
 		$host = sanitize_file_name( (string) wp_parse_url( $meta['site_url'] ?? home_url(), PHP_URL_HOST ) );
-		return 'bizy-backup-' . gmdate( 'Ymd-His', strtotime( $meta['created_at'] ?? 'now' ) ) . ( $host ? '-' . $host : '' ) . ( ! empty( $meta['encrypted'] ) ? '-protected' : '' ) . Local_Store::EXT;
+		return 'wpflat-backup-' . gmdate( 'Ymd-His', strtotime( $meta['created_at'] ?? 'now' ) ) . ( $host ? '-' . $host : '' ) . ( ! empty( $meta['encrypted'] ) ? '-protected' : '' ) . Local_Store::EXT;
 	}
 
 	/** @return array|\WP_Error { url, name } */
@@ -39,7 +39,7 @@ class Backup_Download {
 			$meta['encrypted'] = true;
 		}
 		$token = bin2hex( random_bytes( 16 ) );
-		set_transient( 'bizycore_dl_' . $token, array( 'id' => $id, 'user' => get_current_user_id(), 'temp' => $temp, 'name' => self::filename( $meta ) ), 5 * MINUTE_IN_SECONDS );
+		set_transient( 'wpflatcore_dl_' . $token, array( 'id' => $id, 'user' => get_current_user_id(), 'temp' => $temp, 'name' => self::filename( $meta ) ), 5 * MINUTE_IN_SECONDS );
 		return array( 'url' => add_query_arg( self::PARAM, $token, home_url( '/' ) ), 'name' => self::filename( $meta ) );
 	}
 
@@ -48,9 +48,9 @@ class Backup_Download {
 			return;
 		}
 		$token = preg_replace( '/[^a-f0-9]/', '', (string) wp_unslash( $_GET[ self::PARAM ] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		$d     = get_transient( 'bizycore_dl_' . $token );
-		delete_transient( 'bizycore_dl_' . $token ); // single use
-		if ( ! is_array( $d ) || ! \BizyCore\Roles::can_admin() || (int) $d['user'] !== get_current_user_id() ) {
+		$d     = get_transient( 'wpflatcore_dl_' . $token );
+		delete_transient( 'wpflatcore_dl_' . $token ); // single use
+		if ( ! is_array( $d ) || ! \WPFlatCore\Roles::can_admin() || (int) $d['user'] !== get_current_user_id() ) {
 			wp_die( 'This download link has expired. Go back and ask for the backup again.', 'Link expired', array( 'response' => 403 ) );
 		}
 		$path = $d['temp'] ? $d['temp'] : Backup_Manager::store()->path( $d['id'] );

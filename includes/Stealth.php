@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -8,15 +8,15 @@ defined( 'ABSPATH' ) || exit;
  *
  * Everything here works in PHP, on any host: WordPress's own entry points (login, admin, REST index, XML-RPC, feeds,
  * author pages, cron from outside) answer with a plain "Not Found" unless the visitor holds the admin "gate", and any
- * address Bizy does not own does the same. Bizy's own pages, sign-in, portal, signing links, invoice links and
+ * address WPFlat does not own does the same. WPFlat's own pages, sign-in, portal, signing links, invoice links and
  * /bd/ addresses are untouched. Server rules (class Stealth_Rules) add the same protection for static files.
  *
- * Safety: it can always be switched off by BIZYCORE_STEALTH_OFF in wp-config.php, by creating the file STEALTH_OFF in
- * the bizy-files folder, or with WP-CLI. Turning it on starts a short confirm-or-revert timer.
+ * Safety: it can always be switched off by WPFLATCORE_STEALTH_OFF in wp-config.php, by creating the file STEALTH_OFF in
+ * the wpflat-files folder, or with WP-CLI. Turning it on starts a short confirm-or-revert timer.
  */
 class Stealth {
 
-	const OPTION  = 'bizycore_stealth';
+	const OPTION  = 'wpflatcore_stealth';
 	const COOKIE  = 'bd_gate';
 	const CONFIRM = 300; // seconds to confirm after switching on
 
@@ -110,7 +110,7 @@ class Stealth {
 
 	/** Is a recovery switch pulled? */
 	public static function recovery_flag() {
-		if ( defined( 'BIZYCORE_STEALTH_OFF' ) && BIZYCORE_STEALTH_OFF ) {
+		if ( defined( 'WPFLATCORE_STEALTH_OFF' ) && WPFLATCORE_STEALTH_OFF ) {
 			return 'constant';
 		}
 		if ( is_file( Paths::root() . '/STEALTH_OFF' ) ) {
@@ -178,7 +178,7 @@ class Stealth {
 	/* ───────────────────────── Request handling ───────────────────────── */
 
 	public static function init() {
-		// Always: leave nothing behind that tells (the logout / login addresses become Bizy's own).
+		// Always: leave nothing behind that tells (the logout / login addresses become WPFlat's own).
 		add_filter( 'logout_url', array( __CLASS__, 'logout_url' ), 10, 2 );
 		add_action( 'init', array( __CLASS__, 'maybe_logout' ), 0 );
 		if ( ! self::active() ) {
@@ -283,7 +283,7 @@ class Stealth {
 		self::deny();
 	}
 
-	/** Anything Bizy does not own is a plain 404. Runs last, so every Bizy page has already answered. */
+	/** Anything WPFlat does not own is a plain 404. Runs last, so every WPFlat page has already answered. */
 	public static function allowlist() {
 		$path = self::path();
 		if ( '' === $path ) {

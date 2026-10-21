@@ -1,8 +1,8 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
-use BizyCore\Database\Schema;
-use BizyCore\Services\Activity;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Services\Activity;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,18 +10,18 @@ defined( 'ABSPATH' ) || exit;
 class Core_Resources {
 
 	public static function register() {
-		$cj = 'LEFT JOIN ' . Schema::table( 'bizy_clients' ) . ' c ON c.id=t.client_id';
+		$cj = 'LEFT JOIN ' . Schema::table( 'wpflat_clients' ) . ' c ON c.id=t.client_id';
 		$all = array(
 			'departments' => array(
 				'route'    => 'departments',
-				'table'    => 'bizy_departments',
+				'table'    => 'wpflat_departments',
 				'label'    => Terminology::label( 'department' ),
 				'cols'     => array( 'name' => 's', 'type' => 's', 'description' => 't', 'logo_attachment_id' => 'i', 'status' => 's' ),
 				'filters'  => array( 'type', 'status' ),
 				'search'   => array( 'name' ),
 				'order'    => 't.name ASC',
 				'required' => array( 'name' ),
-				'write_cap' => 'bizycore_clients',
+				'write_cap' => 'wpflatcore_clients',
 				'title'    => function ( $r ) {
 					return $r['name'];
 				},
@@ -36,21 +36,21 @@ class Core_Resources {
 				},
 				'after_delete' => function ( $row ) {
 					global $wpdb;
-					$wpdb->delete( Schema::table( 'bizy_client_departments' ), array( 'department_id' => $row['id'] ) );
+					$wpdb->delete( Schema::table( 'wpflat_client_departments' ), array( 'department_id' => $row['id'] ) );
 				},
 			),
 
 			'groups'      => array(
 				'route'    => 'groups',
-				'table'    => 'bizy_groups',
+				'table'    => 'wpflat_groups',
 				'label'    => Terminology::label( 'group' ),
-				'select'   => ', (SELECT COUNT(*) FROM ' . Schema::table( 'bizy_group_members' ) . ' gm WHERE gm.group_id=t.id) AS member_count',
+				'select'   => ', (SELECT COUNT(*) FROM ' . Schema::table( 'wpflat_group_members' ) . ' gm WHERE gm.group_id=t.id) AS member_count',
 				'cols'     => array( 'name' => 's', 'description' => 't', 'color' => 's', 'status' => 's', 'department_id' => 'i' ),
 				'filters'  => array( 'status', 'department_id' ),
 				'search'   => array( 'name', 'description' ),
 				'order'    => 't.name ASC',
 				'required' => array( 'name' ),
-				'write_cap' => 'bizycore_clients',
+				'write_cap' => 'wpflatcore_clients',
 				'title'    => function ( $r ) {
 					return $r['name'];
 				},
@@ -74,7 +74,7 @@ class Core_Resources {
 						if ( $single ) {
 							$r['members'] = array_map( function ( $m ) {
 								return array( 'id' => (int) $m['id'], 'name' => $m['name'], 'email' => $m['email'] );
-							}, (array) $wpdb->get_results( $wpdb->prepare( 'SELECT c.id, c.name, c.email FROM ' . Schema::table( 'bizy_group_members' ) . ' gm JOIN ' . Schema::table( 'bizy_clients' ) . ' c ON c.id=gm.client_id WHERE gm.group_id=%d ORDER BY c.name', $r['id'] ), ARRAY_A ) ); // phpcs:ignore WordPress.DB
+							}, (array) $wpdb->get_results( $wpdb->prepare( 'SELECT c.id, c.name, c.email FROM ' . Schema::table( 'wpflat_group_members' ) . ' gm JOIN ' . Schema::table( 'wpflat_clients' ) . ' c ON c.id=gm.client_id WHERE gm.group_id=%d ORDER BY c.name', $r['id'] ), ARRAY_A ) ); // phpcs:ignore WordPress.DB
 							$r['member_ids'] = wp_list_pluck( $r['members'], 'id' );
 						}
 					}
@@ -82,39 +82,39 @@ class Core_Resources {
 				},
 				'after_delete' => function ( $row ) {
 					global $wpdb;
-					$wpdb->delete( Schema::table( 'bizy_group_members' ), array( 'group_id' => $row['id'] ) );
+					$wpdb->delete( Schema::table( 'wpflat_group_members' ), array( 'group_id' => $row['id'] ) );
 					Services\Groups::forget_roles( $row['id'] );
-					do_action( 'bizycore_group_deleted', (int) $row['id'] );
+					do_action( 'wpflatcore_group_deleted', (int) $row['id'] );
 				},
 			),
 
 			'clients'     => array(
 				'route'    => 'clients',
-				'table'    => 'bizy_clients',
+				'table'    => 'wpflat_clients',
 				'label'    => Terminology::label( 'client' ),
 				'cols'     => array( 'name' => 's', 'contact_person' => 's', 'email' => 'e', 'phone' => 's', 'address' => 't', 'notes' => 't', 'type' => 's', 'status' => 's' ),
 				'filters'  => array( 'type', 'status' ),
 				'search'   => array( 'name', 'contact_person', 'email' ),
 				'order'    => 't.name ASC',
 				'required' => array( 'name' ),
-				'write_cap' => 'bizycore_clients',
+				'write_cap' => 'wpflatcore_clients',
 				'title'    => function ( $r ) {
 					return $r['name'];
 				},
 				'extra'    => function ( $a ) {
 					$sql = array();
 					$p   = array();
-					$cd  = Schema::table( 'bizy_client_departments' );
+					$cd  = Schema::table( 'wpflat_client_departments' );
 					if ( ! empty( $a['department_id'] ) ) {
 						$sql[] = "EXISTS (SELECT 1 FROM $cd x WHERE x.client_id=t.id AND x.department_id=%d)";
 						$p[]   = (int) $a['department_id'];
 					}
 					if ( ! empty( $a['group_id'] ) ) {
-						$sql[] = 'EXISTS (SELECT 1 FROM ' . Schema::table( 'bizy_group_members' ) . ' gx WHERE gx.client_id=t.id AND gx.group_id=%d)';
+						$sql[] = 'EXISTS (SELECT 1 FROM ' . Schema::table( 'wpflat_group_members' ) . ' gx WHERE gx.client_id=t.id AND gx.group_id=%d)';
 						$p[]   = (int) $a['group_id'];
 					}
 					if ( ! empty( $a['department_type'] ) ) {
-						$sql[] = "EXISTS (SELECT 1 FROM $cd x JOIN " . Schema::table( 'bizy_departments' ) . ' b ON b.id=x.department_id WHERE x.client_id=t.id AND b.type=%s)';
+						$sql[] = "EXISTS (SELECT 1 FROM $cd x JOIN " . Schema::table( 'wpflat_departments' ) . ' b ON b.id=x.department_id WHERE x.client_id=t.id AND b.type=%s)';
 						$p[]   = $a['department_type'];
 					}
 					return array( implode( ' AND ', $sql ), $p );
@@ -126,20 +126,20 @@ class Core_Resources {
 					global $wpdb;
 					// A new client with a contact name/email on the form gets its first primary contact.
 					if ( ! $existing && ( '' !== (string) $row['email'] || '' !== (string) $row['contact_person'] ) ) {
-						$ct = Schema::table( 'bizy_client_contacts' );
+						$ct = Schema::table( 'wpflat_client_contacts' );
 						if ( ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $ct WHERE client_id=%d LIMIT 1", $row['id'] ) ) ) { // phpcs:ignore WordPress.DB
 							$now = current_time( 'mysql' );
 							$wpdb->insert( $ct, array( 'client_id' => $row['id'], 'name' => $row['contact_person'] ? $row['contact_person'] : $row['name'], 'email' => $row['email'], 'phone' => $row['phone'], 'kind' => 'primary', 'created_by' => get_current_user_id(), 'created_at' => $now, 'updated_at' => $now ) );
 						}
 					}
-					do_action( 'bizycore_client_contacts_changed', (int) $row['id'] );
+					do_action( 'wpflatcore_client_contacts_changed', (int) $row['id'] );
 					if ( isset( $params['group_ids'] ) && is_array( $params['group_ids'] ) ) {
 						Services\Groups::sync_client( $row['id'], $params['group_ids'] );
 					}
 					if ( ! isset( $params['department_ids'] ) || ! is_array( $params['department_ids'] ) ) {
 						return;
 					}
-					$tbl = Schema::table( 'bizy_client_departments' );
+					$tbl = Schema::table( 'wpflat_client_departments' );
 					$wpdb->delete( $tbl, array( 'client_id' => $row['id'] ) );
 					$primary = isset( $params['primary_department_id'] ) ? (int) $params['primary_department_id'] : 0;
 					foreach ( array_unique( array_map( 'intval', $params['department_ids'] ) ) as $i => $did ) {
@@ -154,18 +154,18 @@ class Core_Resources {
 						return $rows;
 					}
 					$ids = implode( ',', array_map( 'intval', wp_list_pluck( $rows, 'id' ) ) );
-					$res = $wpdb->get_results( 'SELECT cd.client_id, cd.is_primary, b.id, b.name, b.type FROM ' . Schema::table( 'bizy_client_departments' ) . ' cd JOIN ' . Schema::table( 'bizy_departments' ) . " b ON b.id=cd.department_id WHERE cd.client_id IN ($ids) ORDER BY cd.is_primary DESC, b.name ASC", ARRAY_A ); // phpcs:ignore WordPress.DB
+					$res = $wpdb->get_results( 'SELECT cd.client_id, cd.is_primary, b.id, b.name, b.type FROM ' . Schema::table( 'wpflat_client_departments' ) . ' cd JOIN ' . Schema::table( 'wpflat_departments' ) . " b ON b.id=cd.department_id WHERE cd.client_id IN ($ids) ORDER BY cd.is_primary DESC, b.name ASC", ARRAY_A ); // phpcs:ignore WordPress.DB
 					$map = array();
 					foreach ( (array) $res as $b ) {
 						$map[ $b['client_id'] ][] = array( 'id' => (int) $b['id'], 'name' => $b['name'], 'type' => $b['type'], 'is_primary' => (bool) $b['is_primary'] );
 					}
 					$cmap = array();
-					$cres = $wpdb->get_results( 'SELECT id, client_id, name, email, phone, job_title, kind FROM ' . Schema::table( 'bizy_client_contacts' ) . " WHERE client_id IN ($ids) ORDER BY kind='primary' DESC, sort_order ASC, id ASC", ARRAY_A ); // phpcs:ignore WordPress.DB
+					$cres = $wpdb->get_results( 'SELECT id, client_id, name, email, phone, job_title, kind FROM ' . Schema::table( 'wpflat_client_contacts' ) . " WHERE client_id IN ($ids) ORDER BY kind='primary' DESC, sort_order ASC, id ASC", ARRAY_A ); // phpcs:ignore WordPress.DB
 					foreach ( (array) $cres as $c ) {
 						$cmap[ $c['client_id'] ][] = array( 'id' => (int) $c['id'], 'name' => $c['name'], 'email' => $c['email'], 'phone' => $c['phone'], 'job_title' => $c['job_title'], 'kind' => $c['kind'] );
 					}
 					$gmap = array();
-					foreach ( (array) $wpdb->get_results( 'SELECT gm.client_id, g.id, g.name, g.color FROM ' . Schema::table( 'bizy_group_members' ) . ' gm JOIN ' . Schema::table( 'bizy_groups' ) . " g ON g.id=gm.group_id WHERE gm.client_id IN ($ids) ORDER BY g.name", ARRAY_A ) as $g ) { // phpcs:ignore WordPress.DB
+					foreach ( (array) $wpdb->get_results( 'SELECT gm.client_id, g.id, g.name, g.color FROM ' . Schema::table( 'wpflat_group_members' ) . ' gm JOIN ' . Schema::table( 'wpflat_groups' ) . " g ON g.id=gm.group_id WHERE gm.client_id IN ($ids) ORDER BY g.name", ARRAY_A ) as $g ) { // phpcs:ignore WordPress.DB
 						$gmap[ $g['client_id'] ][] = array( 'id' => (int) $g['id'], 'name' => $g['name'], 'color' => $g['color'] );
 					}
 					foreach ( $rows as &$r ) {
@@ -179,39 +179,39 @@ class Core_Resources {
 				},
 				'after_delete' => function ( $row ) {
 					global $wpdb;
-					$wpdb->delete( Schema::table( 'bizy_client_departments' ), array( 'client_id' => $row['id'] ) );
-					$wpdb->delete( Schema::table( 'bizy_client_contacts' ), array( 'client_id' => $row['id'] ) );
+					$wpdb->delete( Schema::table( 'wpflat_client_departments' ), array( 'client_id' => $row['id'] ) );
+					$wpdb->delete( Schema::table( 'wpflat_client_contacts' ), array( 'client_id' => $row['id'] ) );
 					Services\Groups::forget_client( $row['id'] );
-					do_action( 'bizycore_client_deleted', (int) $row['id'] ); // portal logins, messages and every module's client data
+					do_action( 'wpflatcore_client_deleted', (int) $row['id'] ); // portal logins, messages and every module's client data
 				},
 			),
 
 			'contacts'    => array(
 				'route'    => 'contacts',
-				'table'    => 'bizy_client_contacts',
+				'table'    => 'wpflat_client_contacts',
 				'label'    => 'Contact',
 				'cols'     => array( 'client_id' => 'i', 'name' => 's', 'email' => 'e', 'phone' => 's', 'job_title' => 's', 'kind' => 's', 'sort_order' => 'i' ),
 				'filters'  => array( 'client_id', 'kind' ),
 				'search'   => array( 'name', 'email', 'job_title' ),
 				'order'    => "t.kind='primary' DESC, t.sort_order ASC, t.id ASC",
 				'required' => array( 'client_id', 'name' ),
-				'write_cap' => 'bizycore_clients',
+				'write_cap' => 'wpflatcore_clients',
 				'title'    => function ( $r ) {
 					return $r['name'] . ( $r['email'] ? ' <' . $r['email'] . '>' : '' );
 				},
 				'before_save' => function ( $d, $existing, $params ) {
 					global $wpdb;
 					if ( isset( $params['email'] ) && '' !== trim( (string) $params['email'] ) && empty( $d['email'] ) ) {
-						return new \WP_Error( 'bizycore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
+						return new \WP_Error( 'wpflatcore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
 					}
 					$cid = isset( $d['client_id'] ) ? (int) $d['client_id'] : ( $existing ? (int) $existing['client_id'] : 0 );
 					if ( ! isset( $d['kind'] ) || ! in_array( $d['kind'], array( 'primary', 'secondary' ), true ) ) {
-						$has       = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'bizy_client_contacts' ) . ' WHERE client_id=%d', $cid ) ); // phpcs:ignore WordPress.DB
+						$has       = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'wpflat_client_contacts' ) . ' WHERE client_id=%d', $cid ) ); // phpcs:ignore WordPress.DB
 						$d['kind'] = $existing ? $existing['kind'] : ( $has ? 'secondary' : 'primary' );
 					}
 					$email = isset( $d['email'] ) ? $d['email'] : ( $existing ? $existing['email'] : '' );
 					if ( 'primary' === $d['kind'] && '' === $email ) {
-						return new \WP_Error( 'bizycore_invalid', 'Primary contacts need an email address so documents can reach them.', array( 'status' => 400 ) );
+						return new \WP_Error( 'wpflatcore_invalid', 'Primary contacts need an email address so documents can reach them.', array( 'status' => 400 ) );
 					}
 					return $d;
 				},
@@ -225,20 +225,20 @@ class Core_Resources {
 
 			'team'        => array(
 				'route'    => 'team',
-				'table'    => 'bizy_team_members',
+				'table'    => 'wpflat_team_members',
 				'label'    => Terminology::label( 'team' ),
 				'log'      => false,
 				'select'   => ', dp.name AS department_name',
-				'join'     => 'LEFT JOIN ' . Schema::table( 'bizy_departments' ) . ' dp ON dp.id=t.department_id',
+				'join'     => 'LEFT JOIN ' . Schema::table( 'wpflat_departments' ) . ' dp ON dp.id=t.department_id',
 				'cols'     => array( 'name' => 's', 'email' => 'e', 'role' => 's', 'cc_documents' => 'b', 'wp_user_id' => 'i', 'kind' => 's', 'department_id' => 'i', 'start_date' => 'date', 'end_date' => 'date', 'notes' => 't', 'status' => 's' ),
 				'filters'  => array( 'status', 'kind', 'department_id' ),
 				'search'   => array( 'name', 'email', 'role' ),
 				'order'    => 't.name ASC',
 				'required' => array( 'name', 'email' ),
-				'write_cap' => 'bizycore_team',
+				'write_cap' => 'wpflatcore_team',
 				'before_save' => function ( $d, $existing, $params ) {
 					if ( isset( $params['email'] ) && empty( $d['email'] ) ) {
-						return new \WP_Error( 'bizycore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
+						return new \WP_Error( 'wpflatcore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
 					}
 					if ( ! $existing ) {
 						$d += array( 'status' => 'active', 'cc_documents' => 1 );
@@ -256,7 +256,7 @@ class Core_Resources {
 				'decorate' => function ( $rows ) {
 					foreach ( $rows as &$r ) {
 						$r['is_me'] = (int) $r['wp_user_id'] > 0 && (int) $r['wp_user_id'] === get_current_user_id();
-						// Their access to Bizy: the role, and whether they have joined yet (so a missed invite can be sent again).
+						// Their access to WPFlat: the role, and whether they have joined yet (so a missed invite can be sent again).
 						$r['access_label'] = '';
 						$r['access_state'] = '';
 						$r['invited_at']   = '';
@@ -287,7 +287,7 @@ class Core_Resources {
 
 			'activity'    => array(
 				'route'      => 'activity',
-				'table'      => 'bizy_activity',
+				'table'      => 'wpflat_activity',
 				'label'      => 'Activity',
 				'readonly'   => true,
 				'log'        => false,
@@ -309,7 +309,7 @@ class Core_Resources {
 
 			'lookups'     => array(
 				'route'       => 'lookups',
-				'table'       => 'bizy_lookups',
+				'table'       => 'wpflat_lookups',
 				'label'       => 'Option',
 				'log'         => false,
 				'timestamps'  => false,
@@ -318,14 +318,14 @@ class Core_Resources {
 				'search'      => array( 'label' ),
 				'order'       => 't.type ASC, t.sort_order ASC, t.id ASC',
 				'required'    => array( 'type', 'label' ),
-				'write_cap'   => 'bizycore_admin',
+				'write_cap'   => 'wpflatcore_admin',
 				'before_save' => function ( $d, $existing ) {
 					global $wpdb;
 					if ( ! $existing ) {
 						$base = ! empty( $d['item_key'] ) ? sanitize_key( $d['item_key'] ) : sanitize_key( str_replace( ' ', '_', strtolower( $d['label'] ) ) );
 						$key  = $base ? $base : 'option';
 						$n    = 2;
-						$tbl  = Schema::table( 'bizy_lookups' );
+						$tbl  = Schema::table( 'wpflat_lookups' );
 						while ( $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $tbl WHERE type=%s AND item_key=%s", $d['type'], $key ) ) ) { // phpcs:ignore WordPress.DB
 							$key = $base . '_' . $n++;
 						}
@@ -337,7 +337,7 @@ class Core_Resources {
 				},
 				'before_delete' => function ( $row ) {
 					if ( ! empty( $row['is_system'] ) ) {
-						return new \WP_Error( 'bizycore_protected', 'Built-in options can be renamed or deactivated, not deleted.', array( 'status' => 400 ) );
+						return new \WP_Error( 'wpflatcore_protected', 'Built-in options can be renamed or deactivated, not deleted.', array( 'status' => 400 ) );
 					}
 					return true;
 				},
@@ -369,29 +369,29 @@ class Core_Resources {
 	}
 
 	public static function resolve_client( $id ) {
-		$r = self::one( 'bizy_clients', 'name', $id );
+		$r = self::one( 'wpflat_clients', 'name', $id );
 		return $r ? array( 'title' => $r['name'], 'url' => '#/clients/' . (int) $id, 'sub' => $r['email'] ) : null;
 	}
 
 	public static function search_clients( $q, $n ) {
-		return self::find( 'bizy_clients', 'name', $q, $n );
+		return self::find( 'wpflat_clients', 'name', $q, $n );
 	}
 
 	public static function resolve_department( $id ) {
-		$r = self::one( 'bizy_departments', 'name', $id );
+		$r = self::one( 'wpflat_departments', 'name', $id );
 		return $r ? array( 'title' => $r['name'], 'url' => '#/departments/' . (int) $id, 'sub' => $r['type'] ) : null;
 	}
 
 	public static function search_departments( $q, $n ) {
-		return self::find( 'bizy_departments', 'name', $q, $n );
+		return self::find( 'wpflat_departments', 'name', $q, $n );
 	}
 
 	public static function resolve_member( $id ) {
-		$r = self::one( 'bizy_team_members', 'name', $id );
+		$r = self::one( 'wpflat_team_members', 'name', $id );
 		return $r ? array( 'title' => $r['name'], 'url' => '#/team/' . (int) $id, 'sub' => $r['role'] ) : null;
 	}
 
 	public static function search_members( $q, $n ) {
-		return self::find( 'bizy_team_members', 'name', $q, $n );
+		return self::find( 'wpflat_team_members', 'name', $q, $n );
 	}
 }

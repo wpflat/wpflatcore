@@ -1,8 +1,8 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Database\Schema;
-use BizyCore\Settings;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,20 +10,20 @@ defined( 'ABSPATH' ) || exit;
  * WordPress logins for clients, ready for the client portal.
  *
  * A client is an organisation; its people are the contacts. Every contact with an email gets a WordPress user with the
- * Bizy Client role, and each user is linked (user meta `bizycore_client_id`) to the organisation(s) they belong to. One
+ * WPFlat Client role, and each user is linked (user meta `wpflatcore_client_id`) to the organisation(s) they belong to. One
  * person can belong to several clients. No email is sent and no password is shared: the portal will let people set
  * their own password.
  */
 class Portal_Users {
 
-	const META_CLIENT  = 'bizycore_client_id';
-	const META_MANAGED = 'bizycore_portal_user';
+	const META_CLIENT  = 'wpflatcore_client_id';
+	const META_MANAGED = 'wpflatcore_portal_user';
 
 	/** Keep logins in step with contacts: Core announces changes, nothing here is called by name from elsewhere. */
 	public static function init() {
-		add_action( 'bizycore_client_contacts_changed', array( __CLASS__, 'sync_client' ) );
-		add_action( 'bizycore_client_deleted', array( __CLASS__, 'unlink_client' ) );
-		add_action( 'bizycore_sync_portal_users', array( __CLASS__, 'cron_sync' ) );
+		add_action( 'wpflatcore_client_contacts_changed', array( __CLASS__, 'sync_client' ) );
+		add_action( 'wpflatcore_client_deleted', array( __CLASS__, 'unlink_client' ) );
+		add_action( 'wpflatcore_sync_portal_users', array( __CLASS__, 'cron_sync' ) );
 	}
 
 	public static function enabled() {
@@ -41,7 +41,7 @@ class Portal_Users {
 			}
 		}
 		if ( ! $out ) {
-			$row = $wpdb->get_row( $wpdb->prepare( 'SELECT name, contact_person, email FROM ' . Schema::table( 'bizy_clients' ) . ' WHERE id=%d', $client_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+			$row = $wpdb->get_row( $wpdb->prepare( 'SELECT name, contact_person, email FROM ' . Schema::table( 'wpflat_clients' ) . ' WHERE id=%d', $client_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
 			$e   = $row ? sanitize_email( $row['email'] ) : '';
 			if ( $e ) {
 				$out[ strtolower( $e ) ] = array( 'email' => $e, 'name' => $row['contact_person'] ? $row['contact_person'] : $row['name'] );
@@ -65,11 +65,11 @@ class Portal_Users {
 	public static function ensure_user( $email, $name, $client_id ) {
 		$u = get_user_by( 'email', $email );
 		if ( $u ) {
-			if ( user_can( $u, 'manage_bizycore' ) || user_can( $u, 'manage_options' ) ) {
+			if ( user_can( $u, 'manage_wpflatcore' ) || user_can( $u, 'manage_options' ) ) {
 				return 0; // a staff member who is also someone's contact: leave their access alone
 			}
-			if ( ! in_array( 'bizy_user', (array) $u->roles, true ) ) {
-				$u->add_role( 'bizy_user' );
+			if ( ! in_array( 'wpflat_user', (array) $u->roles, true ) ) {
+				$u->add_role( 'wpflat_user' );
 			}
 			$uid = (int) $u->ID;
 		} else {
@@ -81,7 +81,7 @@ class Portal_Users {
 				'display_name' => '' !== trim( (string) $name ) ? $name : $email,
 				'first_name'   => $parts[0] ?? '',
 				'last_name'    => $parts[1] ?? '',
-				'role'         => 'bizy_user',
+				'role'         => 'wpflat_user',
 			) );
 			if ( is_wp_error( $uid ) ) {
 				return 0;
@@ -150,7 +150,7 @@ class Portal_Users {
 	 */
 	public static function sync_all( $after = 0, $limit = 200 ) {
 		global $wpdb;
-		$ids = array_map( 'intval', (array) $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'bizy_clients' ) . ' WHERE id > %d ORDER BY id ASC LIMIT %d', (int) $after, (int) $limit ) ) ); // phpcs:ignore WordPress.DB
+		$ids = array_map( 'intval', (array) $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'wpflat_clients' ) . ' WHERE id > %d ORDER BY id ASC LIMIT %d', (int) $after, (int) $limit ) ) ); // phpcs:ignore WordPress.DB
 		foreach ( $ids as $id ) {
 			self::sync_client( $id );
 		}
@@ -162,15 +162,15 @@ class Portal_Users {
 	public static function cron_sync( $after = 0 ) {
 		$r = self::sync_all( (int) $after, 150 );
 		if ( $r['next'] ) {
-			wp_schedule_single_event( time() + 30, 'bizycore_sync_portal_users', array( (int) $r['next'] ) );
+			wp_schedule_single_event( time() + 30, 'wpflatcore_sync_portal_users', array( (int) $r['next'] ) );
 		}
 	}
 
 	public static function stats() {
 		global $wpdb;
-		$clients = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'bizy_clients' ) ); // phpcs:ignore WordPress.DB
+		$clients = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'wpflat_clients' ) ); // phpcs:ignore WordPress.DB
 		$linked  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT meta_value) FROM $wpdb->usermeta WHERE meta_key=%s", self::META_CLIENT ) ); // phpcs:ignore WordPress.DB
-		$users   = count( get_users( array( 'role' => 'bizy_user', 'fields' => 'ID' ) ) );
+		$users   = count( get_users( array( 'role' => 'wpflat_user', 'fields' => 'ID' ) ) );
 		return array( 'clients' => $clients, 'clients_with_login' => $linked, 'portal_users' => $users );
 	}
 }

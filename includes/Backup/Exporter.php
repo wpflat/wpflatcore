@@ -1,8 +1,8 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
-use BizyCore\Database\Schema;
-use BizyCore\Settings;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -108,7 +108,7 @@ class Exporter {
 				$job = self::files_phase( $job, $deadline );
 			}
 			$save( $job );
-			if ( defined( 'BIZYCORE_BACKUP_FAIL_AT' ) && BIZYCORE_BACKUP_FAIL_AT === $job['phase'] ) {
+			if ( defined( 'WPFLATCORE_BACKUP_FAIL_AT' ) && WPFLATCORE_BACKUP_FAIL_AT === $job['phase'] ) {
 				throw new \RuntimeException( 'Injected failure at ' . $job['phase'] );
 			}
 		}
@@ -173,7 +173,7 @@ class Exporter {
 			if ( null === $v ) {
 				continue;
 			}
-			if ( 'bizycore_mail' === $name && is_array( $v ) ) {
+			if ( 'wpflatcore_mail' === $name && is_array( $v ) ) {
 				unset( $v['smtp_pass_enc'] ); // encrypted with this site's keys, so useless elsewhere
 			}
 			$out[ $name ] = $v;
@@ -200,7 +200,7 @@ class Exporter {
 				$ids = array_merge( $ids, (array) $wpdb->get_col( 'SELECT DISTINCT ' . $c . ' FROM ' . Schema::table( $t ) . ' WHERE ' . $c . ' > 0' ) ); // phpcs:ignore WordPress.DB
 			}
 		}
-		$s = get_option( 'bizycore_settings', array() );
+		$s = get_option( 'wpflatcore_settings', array() );
 		foreach ( array( 'business_logo_id', 'business_logo_email_id' ) as $k ) {
 			if ( ! empty( $s[ $k ] ) ) {
 				$ids[] = (int) $s[ $k ];
@@ -210,7 +210,7 @@ class Exporter {
 	}
 
 	/**
-	 * Media files the data points at: attachment id => where the file is. A Bizy file is "bd:<name>" (in
+	 * Media files the data points at: attachment id => where the file is. A WPFlat file is "bd:<name>" (in
 	 * bd-files/public); an older WordPress one is its path relative to the uploads folder.
 	 */
 	public static function attachment_map( $ids_only = false ) {
@@ -222,8 +222,8 @@ class Exporter {
 				$out[ $aid ] = '';
 				continue;
 			}
-			$bd = (string) get_post_meta( $aid, \BizyCore\Media::META, true );
-			if ( '' !== $bd && is_file( \BizyCore\Media::dir() . '/' . $bd ) ) {
+			$bd = (string) get_post_meta( $aid, \WPFlatCore\Media::META, true );
+			if ( '' !== $bd && is_file( \WPFlatCore\Media::dir() . '/' . $bd ) ) {
 				$out[ $aid ] = 'bd:' . $bd;
 				continue;
 			}
@@ -237,7 +237,7 @@ class Exporter {
 
 	/**
 	 * Files the data points at: client message files, logos and other attachments, and whatever the installed
-	 * modules add through the `bizycore_backup_files` filter (each entry: array( path => 'files/private/docs/x.pdf', src => absolute path )).
+	 * modules add through the `wpflatcore_backup_files` filter (each entry: array( path => 'files/private/docs/x.pdf', src => absolute path )).
 	 */
 	public static function collect_files() {
 		global $wpdb;
@@ -249,20 +249,20 @@ class Exporter {
 				$out[ $zip ] = array( 'path' => $zip, 'src' => $abs, 'size' => (int) filesize( $abs ) );
 			}
 		};
-		$mf = Schema::table( 'bizy_message_files' );
+		$mf = Schema::table( 'wpflat_message_files' );
 		foreach ( (array) $wpdb->get_col( "SELECT DISTINCT file FROM $mf WHERE file <> ''" ) as $f ) { // phpcs:ignore WordPress.DB
-			$add( \BizyCore\Services\Messages::dir() . '/' . basename( $f ), 'files/private/messages/' . basename( $f ) );
+			$add( \WPFlatCore\Services\Messages::dir() . '/' . basename( $f ), 'files/private/messages/' . basename( $f ) );
 		}
 		foreach ( self::attachment_map() as $rel ) {
 			if ( 0 === strpos( $rel, 'bd:' ) ) {
-				$add( \BizyCore\Media::dir() . '/' . substr( $rel, 3 ), 'files/public/' . substr( $rel, 3 ) );
+				$add( \WPFlatCore\Media::dir() . '/' . substr( $rel, 3 ), 'files/public/' . substr( $rel, 3 ) );
 			} elseif ( 0 === strpos( $rel, 'up:' ) ) {
 				// an old WordPress media file: found again by its attachment record, kept under its new name
 				$aid = array_search( $rel, self::attachment_map(), true );
 				$add( $aid ? get_attached_file( $aid ) : '', 'files/public/' . substr( $rel, 3 ) );
 			}
 		}
-		foreach ( (array) apply_filters( 'bizycore_backup_files', array() ) as $f ) {
+		foreach ( (array) apply_filters( 'wpflatcore_backup_files', array() ) as $f ) {
 			if ( ! empty( $f['path'] ) && ! empty( $f['src'] ) && preg_match( '#^files/(public|private/[a-z0-9_-]{1,40})/[A-Za-z0-9_\-. ()+%/]+$#', $f['path'] ) ) {
 				$add( $f['src'], $f['path'] );
 			}
@@ -334,8 +334,8 @@ class Exporter {
 		$manifest = array(
 			'format_version'     => self::FORMAT,
 			'min_reader_version' => 2,
-			'suite'              => 'bizy',
-			'plugin_version'     => defined( 'BIZYCORE_VERSION' ) ? BIZYCORE_VERSION : '',
+			'suite'              => 'wpflat',
+			'plugin_version'     => defined( 'WPFLATCORE_VERSION' ) ? WPFLATCORE_VERSION : '',
 			'schema_version'     => (int) Schema::VERSION,
 			'created_at'         => $job['created_at'],
 			'site_url'           => home_url(),

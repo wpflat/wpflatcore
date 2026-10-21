@@ -1,26 +1,26 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Where the Bizy suite keeps its files: wp-content/bizy-files, closed to direct web access and only ever read through
- * Bizy after checking who is asking. Layout:
- *   bizy-files/private/<kind>   one folder per kind a plugin asks for: messages, backups, tmp, docs…
- *   bizy-files/public           logos and images that appear on public pages (served by a Bizy address)
+ * Where the WPFlat suite keeps its files: wp-content/wpflat-files, closed to direct web access and only ever read through
+ * WPFlat after checking who is asking. Layout:
+ *   wpflat-files/private/<kind>   one folder per kind a plugin asks for: messages, backups, tmp, docs…
+ *   wpflat-files/public           logos and images that appear on public pages (served by a WPFlat address)
  *
  * It lives inside wp-content so WordPress core updates and managed-host refreshes leave it alone, and so hosts that
- * only allow writing there still work. `BIZYCORE_FILES_DIR` (wp-config.php) or the Security settings can point it elsewhere.
+ * only allow writing there still work. `WPFLATCORE_FILES_DIR` (wp-config.php) or the Security settings can point it elsewhere.
  */
 class Paths {
 
-	const OPTION = 'bizycore_files_state';
+	const OPTION = 'wpflatcore_files_state';
 	const DENY   = "Options -Indexes\n<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\nOrder deny,allow\nDeny from all\n</IfModule>\n";
 
 	private static $state = null;
 
 	public static function default_root() {
-		return rtrim( wp_normalize_path( WP_CONTENT_DIR ), '/' ) . '/bizy-files';
+		return rtrim( wp_normalize_path( WP_CONTENT_DIR ), '/' ) . '/wpflat-files';
 	}
 
 	public static function state() {
@@ -36,8 +36,8 @@ class Paths {
 	}
 
 	public static function root() {
-		if ( defined( 'BIZYCORE_FILES_DIR' ) && BIZYCORE_FILES_DIR ) {
-			return rtrim( wp_normalize_path( BIZYCORE_FILES_DIR ), '/' );
+		if ( defined( 'WPFLATCORE_FILES_DIR' ) && WPFLATCORE_FILES_DIR ) {
+			return rtrim( wp_normalize_path( WPFLATCORE_FILES_DIR ), '/' );
 		}
 		return rtrim( wp_normalize_path( (string) self::state()['root'] ), '/' );
 	}
@@ -91,7 +91,7 @@ class Paths {
 
 	/** Where the files could live: inside wp-content (recommended) or beside WordPress (advanced; hosts may remove it on updates). */
 	public static function targets() {
-		$outside = dirname( rtrim( wp_normalize_path( ABSPATH ), '/' ) ) . '/bizy-files';
+		$outside = dirname( rtrim( wp_normalize_path( ABSPATH ), '/' ) ) . '/wpflat-files';
 		return array(
 			'content' => array( 'root' => self::default_root(), 'writable' => wp_is_writable( WP_CONTENT_DIR ) || is_dir( self::default_root() ) ),
 			'outside' => array( 'root' => $outside, 'writable' => wp_is_writable( dirname( $outside ) ) ),
@@ -99,6 +99,6 @@ class Paths {
 	}
 
 	public static function status() {
-		return array( 'root' => self::root(), 'outside_webroot' => self::outside_webroot(), 'fixed_by_constant' => defined( 'BIZYCORE_FILES_DIR' ) && BIZYCORE_FILES_DIR, 'targets' => self::targets() );
+		return array( 'root' => self::root(), 'outside_webroot' => self::outside_webroot(), 'fixed_by_constant' => defined( 'WPFLATCORE_FILES_DIR' ) && WPFLATCORE_FILES_DIR, 'targets' => self::targets() );
 	}
 }

@@ -1,10 +1,10 @@
 <?php
-namespace BizyCore\Rest;
+namespace WPFlatCore\Rest;
 
-use BizyCore\Events;
-use BizyCore\Registry;
-use BizyCore\Resources;
-use BizyCore\Services\Activity;
+use WPFlatCore\Events;
+use WPFlatCore\Registry;
+use WPFlatCore\Resources;
+use WPFlatCore\Services\Activity;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Resource_Controller {
 
-	const NS = 'bizycore/v1';
+	const NS = 'wpflatcore/v1';
 
 	private $name;
 	private $cfg;
@@ -26,7 +26,7 @@ class Resource_Controller {
 	}
 
 	public static function can() {
-		return current_user_can( 'manage_options' ) || current_user_can( 'manage_bizycore' );
+		return current_user_can( 'manage_options' ) || current_user_can( 'manage_wpflatcore' );
 	}
 
 	/**
@@ -42,7 +42,7 @@ class Resource_Controller {
 			if ( current_user_can( 'manage_options' ) ) {
 				return true;
 			}
-			return current_user_can( 'manage_bizycore' ) && ( '' === $cap || current_user_can( $cap ) );
+			return current_user_can( 'manage_wpflatcore' ) && ( '' === $cap || current_user_can( $cap ) );
 		};
 	}
 
@@ -73,7 +73,7 @@ class Resource_Controller {
 			$rows = call_user_func( $this->cfg['decorate'], $rows, $single );
 		}
 		/** Modules add their own figures to another plugin's rows (a client's balance, a team member's open tasks). */
-		return apply_filters( 'bizycore_decorate_' . $this->name, $rows, $single );
+		return apply_filters( 'wpflatcore_decorate_' . $this->name, $rows, $single );
 	}
 
 	private function hook( $key ) {
@@ -108,7 +108,7 @@ class Resource_Controller {
 	public function show( \WP_REST_Request $req ) {
 		$row = $this->repo->find( (int) $req['id'] );
 		if ( ! $row ) {
-			return new \WP_Error( 'bizycore_not_found', 'Not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_not_found', 'Not found.', array( 'status' => 404 ) );
 		}
 		$rows = $this->decorate( array( $row ), true );
 		return rest_ensure_response( $rows[0] );
@@ -126,20 +126,20 @@ class Resource_Controller {
 		}
 		foreach ( (array) $this->hook( 'required' ) as $f ) {
 			if ( ! isset( $data[ $f ] ) || '' === $data[ $f ] || 0 === $data[ $f ] || 0.0 === $data[ $f ] ) {
-				return new \WP_Error( 'bizycore_missing', sprintf( '"%s" is required.', str_replace( '_', ' ', $f ) ), array( 'status' => 400 ) );
+				return new \WP_Error( 'wpflatcore_missing', sprintf( '"%s" is required.', str_replace( '_', ' ', $f ) ), array( 'status' => 400 ) );
 			}
 		}
 
 		$id = $this->repo->insert( $data );
 		if ( ! $id ) {
-			return new \WP_Error( 'bizycore_db', 'Could not save the record.', array( 'status' => 500 ) );
+			return new \WP_Error( 'wpflatcore_db', 'Could not save the record.', array( 'status' => 500 ) );
 		}
 		$row = $this->repo->find( $id );
 		if ( $fn = $this->hook( 'after_save' ) ) {
 			call_user_func( $fn, $row, null, $params );
 			$row = $this->repo->find( $id );
 		}
-		do_action( 'bizycore_saved_' . $this->name, $row, null, $params );
+		do_action( 'wpflatcore_saved_' . $this->name, $row, null, $params );
 		Events::saved( $this->name, $row, null );
 		$this->log( 'added', $row );
 
@@ -153,7 +153,7 @@ class Resource_Controller {
 		$id       = (int) $req['id'];
 		$existing = $this->repo->find( $id );
 		if ( ! $existing ) {
-			return new \WP_Error( 'bizycore_not_found', 'Not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_not_found', 'Not found.', array( 'status' => 404 ) );
 		}
 		$params = $req->get_params();
 		$data   = $this->repo->sanitize( $params );
@@ -166,7 +166,7 @@ class Resource_Controller {
 		}
 		foreach ( (array) $this->hook( 'required' ) as $f ) {
 			if ( array_key_exists( $f, $data ) && ( '' === $data[ $f ] || 0 === $data[ $f ] || null === $data[ $f ] ) ) {
-				return new \WP_Error( 'bizycore_missing', sprintf( '"%s" is required.', str_replace( '_', ' ', $f ) ), array( 'status' => 400 ) );
+				return new \WP_Error( 'wpflatcore_missing', sprintf( '"%s" is required.', str_replace( '_', ' ', $f ) ), array( 'status' => 400 ) );
 			}
 		}
 
@@ -176,7 +176,7 @@ class Resource_Controller {
 			call_user_func( $fn, $row, $existing, $params );
 			$row = $this->repo->find( $id );
 		}
-		do_action( 'bizycore_saved_' . $this->name, $row, $existing, $params );
+		do_action( 'wpflatcore_saved_' . $this->name, $row, $existing, $params );
 		Events::saved( $this->name, $row, $existing );
 
 		$extra = '';
@@ -193,7 +193,7 @@ class Resource_Controller {
 		$id  = (int) $req['id'];
 		$row = $this->repo->find( $id );
 		if ( ! $row ) {
-			return new \WP_Error( 'bizycore_not_found', 'Not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_not_found', 'Not found.', array( 'status' => 404 ) );
 		}
 		if ( $fn = $this->hook( 'before_delete' ) ) {
 			$ok = call_user_func( $fn, $row );
@@ -202,7 +202,7 @@ class Resource_Controller {
 			}
 		}
 		/** A module may refuse the delete by returning a WP_Error (e.g. a client that still has invoices). */
-		$ok = apply_filters( 'bizycore_before_delete_' . $this->name, true, $row );
+		$ok = apply_filters( 'wpflatcore_before_delete_' . $this->name, true, $row );
 		if ( is_wp_error( $ok ) ) {
 			return $ok;
 		}
@@ -211,7 +211,7 @@ class Resource_Controller {
 		if ( $fn = $this->hook( 'after_delete' ) ) {
 			call_user_func( $fn, $row );
 		}
-		do_action( 'bizycore_deleted_' . $this->name, $row );
+		do_action( 'wpflatcore_deleted_' . $this->name, $row );
 		Events::deleted( $this->name, $id );
 		if ( ! isset( $this->cfg['log'] ) || false !== $this->cfg['log'] ) {
 			Activity::log( $this->name, $id, $this->client_id_of( $row ), 'deleted', sprintf( '%s deleted: %s', $this->cfg['label'], $title ) );

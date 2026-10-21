@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -23,10 +23,10 @@ class Stealth_Admin {
 			'recovery'    => Stealth::recovery_flag(),
 			'rest_allow'  => $s['rest_allow'],
 			'gate'        => Stealth::has_gate(),
-			'rules'       => class_exists( '\\BizyCore\\Stealth_Rules' ) ? Stealth_Rules::status() : array( 'applied' => false ),
+			'rules'       => class_exists( '\\WPFlatCore\\Stealth_Rules' ) ? Stealth_Rules::status() : array( 'applied' => false ),
 			'files'       => Paths::status(),
 			'readiness'   => Stealth_Readiness::overview(),
-			'wpconfig'    => array( 'constant' => "define( 'BIZYCORE_STEALTH_OFF', true );", 'file' => Paths::root() . '/STEALTH_OFF', 'wpcli' => 'wp bizy stealth off' ),
+			'wpconfig'    => array( 'constant' => "define( 'WPFLATCORE_STEALTH_OFF', true );", 'file' => Paths::root() . '/STEALTH_OFF', 'wpcli' => 'wp wpflat stealth off' ),
 		);
 	}
 
@@ -38,7 +38,7 @@ class Stealth_Admin {
 		if ( is_wp_error( $r ) ) {
 			return $r;
 		}
-		if ( class_exists( '\\BizyCore\\Stealth_Rules' ) ) {
+		if ( class_exists( '\\WPFlatCore\\Stealth_Rules' ) ) {
 			Stealth_Rules::sync( Stealth::settings() );
 		}
 		return self::overview();
@@ -49,7 +49,7 @@ class Stealth_Admin {
 		$s    = Stealth::settings();
 		$site = home_url( '/' );
 		$lines = array(
-			'Bizy — recovery card for ' . $site,
+			'WPFlat — recovery card for ' . $site,
 			'Made ' . gmdate( 'Y-m-d H:i' ) . ' UTC. Keep this somewhere safe; it is not stored in your backups.',
 			'',
 			'Your secret WordPress admin address (open it once in your browser, then sign in as usual):',
@@ -57,16 +57,16 @@ class Stealth_Admin {
 			'',
 			'If the site stops working or you cannot reach WordPress admin, do ONE of these (they switch stealth mode off):',
 			'  1. In wp-config.php, above the line "That\'s all, stop editing!", add:',
-			'       define( \'BIZYCORE_STEALTH_OFF\', true );',
+			'       define( \'WPFLATCORE_STEALTH_OFF\', true );',
 			'  2. With FTP or the host\'s file manager, create an empty file called STEALTH_OFF here:',
 			'       ' . Paths::root() . '/STEALTH_OFF',
-			'  3. On the server run:  wp bizy stealth off',
+			'  3. On the server run:  wp wpflat stealth off',
 			'',
 			'If the site shows a server error after the server rules were added:',
-			'  - Open the .htaccess file in the WordPress folder and delete everything from "# BEGIN Bizy Stealth" to "# END Bizy Stealth".',
+			'  - Open the .htaccess file in the WordPress folder and delete everything from "# BEGIN WPFlat Stealth" to "# END WPFlat Stealth".',
 			'  - Or replace .htaccess with the saved copy .htaccess.bd-backup (same folder).',
 			'',
-			'Where your Bizy files live:',
+			'Where your WPFlat files live:',
 			'  ' . Paths::root() . '  (each plugin\'s private files under "private"; logos and images under "public")',
 			'',
 			'After recovering, remove the line or file again if you want stealth mode back, and run the hosting test again.',

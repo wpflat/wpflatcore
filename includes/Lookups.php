@@ -1,7 +1,7 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
-use BizyCore\Database\Schema;
+use WPFlatCore\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Lookups {
 
-	/** Core's own lists; modules add theirs through the `bizycore_lookup_defaults` filter (BizyFinance: billing periods, expense categories…). */
+	/** Core's own lists; modules add theirs through the `wpflatcore_lookup_defaults` filter (WPFlat Finance: billing periods, expense categories…). */
 	public static function defaults() {
 		$core = array(
 			'client_type'     => array(
@@ -27,23 +27,23 @@ class Lookups {
 				array( 'service', 'Service', 0, '#db2777' ),
 			),
 		);
-		return apply_filters( 'bizycore_lookup_defaults', $core );
+		return apply_filters( 'wpflatcore_lookup_defaults', $core );
 	}
 
 	/** Seed any new defaults once the module list is known (a module may add its own lists); skipped when nothing changed. */
 	public static function sync() {
 		$hash = md5( wp_json_encode( self::defaults() ) );
-		if ( get_option( 'bizycore_lookups_hash' ) === $hash ) {
+		if ( get_option( 'wpflatcore_lookups_hash' ) === $hash ) {
 			return;
 		}
 		self::seed();
-		update_option( 'bizycore_lookups_hash', $hash, false );
+		update_option( 'wpflatcore_lookups_hash', $hash, false );
 	}
 
 	/** Insert any missing system defaults (never overwrites edits). */
 	public static function seed() {
 		global $wpdb;
-		$table = Schema::table( 'bizy_lookups' );
+		$table = Schema::table( 'wpflat_lookups' );
 		foreach ( self::defaults() as $type => $items ) {
 			foreach ( $items as $i => $it ) {
 				$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE type=%s AND item_key=%s", $type, $it[0] ) ); // phpcs:ignore WordPress.DB
@@ -70,7 +70,7 @@ class Lookups {
 	/** All lookups grouped by type. */
 	public static function grouped() {
 		global $wpdb;
-		$table = Schema::table( 'bizy_lookups' );
+		$table = Schema::table( 'wpflat_lookups' );
 		$rows  = $wpdb->get_results( "SELECT * FROM $table ORDER BY type ASC, sort_order ASC, id ASC", ARRAY_A ); // phpcs:ignore WordPress.DB
 		$out   = array();
 		foreach ( (array) $rows as $r ) {
@@ -90,7 +90,7 @@ class Lookups {
 
 	public static function months_for( $period, $type = 'billing_period' ) {
 		global $wpdb;
-		$table = Schema::table( 'bizy_lookups' );
+		$table = Schema::table( 'wpflat_lookups' );
 		$m     = $wpdb->get_var( $wpdb->prepare( "SELECT months FROM $table WHERE type=%s AND item_key=%s", $type, $period ) ); // phpcs:ignore WordPress.DB
 		return (int) $m;
 	}

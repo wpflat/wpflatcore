@@ -1,16 +1,16 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Bizy's own public addresses, so nothing it serves needs /wp-content/ or /wp-json/:
+ * WPFlat's own public addresses, so nothing it serves needs /wp-content/ or /wp-json/:
  *
- *   /bd/a/<version>/<file>   the app (bizycore.js / .css) and fonts, straight from the plugin folder (allow-listed names)
- *   /bd/f/<name>             public files (logo, images on public pages) from bizy-files/public
+ *   /bd/a/<version>/<file>   the app (wpflatcore.js / .css) and fonts, straight from the plugin folder (allow-listed names)
+ *   /bd/f/<name>             public files (logo, images on public pages) from wpflat-files/public
  *   /bd/a/<version>/m/<module>/<file>   a module's own app bundle (declared in its registry entry)
  *   /bd/m/<id>               a file shared in a client conversation (access-checked)
- *   /bd/api/<route>          the Bizy REST API (namespace bizycore/v1 only), called with the cookie + nonce
+ *   /bd/api/<route>          the WPFlat REST API (namespace wpflatcore/v1 only), called with the cookie + nonce
  */
 class Assets {
 
@@ -20,13 +20,13 @@ class Assets {
 
 	public static function version() {
 		if ( '' === self::$ver ) {
-			$f         = BIZYCORE_DIR . 'build/bizycore.js';
-			self::$ver = is_readable( $f ) ? (string) filemtime( $f ) : (string) BIZYCORE_VERSION;
+			$f         = WPFLATCORE_DIR . 'build/wpflatcore.js';
+			self::$ver = is_readable( $f ) ? (string) filemtime( $f ) : (string) WPFLATCORE_VERSION;
 		}
 		return self::$ver;
 	}
 
-	/** Address of an app file: 'bizycore.js', 'bizycore.css' or 'fonts/<name>.woff2'. */
+	/** Address of an app file: 'wpflatcore.js', 'wpflatcore.css' or 'fonts/<name>.woff2'. */
 	public static function url( $file ) {
 		return home_url( '/' . self::BASE . '/a/' . self::version() . '/' . $file );
 	}
@@ -40,7 +40,7 @@ class Assets {
 		return untrailingslashit( home_url( '/' . self::BASE . '/api' ) );
 	}
 
-	/** Address of a module's bundle file, e.g. module_url( 'tasks', 'bizytasks.js' ). */
+	/** Address of a module's bundle file, e.g. module_url( 'tasks', 'wpflattasks.js' ). */
 	public static function module_url( $module, $file ) {
 		// The address carries the bundle's own change time, so a module update is never hidden by a browser's cached copy.
 		$ver = self::version();
@@ -53,8 +53,8 @@ class Assets {
 
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'maybe_serve' ), 0 );
-		add_filter( 'bizycore_api_base', array( __CLASS__, 'api_base' ) );
-		add_filter( 'bizycore_message_file_url', function ( $url, $id ) {
+		add_filter( 'wpflatcore_api_base', array( __CLASS__, 'api_base' ) );
+		add_filter( 'wpflatcore_message_file_url', function ( $url, $id ) {
 			return home_url( '/' . self::BASE . '/m/' . (int) $id );
 		}, 10, 2 );
 	}
@@ -115,7 +115,7 @@ class Assets {
 
 	private static function serve_asset( $rel ) {
 		$rel = preg_replace( '#^[0-9a-zA-Z._-]+/#', '', $rel, 1 ); // drop the version segment
-		$map = array( 'bizycore.js' => BIZYCORE_DIR . 'build/bizycore.js', 'bizycore.css' => BIZYCORE_DIR . 'build/bizycore.css' );
+		$map = array( 'wpflatcore.js' => WPFLATCORE_DIR . 'build/wpflatcore.js', 'wpflatcore.css' => WPFLATCORE_DIR . 'build/wpflatcore.css' );
 		$p   = '';
 		if ( preg_match( '#^m/([a-z0-9-]+)/([A-Za-z0-9._-]+)$#', $rel, $mm ) ) {
 			$def = Registry::get( $mm[1] );
@@ -125,7 +125,7 @@ class Assets {
 		} elseif ( isset( $map[ $rel ] ) ) {
 			$p = $map[ $rel ];
 		} elseif ( preg_match( '#^fonts/([A-Za-z0-9_-]+\.woff2)$#', $rel, $m ) ) {
-			$p = BIZYCORE_DIR . 'assets/fonts/' . $m[1];
+			$p = WPFLATCORE_DIR . 'assets/fonts/' . $m[1];
 		}
 		if ( '' === $p || ! is_readable( $p ) ) {
 			self::not_found();
@@ -142,7 +142,7 @@ class Assets {
 	}
 
 	/**
-	 * Run a Bizy REST call under /bd/api without exposing /wp-json. Same security as the REST API: the signed-in
+	 * Run a WPFlat REST call under /bd/api without exposing /wp-json. Same security as the REST API: the signed-in
 	 * cookie identifies the person, and anything that changes data must carry the nonce.
 	 */
 	private static function gateway( $route ) {
@@ -161,7 +161,7 @@ class Assets {
 				wp_set_current_user( 0 ); // as WordPress does: no valid nonce means the cookie does not count
 			}
 		}
-		$req = new \WP_REST_Request( $method, '/bizycore/v1' . $route );
+		$req = new \WP_REST_Request( $method, '/wpflatcore/v1' . $route );
 		$req->set_query_params( wp_unslash( $_GET ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		$ct = isset( $_SERVER['CONTENT_TYPE'] ) ? strtolower( (string) $_SERVER['CONTENT_TYPE'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 		if ( 0 === strpos( $ct, 'multipart/form-data' ) ) {

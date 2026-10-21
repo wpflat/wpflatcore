@@ -1,7 +1,7 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Database\Schema;
+use WPFlatCore\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,7 +10,7 @@ class Activity {
 	public static function log( $entity, $entity_id, $client_id, $action, $summary, array $meta = array() ) {
 		global $wpdb;
 		$wpdb->insert(
-			Schema::table( 'bizy_activity' ),
+			Schema::table( 'wpflat_activity' ),
 			array(
 				'entity_type' => $entity,
 				'entity_id'   => (int) $entity_id,

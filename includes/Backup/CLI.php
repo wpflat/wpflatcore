@@ -1,22 +1,22 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * WP-CLI: back up or list Bizy backups from the command line (handy for server cron on big sites).
+ * WP-CLI: back up or list WPFlat backups from the command line (handy for server cron on big sites).
  *
- *   wp bizy backup [--no-files] [--no-logs]
- *   wp bizy backups
+ *   wp wpflat backup [--no-files] [--no-logs]
+ *   wp wpflat backups
  */
 class CLI {
 
 	public static function register() {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			\WP_CLI::add_command( 'bizy backup', array( __CLASS__, 'backup' ) );
-			\WP_CLI::add_command( 'bizy backups', array( __CLASS__, 'backups' ) );
-			\WP_CLI::add_command( 'bizy stealth', array( __CLASS__, 'stealth' ) );
-			\WP_CLI::add_command( 'bizy files', array( __CLASS__, 'files' ) );
+			\WP_CLI::add_command( 'wpflat backup', array( __CLASS__, 'backup' ) );
+			\WP_CLI::add_command( 'wpflat backups', array( __CLASS__, 'backups' ) );
+			\WP_CLI::add_command( 'wpflat stealth', array( __CLASS__, 'stealth' ) );
+			\WP_CLI::add_command( 'wpflat files', array( __CLASS__, 'files' ) );
 		}
 	}
 
@@ -39,34 +39,34 @@ class CLI {
 		\WP_CLI\Utils\format_items( 'table', $rows, array( 'id', 'created', 'type', 'size', 'protected' ) );
 	}
 
-	/** wp bizy stealth status|off|on */
+	/** wp wpflat stealth status|off|on */
 	public static function stealth( $args ) {
 		$do = $args[0] ?? 'status';
 		if ( 'off' === $do ) {
-			$r = \BizyCore\Stealth::save( array( 'enabled' => false ) );
-			\BizyCore\Stealth_Rules::remove();
+			$r = \WPFlatCore\Stealth::save( array( 'enabled' => false ) );
+			\WPFlatCore\Stealth_Rules::remove();
 			\WP_CLI::success( 'Stealth mode is off and the server rules are removed.' );
 		} elseif ( 'test' === $do ) {
-			\BizyCore\Stealth_Readiness::run_step( 'start' );
-			foreach ( array_keys( \BizyCore\Stealth_Readiness::steps() ) as $id ) {
-				$o = \BizyCore\Stealth_Readiness::run_step( $id );
+			\WPFlatCore\Stealth_Readiness::run_step( 'start' );
+			foreach ( array_keys( \WPFlatCore\Stealth_Readiness::steps() ) as $id ) {
+				$o = \WPFlatCore\Stealth_Readiness::run_step( $id );
 			}
 			foreach ( $o['items'] as $i ) {
 				\WP_CLI::line( strtoupper( $i['level'] ) . '  ' . $i['label'] . ( $i['detail'] ? ' — ' . $i['detail'] : '' ) );
 			}
 			\WP_CLI::line( 'Verdicts: ' . wp_json_encode( $o['verdicts'] ) );
 		} elseif ( 'on' === $do ) {
-			$r = \BizyCore\Stealth_Admin::save( array( 'enabled' => true, 'rules' => true ) );
+			$r = \WPFlatCore\Stealth_Admin::save( array( 'enabled' => true, 'rules' => true ) );
 			is_wp_error( $r ) ? \WP_CLI::error( $r->get_error_message() ) : \WP_CLI::success( 'Stealth mode is on. Confirm it in Settings → Security & privacy within 5 minutes.' );
 		} else {
-			$o = \BizyCore\Stealth_Admin::overview();
+			$o = \WPFlatCore\Stealth_Admin::overview();
 			\WP_CLI::line( 'enabled: ' . ( $o['enabled'] ? 'yes' : 'no' ) . ' | confirmed: ' . ( $o['confirmed'] ? 'yes' : 'no' ) . ' | secret: ' . ( $o['secret_url'] ?: '(none)' ) . ' | server rules: ' . ( $o['rules']['applied'] ? 'yes' : 'no' ) );
 		}
 	}
 
-	/** wp bizy files status */
+	/** wp wpflat files status */
 	public static function files( $args, $assoc = array() ) {
-		$s = \BizyCore\Paths::status();
+		$s = \WPFlatCore\Paths::status();
 		\WP_CLI::line( 'root: ' . $s['root'] . ' | outside web root: ' . ( $s['outside_webroot'] ? 'yes' : 'no' ) );
 	}
 }

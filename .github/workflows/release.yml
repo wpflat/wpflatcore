@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag like v0.1.0 (it must match the "Version:" line in bizycore.php) and this attaches an installable zip to a GitHub release.
+# Push a tag like v0.1.0 (it must match the "Version:" line in wpflatcore.php) and this attaches an installable zip to a GitHub release.
 on:
   push:
     tags: [ 'v*' ]
@@ -14,29 +14,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: bizycore
+          path: wpflatcore
 
       - name: Check the tag matches the plugin version
         run: |
-          V=$(grep -m1 '^ \* Version:' bizycore/bizycore.php | awk '{print $3}')
+          V=$(grep -m1 '^ \* Version:' wpflatcore/wpflatcore.php | awk '{print $3}')
           if [ "v$V" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match Version: $V in bizycore.php" >&2
+            echo "Tag $GITHUB_REF_NAME does not match Version: $V in wpflatcore.php" >&2
             exit 1
           fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
 
       - name: Build the zip (the plugin folder, without development files)
         run: |
-          zip -rq "bizycore-$VERSION.zip" bizycore \
-            -x "bizycore/.git/*" "bizycore/.github/*" "bizycore/.gitignore" "bizycore/ui/*" "bizycore/vite*.js" "bizycore/package*.json" "bizycore/API.md" \
-               "bizycore/node_modules/*" "bizycore/lib/dompdf/tests/*" '*.DS_Store'
-          cp "bizycore-$VERSION.zip" bizycore.zip   # a stable name, so .../releases/latest/download/bizycore.zip always works
-          unzip -l bizycore.zip | tail -1
+          zip -rq "wpflatcore-$VERSION.zip" wpflatcore \
+            -x "wpflatcore/.git/*" "wpflatcore/.github/*" "wpflatcore/.gitignore" "wpflatcore/ui/*" "wpflatcore/vite*.js" "wpflatcore/package*.json" "wpflatcore/API.md" \
+               "wpflatcore/node_modules/*" "wpflatcore/lib/dompdf/tests/*" '*.DS_Store'
+          cp "wpflatcore-$VERSION.zip" wpflatcore.zip   # a stable name, so .../releases/latest/download/wpflatcore.zip always works
+          unzip -l wpflatcore.zip | tail -1
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            bizycore-${{ env.VERSION }}.zip
-            bizycore.zip
+            wpflatcore-${{ env.VERSION }}.zip
+            wpflatcore.zip
           generate_release_notes: true

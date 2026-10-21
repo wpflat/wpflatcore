@@ -1,25 +1,25 @@
 <?php
-namespace BizyCore\Rest;
+namespace WPFlatCore\Rest;
 
-use BizyCore\Mail_Settings;
-use BizyCore\Media;
-use BizyCore\Services\Mailer;
-use BizyCore\Paths;
-use BizyCore\Roles;
-use BizyCore\Services\Activity;
-use BizyCore\Settings;
-use BizyCore\Shell;
-use BizyCore\Stealth;
-use BizyCore\Stealth_Admin;
-use BizyCore\Stealth_Check;
-use BizyCore\Stealth_Readiness;
+use WPFlatCore\Mail_Settings;
+use WPFlatCore\Media;
+use WPFlatCore\Services\Mailer;
+use WPFlatCore\Paths;
+use WPFlatCore\Roles;
+use WPFlatCore\Services\Activity;
+use WPFlatCore\Settings;
+use WPFlatCore\Shell;
+use WPFlatCore\Stealth;
+use WPFlatCore\Stealth_Admin;
+use WPFlatCore\Stealth_Check;
+use WPFlatCore\Stealth_Readiness;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Settings, preferences, uploads and the security (stealth) screen. Namespace bizycore/v1. */
+/** Settings, preferences, uploads and the security (stealth) screen. Namespace wpflatcore/v1. */
 class System_Routes {
 
-	const NS = 'bizycore/v1';
+	const NS = 'wpflatcore/v1';
 
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register' ) );
@@ -36,9 +36,9 @@ class System_Routes {
 			return current_user_can( 'manage_options' );
 		};
 		register_rest_route( self::NS, '/demo', array(
-			array( 'methods' => 'GET', 'callback' => function () { return rest_ensure_response( \BizyCore\Services\Demo::status() ); }, 'permission_callback' => $admin ),
-			array( 'methods' => 'POST', 'callback' => function () { return self::done( \BizyCore\Services\Demo::load() ); }, 'permission_callback' => $admin ),
-			array( 'methods' => 'DELETE', 'callback' => function () { return rest_ensure_response( \BizyCore\Services\Demo::clear() ); }, 'permission_callback' => $admin ),
+			array( 'methods' => 'GET', 'callback' => function () { return rest_ensure_response( \WPFlatCore\Services\Demo::status() ); }, 'permission_callback' => $admin ),
+			array( 'methods' => 'POST', 'callback' => function () { return self::done( \WPFlatCore\Services\Demo::load() ); }, 'permission_callback' => $admin ),
+			array( 'methods' => 'DELETE', 'callback' => function () { return rest_ensure_response( \WPFlatCore\Services\Demo::clear() ); }, 'permission_callback' => $admin ),
 		) );
 		register_rest_route( self::NS, '/meta', array( 'methods' => 'GET', 'callback' => function () {
 			return rest_ensure_response( Shell::meta_payload() );
@@ -107,7 +107,7 @@ class System_Routes {
 	public static function save_prefs( \WP_REST_Request $r ) {
 		$p = (array) $r->get_json_params();
 		if ( isset( $p['theme'] ) ) {
-			update_user_meta( get_current_user_id(), 'bizycore_theme', in_array( $p['theme'], array( 'dark', 'auto' ), true ) ? $p['theme'] : 'light' );
+			update_user_meta( get_current_user_id(), 'wpflatcore_theme', in_array( $p['theme'], array( 'dark', 'auto' ), true ) ? $p['theme'] : 'light' );
 		}
 		return rest_ensure_response( array( 'theme' => Shell::theme() ) );
 	}
@@ -123,15 +123,15 @@ class System_Routes {
 		$p  = (array) $r->get_json_params();
 		$to = sanitize_email( isset( $p['to'] ) ? (string) $p['to'] : '' );
 		if ( ! is_email( $to ) ) {
-			return new \WP_Error( 'bizycore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
 		}
 		$m    = Mail_Settings::get_full();
-		$via  = 'smtp' === $m['method'] ? 'Bizy SMTP (' . $m['smtp_host'] . ':' . $m['smtp_port'] . ')' : 'the site mailer (wp_mail)';
+		$via  = 'smtp' === $m['method'] ? 'WPFlat SMTP (' . $m['smtp_host'] . ':' . $m['smtp_port'] . ')' : 'the site mailer (wp_mail)';
 		$biz  = (string) Settings::get( 'business_name' );
 		$html = '<p>This is a test message from ' . esc_html( $biz ) . '.</p><p>If you can read it, your email settings work. It was sent through ' . esc_html( $via ) . '.</p>';
-		$res  = Mailer::send( array( 'to' => array( $to ), 'subject' => 'Bizy test email', 'html' => $html, 'text' => 'This is a test message. It was sent through ' . $via . '.' ) );
+		$res  = Mailer::send( array( 'to' => array( $to ), 'subject' => 'WPFlat test email', 'html' => $html, 'text' => 'This is a test message. It was sent through ' . $via . '.' ) );
 		if ( empty( $res['ok'] ) ) {
-			return new \WP_Error( 'bizycore_mail_failed', $res['error'], array( 'status' => 502 ) );
+			return new \WP_Error( 'wpflatcore_mail_failed', $res['error'], array( 'status' => 502 ) );
 		}
 		Activity::log( 'settings', 0, 0, 'test_email', 'Email test sent to ' . $to );
 		return rest_ensure_response( array( 'ok' => true, 'via' => $via, 'to' => $to ) );
@@ -176,18 +176,18 @@ class System_Routes {
 	/** Add an image to the WordPress Media Library (WordPress's own upload rules and sizes apply). */
 	public static function library_upload( \WP_REST_Request $r ) {
 		if ( ! current_user_can( 'upload_files' ) ) {
-			return new \WP_Error( 'bizycore_forbidden', 'Your account cannot add files to the WordPress Media Library. Choose an image that is already there, or ask an administrator.', array( 'status' => 403 ) );
+			return new \WP_Error( 'wpflatcore_forbidden', 'Your account cannot add files to the WordPress Media Library. Choose an image that is already there, or ask an administrator.', array( 'status' => 403 ) );
 		}
 		$files = $r->get_file_params();
 		if ( empty( $files['file'] ) ) {
-			return new \WP_Error( 'bizycore_upload', 'No file was sent.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_upload', 'No file was sent.', array( 'status' => 400 ) );
 		}
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		$ft = wp_check_filetype( (string) $files['file']['name'] );
 		if ( 0 !== strpos( (string) $ft['type'], 'image/' ) ) {
-			return new \WP_Error( 'bizycore_type', 'Choose an image file (PNG, JPG, GIF or WebP).', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_type', 'Choose an image file (PNG, JPG, GIF or WebP).', array( 'status' => 400 ) );
 		}
 		$_FILES['file'] = $files['file'];
 		$id = media_handle_upload( 'file', 0 );
@@ -197,7 +197,7 @@ class System_Routes {
 	public static function upload( \WP_REST_Request $r ) {
 		$f = isset( $r->get_file_params()['file'] ) ? $r->get_file_params()['file'] : null;
 		if ( ! $f ) {
-			return new \WP_Error( 'bizycore_upload', 'No file was received.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_upload', 'No file was received.', array( 'status' => 400 ) );
 		}
 		return self::done( Media::store( $f ) );
 	}

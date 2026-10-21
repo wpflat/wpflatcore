@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,14 +10,14 @@ defined( 'ABSPATH' ) || exit;
  */
 class Settings {
 
-	const OPTION = 'bizycore_settings';
+	const OPTION = 'wpflatcore_settings';
 
 	/** Strings that may hold line breaks. */
 	const TEXTAREAS = array( 'business_address', 'portal_welcome' );
 
 	public static function defaults() {
 		return apply_filters(
-			'bizycore_settings_defaults',
+			'wpflatcore_settings_defaults',
 			array(
 				'company_name'           => '',
 				'business_name'          => '',
@@ -102,10 +102,10 @@ class Settings {
 				$out[ $key ] = sanitize_text_field( (string) $v );
 			}
 		}
-		$out = apply_filters( 'bizycore_settings_sanitize', $out, $in );
+		$out = apply_filters( 'wpflatcore_settings_sanitize', $out, $in );
 		update_option( self::OPTION, $out, false );
 		if ( $cur['app_slug'] !== $out['app_slug'] || $cur['portal_slug'] !== $out['portal_slug'] || $cur['app_home'] !== $out['app_home'] || $cur['home_module'] !== $out['home_module'] ) {
-			do_action( 'bizycore_addresses_changed' );
+			do_action( 'wpflatcore_addresses_changed' );
 			do_action( 'litespeed_purge_all' );
 		}
 		return self::get();

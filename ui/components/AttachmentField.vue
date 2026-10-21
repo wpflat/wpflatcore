@@ -13,7 +13,7 @@ const busy = ref( false );
 const input = ref( null );
 const shownUrl = computed( () => ( name.value ? '' : props.url ) );
 
-/** Upload straight to Bizy's own files folder; with `library`, pick from the WordPress Media Library instead. */
+/** Upload straight to WPFlat's own files folder; with `library`, pick from the WordPress Media Library instead. */
 const pick = () => ( props.library ? ( picker.value = true ) : input.value && input.value.click() );
 const fromLibrary = ( f ) => {
 	name.value = '';

@@ -1,22 +1,22 @@
 <?php
-namespace BizyCore\Rest;
+namespace WPFlatCore\Rest;
 
-use BizyCore\Database\Schema;
-use BizyCore\Portal;
-use BizyCore\Roles;
-use BizyCore\Services\Departments;
-use BizyCore\Services\Home;
-use BizyCore\Services\Messages;
-use BizyCore\Services\Search;
-use BizyCore\Services\Notifications;
-use BizyCore\Services\Portal_Users;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Portal;
+use WPFlatCore\Roles;
+use WPFlatCore\Services\Departments;
+use WPFlatCore\Services\Home;
+use WPFlatCore\Services\Messages;
+use WPFlatCore\Services\Search;
+use WPFlatCore\Services\Notifications;
+use WPFlatCore\Services\Portal_Users;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Core's people-facing routes: messages, notifications, client portal logins and access (roles). Namespace bizycore/v1. */
+/** Core's people-facing routes: messages, notifications, client portal logins and access (roles). Namespace wpflatcore/v1. */
 class Collab_Routes {
 
-	const NS = 'bizycore/v1';
+	const NS = 'wpflatcore/v1';
 
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register' ) );
@@ -35,10 +35,10 @@ class Collab_Routes {
 		$msg   = array( Messages::class, 'can_use' );
 		$ntf   = array( Notifications::class, 'can_use' );
 		$clients = function () {
-			return current_user_can( 'bizycore_clients' ) || current_user_can( 'manage_options' );
+			return current_user_can( 'wpflatcore_clients' ) || current_user_can( 'manage_options' );
 		};
 		$team = function () {
-			return current_user_can( 'bizycore_team' ) || current_user_can( 'manage_options' );
+			return current_user_can( 'wpflatcore_team' ) || current_user_can( 'manage_options' );
 		};
 
 		/* Messages */
@@ -184,7 +184,7 @@ class Collab_Routes {
 
 	public static function dept_one( \WP_REST_Request $req ) {
 		$d = Departments::one( (int) $req['id'], (string) $req->get_param( 'from' ), (string) $req->get_param( 'to' ) );
-		return $d ? rest_ensure_response( $d ) : new \WP_Error( 'bizycore_not_found', 'Not found.', array( 'status' => 404 ) );
+		return $d ? rest_ensure_response( $d ) : new \WP_Error( 'wpflatcore_not_found', 'Not found.', array( 'status' => 404 ) );
 	}
 
 	/* ---- access ---- */
@@ -221,18 +221,18 @@ class Collab_Routes {
 
 	private static function member( $team_id ) {
 		global $wpdb;
-		return $wpdb->get_row( $wpdb->prepare( 'SELECT id, name, email, wp_user_id FROM ' . Schema::table( 'bizy_team_members' ) . ' WHERE id=%d', $team_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT id, name, email, wp_user_id FROM ' . Schema::table( 'wpflat_team_members' ) . ' WHERE id=%d', $team_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
 	}
 
 	public static function team_access_get( \WP_REST_Request $req ) {
 		$m = self::member( (int) $req['id'] );
 		if ( ! $m ) {
-			return new \WP_Error( 'bizycore_missing', 'Team member not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_missing', 'Team member not found.', array( 'status' => 404 ) );
 		}
 		$uid                 = (int) $m['wp_user_id'];
 		list( $role, $mods ) = $uid ? Roles::role_of( $uid ) : array( '', array() );
 		$u                   = $uid ? get_userdata( $uid ) : null;
-		$pend                = ( ! $u ) ? \BizyCore\Services\Team_Invite::pending( (int) $m['id'] ) : null;
+		$pend                = ( ! $u ) ? \WPFlatCore\Services\Team_Invite::pending( (int) $m['id'] ) : null;
 		if ( $pend ) {
 			$role = (string) $pend['role'];
 			$mods = (array) $pend['modules'];
@@ -247,7 +247,7 @@ class Collab_Routes {
 			'manager_modules' => self::grant_labels(),
 			'pending'         => (bool) $pend,
 			'invited'         => ( $pend && ! empty( $pend['sent_at'] ) ) ? gmdate( 'Y-m-d H:i:s', (int) $pend['sent_at'] ) : '',
-			'joined'          => $u ? ( (int) get_user_meta( $u->ID, 'bizycore_team_joined', true ) ? gmdate( 'Y-m-d H:i:s', (int) get_user_meta( $u->ID, 'bizycore_team_joined', true ) ) : '' ) : '',
+			'joined'          => $u ? ( (int) get_user_meta( $u->ID, 'wpflatcore_team_joined', true ) ? gmdate( 'Y-m-d H:i:s', (int) get_user_meta( $u->ID, 'wpflatcore_team_joined', true ) ) : '' ) : '',
 			'email'           => $m['email'],
 		) );
 	}
@@ -265,7 +265,7 @@ class Collab_Routes {
 		global $wpdb;
 		$m = self::member( (int) $req['id'] );
 		if ( ! $m ) {
-			return new \WP_Error( 'bizycore_missing', 'Team member not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_missing', 'Team member not found.', array( 'status' => 404 ) );
 		}
 		$p      = (array) $req->get_json_params();
 		$role   = (string) ( isset( $p['role'] ) ? $p['role'] : '' );
@@ -274,25 +274,25 @@ class Collab_Routes {
 		$uid    = (int) $m['wp_user_id'];
 		$error  = '';
 		if ( '' !== $role && ! isset( Roles::roles()[ $role ] ) ) {
-			return new \WP_Error( 'bizycore_role', 'Unknown role.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_role', 'Unknown role.', array( 'status' => 400 ) );
 		}
 		if ( ! $uid || ! get_userdata( $uid ) ) {
 			$email = sanitize_email( $m['email'] );
 			$ex    = $email ? get_user_by( 'email', $email ) : false;
 			if ( $ex ) { // they already have a login on this site: link it and give the role now
 				$uid = (int) $ex->ID;
-				$wpdb->update( Schema::table( 'bizy_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
-				\BizyCore\Services\Team_Invite::forget( (int) $m['id'] );
+				$wpdb->update( Schema::table( 'wpflat_team_members' ), array( 'wp_user_id' => $uid ), array( 'id' => (int) $m['id'] ) );
+				\WPFlatCore\Services\Team_Invite::forget( (int) $m['id'] );
 			} elseif ( '' === $role ) {
-				\BizyCore\Services\Team_Invite::forget( (int) $m['id'] );
+				\WPFlatCore\Services\Team_Invite::forget( (int) $m['id'] );
 				return self::team_access_get( $req );
 			} else {
 				if ( ! $email ) {
-					return new \WP_Error( 'bizycore_email', 'Add an email address to this person first.', array( 'status' => 400 ) );
+					return new \WP_Error( 'wpflatcore_email', 'Add an email address to this person first.', array( 'status' => 400 ) );
 				}
-				\BizyCore\Services\Team_Invite::set_pending( (int) $m['id'], $role, $mods );
+				\WPFlatCore\Services\Team_Invite::set_pending( (int) $m['id'], $role, $mods );
 				if ( $invite ) {
-					$sent = \BizyCore\Services\Team_Invite::send( (int) $m['id'] );
+					$sent = \WPFlatCore\Services\Team_Invite::send( (int) $m['id'] );
 					if ( is_wp_error( $sent ) ) {
 						$error = $sent->get_error_message();
 					}
@@ -311,7 +311,7 @@ class Collab_Routes {
 			return $r;
 		}
 		if ( $invite && '' !== $role ) {
-			$sent = \BizyCore\Services\Team_Invite::notify_existing( $uid );
+			$sent = \WPFlatCore\Services\Team_Invite::notify_existing( $uid );
 			if ( is_wp_error( $sent ) ) {
 				$error = $sent->get_error_message();
 			}
@@ -329,12 +329,12 @@ class Collab_Routes {
 	public static function team_invite( \WP_REST_Request $req ) {
 		$m = self::member( (int) $req['id'] );
 		if ( ! $m ) {
-			return new \WP_Error( 'bizycore_missing', 'Team member not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_missing', 'Team member not found.', array( 'status' => 404 ) );
 		}
 		if ( (int) $m['wp_user_id'] && get_userdata( (int) $m['wp_user_id'] ) ) {
-			return new \WP_Error( 'bizycore_invite', 'This person has already joined.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_invite', 'This person has already joined.', array( 'status' => 400 ) );
 		}
-		$r = \BizyCore\Services\Team_Invite::send( (int) $m['id'] );
+		$r = \WPFlatCore\Services\Team_Invite::send( (int) $m['id'] );
 		return is_wp_error( $r ) ? $r : self::team_access_get( $req );
 	}
 
@@ -342,8 +342,8 @@ class Collab_Routes {
 		$id  = (int) $req['id'];
 		$out = array();
 		foreach ( Portal_Users::users_for_client( $id ) as $u ) {
-			$last            = (int) get_user_meta( $u['id'], 'bizycore_last_login', true );
-			$inv             = (int) get_user_meta( $u['id'], 'bizycore_portal_invited', true );
+			$last            = (int) get_user_meta( $u['id'], 'wpflatcore_last_login', true );
+			$inv             = (int) get_user_meta( $u['id'], 'wpflatcore_portal_invited', true );
 			$u['last_login'] = $last ? gmdate( 'Y-m-d H:i:s', $last ) : '';
 			$u['invited']    = $inv ? gmdate( 'Y-m-d H:i:s', $inv ) : '';
 			$out[]           = $u;
@@ -355,7 +355,7 @@ class Collab_Routes {
 		$p   = (array) $req->get_json_params();
 		$uid = (int) ( isset( $p['user_id'] ) ? $p['user_id'] : 0 );
 		if ( ! in_array( $uid, Portal_Users::users_for_client( (int) $req['id'], false ), true ) ) {
-			return new \WP_Error( 'bizycore_invite', 'That person is not a login for this client.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_invite', 'That person is not a login for this client.', array( 'status' => 400 ) );
 		}
 		$r = Portal::invite( $uid );
 		return is_wp_error( $r ) ? $r : rest_ensure_response( array( 'sent' => true ) );

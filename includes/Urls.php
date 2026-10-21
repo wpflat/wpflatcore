@@ -1,9 +1,9 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Addresses of Bizy's own pages. Everything that builds a link to the app or the portal goes through here. */
+/** Addresses of WPFlat's own pages. Everything that builds a link to the app or the portal goes through here. */
 class Urls {
 
 	/** The team app, optionally at an in-app route: Urls::app( '/clients/3' ). */
@@ -20,6 +20,6 @@ class Urls {
 
 	/** Base address of Core's REST API for browser code (no trailing slash). The stealth layer can serve it under a neutral path. */
 	public static function api() {
-		return untrailingslashit( apply_filters( 'bizycore_api_base', rest_url( 'bizycore/v1' ) ) );
+		return untrailingslashit( apply_filters( 'wpflatcore_api_base', rest_url( 'wpflatcore/v1' ) ) );
 	}
 }

@@ -54,7 +54,7 @@ watch( q, () => {
 <template>
 	<el-dialog :model-value="modelValue" title="Link to…" width="460px" @update:model-value="emit( 'update:modelValue', $event )">
 		<el-alert v-if="error" :title="error" type="error" show-icon :closable="false" style="margin-bottom: 12px" />
-		<el-empty v-if="!choices.length" description="Nothing else can be linked yet. Install another Bizy module to link records across." :image-size="64" />
+		<el-empty v-if="!choices.length" description="Nothing else can be linked yet. Install another WPFlat module to link records across." :image-size="64" />
 		<template v-else>
 			<el-radio-group v-model="type" size="small" style="margin-bottom: 10px">
 				<el-radio-button v-for="[ k, d ] in choices" :key="k" :value="k">{{ d.label }}</el-radio-button>

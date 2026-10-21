@@ -1,12 +1,12 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Mail_Settings;
+use WPFlatCore\Mail_Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Sends a single message through wp_mail, optionally via Bizy's own SMTP settings.
+ * Sends a single message through wp_mail, optionally via WPFlat's own SMTP settings.
  * The SMTP hook is attached only for the duration of the send, so other plugins' mail is untouched.
  */
 class Mailer {
@@ -15,7 +15,7 @@ class Mailer {
 		return trim( str_replace( array( "\r", "\n", '"', '<', '>' ), ' ', (string) $s ) );
 	}
 
-	/** Configure a PHPMailer instance from Bizy SMTP settings. */
+	/** Configure a PHPMailer instance from WPFlat SMTP settings. */
 	public static function configure( $pm, array $cfg, $password ) {
 		$pm->isSMTP();
 		$pm->Host    = $cfg['smtp_host'];
@@ -50,7 +50,7 @@ class Mailer {
 			return array( 'ok' => false, 'error' => 'SMTP is selected but no host is configured (Settings → Email).' );
 		}
 
-		if ( empty( $m['raw'] ) ) { // every Bizy email gets the same branded look (logo, card, button colour, footer)
+		if ( empty( $m['raw'] ) ) { // every WPFlat email gets the same branded look (logo, card, button colour, footer)
 			$m['html'] = Email_Template::wrap( isset( $m['html'] ) ? (string) $m['html'] : '', array( 'title' => isset( $m['heading'] ) ? $m['heading'] : '', 'preheader' => isset( $m['preheader'] ) ? $m['preheader'] : '', 'note' => isset( $m['note'] ) ? $m['note'] : 'If you were not expecting this email, you can safely ignore it.' ) );
 		}
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );

@@ -162,7 +162,7 @@ const warnings = computed( () => {
 	const h = health.value, w = [];
 	if ( h.zip === false ) w.push( 'This server has no zip support, so backups cannot be created. Ask your host to enable the PHP zip extension.' );
 	if ( h.writable === false ) w.push( 'The backup folder is not writable.' );
-	if ( h.exposed === true ) w.push( 'The backup folder can be opened from the web. Anyone with a file’s link could download it. Your server may ignore .htaccess (Nginx): ask your host to block this folder, or set BIZYCORE_FILES_DIR to a location outside the web root.' );
+	if ( h.exposed === true ) w.push( 'The backup folder can be opened from the web. Anyone with a file’s link could download it. Your server may ignore .htaccess (Nginx): ask your host to block this folder, or set WPFLATCORE_FILES_DIR to a location outside the web root.' );
 	if ( h.cron_disabled && settings.auto !== 'off' ) w.push( 'WP-Cron is disabled on this site, so automatic backups only run if your host triggers cron itself.' );
 	if ( settings.last_status === 'failed' ) w.push( 'The last automatic backup failed: ' + ( settings.last_error || 'unknown error' ) );
 	return w;
@@ -227,8 +227,8 @@ onMounted( async () => {
 
 		<el-card shadow="never" class="bd-mb" :class="{ 'bd-restore-hl': store.route.query && store.route.query.restore }">
 			<template #header><div class="bd-widget__head"><span>Restore from a backup file</span></div></template>
-			<p class="bd-muted bd-small">Have a backup from this or another site? Upload it, choose what to restore, and Bizy puts it back, safely. You can restore everything or only some parts. You can also restore any saved backup below.</p>
-			<input ref="fileInput" type="file" accept=".bizy,.zip" hidden @change="uploadFile( $event.target.files[ 0 ] )" />
+			<p class="bd-muted bd-small">Have a backup from this or another site? Upload it, choose what to restore, and WPFlat puts it back, safely. You can restore everything or only some parts. You can also restore any saved backup below.</p>
+			<input ref="fileInput" type="file" accept=".wpflat,.bizy,.zip" hidden @change="uploadFile( $event.target.files[ 0 ] )" />
 			<div class="bd-mt"><el-button :loading="uploading" @click="fileInput.click()">{{ uploading ? 'Uploading… ' + uploadPct + '%' : 'Upload a backup file…' }}</el-button></div>
 		</el-card>
 

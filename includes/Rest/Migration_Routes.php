@@ -1,15 +1,15 @@
 <?php
-namespace BizyCore\Rest;
+namespace WPFlatCore\Rest;
 
-use BizyCore\Migration\Legacy;
-use BizyCore\Roles;
+use WPFlatCore\Migration\Legacy;
+use WPFlatCore\Roles;
 
 defined( 'ABSPATH' ) || exit;
 
 /** Moving from the old single BizyDash plugin: choose a backup, import, then let each module take its part. */
 class Migration_Routes {
 
-	const NS = 'bizycore/v1';
+	const NS = 'wpflatcore/v1';
 
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register' ) );

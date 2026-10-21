@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -39,7 +39,7 @@ class Stealth_Check {
 		list( $code ) = self::get( '/zz-' . wp_generate_password( 8, false ) . '-not-here' );
 		$add( 'Hidden addresses', 'Unknown address shows a plain 404', 404 === $code, 'Answers ' . $code );
 		// Addresses that must work.
-		foreach ( array( '/' => 'Home', App_Page::url() => 'App', Portal::url() => 'Client portal', Assets::url( 'bizycore.js' ) => 'App file', Assets::url( 'bizycore.css' ) => 'App styles' ) as $u => $label ) {
+		foreach ( array( '/' => 'Home', App_Page::url() => 'App', Portal::url() => 'Client portal', Assets::url( 'wpflatcore.js' ) => 'App file', Assets::url( 'wpflatcore.css' ) => 'App styles' ) as $u => $label ) {
 			$path = 0 === strpos( $u, 'http' ) ? (string) wp_parse_url( $u, PHP_URL_PATH ) : $u;
 			list( $c ) = self::get( $path );
 			$add( 'Still working', $label, in_array( $c, array( 200, 302 ), true ), 'Answers ' . $c );

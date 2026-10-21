@@ -1,24 +1,24 @@
 <?php
-namespace BizyCore\Migration;
+namespace WPFlatCore\Migration;
 
-use BizyCore\Backup\Crypto as Backup_Crypto;
-use BizyCore\Database\Schema;
-use BizyCore\Media;
-use BizyCore\Paths;
-use BizyCore\Registry;
-use BizyCore\Services\Crypto;
-use BizyCore\Settings;
+use WPFlatCore\Backup\Crypto as Backup_Crypto;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Media;
+use WPFlatCore\Paths;
+use WPFlatCore\Registry;
+use WPFlatCore\Services\Crypto;
+use WPFlatCore\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Moving from the single BizyDash plugin to the Bizy suite, from a BizyDash backup (.bizydash).
+ * Moving from the single BizyDash plugin to the WPFlat suite, from a BizyDash backup (.bizydash).
  *
  * The backup is adopted into a private folder and kept there. Core imports its own tables (clients, contacts,
  * departments, team, conversations, activity, lists) keeping every id, so what the modules import later lines up.
  * Each module then imports its part from the same archive when it is installed:
  *
- *   add_filter( 'bizycore_legacy_import_finance', function ( $report, $reader, $legacy ) {
+ *   add_filter( 'wpflatcore_legacy_import_finance', function ( $report, $reader, $legacy ) {
  *       foreach ( $reader->rows( 'invoices' ) as $row ) { … }
  *       return array( 'invoices' => 197 );
  *   }, 10, 3 );
@@ -27,7 +27,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Legacy {
 
-	const OPTION = 'bizycore_legacy';
+	const OPTION = 'wpflatcore_legacy';
 
 	/** Which new plugin takes each old table. */
 	const OWNER = array(
@@ -46,8 +46,8 @@ class Legacy {
 
 	/** Old role => new role. Old roles stay (the old plugin may still be running); the new ones are added. */
 	const ROLES = array(
-		'bizydash_client' => 'bizy_user', 'bizydash_client_manager' => 'bizy_client_manager', 'bizydash_team_manager' => 'bizy_team_manager', 'bizydash_admin' => 'bizy_admin',
-		'bizydash_work_team' => 'bizy_tasks_team', 'bizydash_finance_team' => 'bizy_finance_team', 'bizydash_contract_team' => 'bizy_sign_team', 'bizydash_staff' => 'bizy_client_manager',
+		'bizydash_client' => 'wpflat_user', 'bizydash_client_manager' => 'wpflat_client_manager', 'bizydash_team_manager' => 'wpflat_team_manager', 'bizydash_admin' => 'wpflat_admin',
+		'bizydash_work_team' => 'wpflat_tasks_team', 'bizydash_finance_team' => 'wpflat_finance_team', 'bizydash_contract_team' => 'wpflat_sign_team', 'bizydash_staff' => 'wpflat_client_manager',
 	);
 
 	/** Old module id => new module id. */
@@ -110,16 +110,16 @@ class Legacy {
 	 */
 	public static function adopt( $source, $password = '', $uploaded = false ) {
 		if ( ! $uploaded && ! self::allowed_source( $source ) ) {
-			return new \WP_Error( 'bizycore_source', 'That backup was not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_source', 'That backup was not found.', array( 'status' => 404 ) );
 		}
 		if ( ! is_readable( $source ) ) {
-			return new \WP_Error( 'bizycore_source', 'That backup could not be read.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_source', 'That backup could not be read.', array( 'status' => 404 ) );
 		}
 		$dest = self::archive_path();
 		@set_time_limit( 120 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 		if ( Backup_Crypto::is_encrypted( $source ) ) {
 			if ( '' === (string) $password ) {
-				return new \WP_Error( 'bizycore_password_required', 'This backup is password protected. Enter its password.', array( 'status' => 400 ) );
+				return new \WP_Error( 'wpflatcore_password_required', 'This backup is password protected. Enter its password.', array( 'status' => 400 ) );
 			}
 			$r = Backup_Crypto::decrypt_file( $source, $dest, $password );
 			if ( is_wp_error( $r ) ) {
@@ -128,7 +128,7 @@ class Legacy {
 				return $r;
 			}
 		} elseif ( ! copy( $source, $dest ) ) {
-			return new \WP_Error( 'bizycore_io', 'The backup could not be copied into the private folder.', array( 'status' => 500 ) );
+			return new \WP_Error( 'wpflatcore_io', 'The backup could not be copied into the private folder.', array( 'status' => 500 ) );
 		}
 		$reader = Reader::open( $dest );
 		if ( is_wp_error( $reader ) ) {
@@ -192,7 +192,7 @@ class Legacy {
 	public static function analysis() {
 		$r = self::reader();
 		if ( ! $r ) {
-			return new \WP_Error( 'bizycore_none', 'No backup has been chosen yet.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_none', 'No backup has been chosen yet.', array( 'status' => 400 ) );
 		}
 		$st      = self::state();
 		$tables  = array();
@@ -216,7 +216,7 @@ class Legacy {
 				'module'    => $m,
 				'rows'      => $rows,
 				'installed' => Registry::installed( $m ),
-				'ready'     => Registry::enabled( $m ) && has_filter( 'bizycore_legacy_import_' . $m ),
+				'ready'     => Registry::enabled( $m ) && has_filter( 'wpflatcore_legacy_import_' . $m ),
 				'done'      => ! empty( $st['modules'][ $m ]['done'] ),
 				'report'    => isset( $st['modules'][ $m ]['report'] ) ? $st['modules'][ $m ]['report'] : array(),
 			);
@@ -237,13 +237,13 @@ class Legacy {
 	}
 
 	private static function core_tables() {
-		return array( 'bizy_departments', 'bizy_clients', 'bizy_client_departments', 'bizy_client_contacts', 'bizy_team_members', 'bizy_activity', 'bizy_threads', 'bizy_messages', 'bizy_message_files', 'bizy_thread_reads' );
+		return array( 'wpflat_departments', 'wpflat_clients', 'wpflat_client_departments', 'wpflat_client_contacts', 'wpflat_team_members', 'wpflat_activity', 'wpflat_threads', 'wpflat_messages', 'wpflat_message_files', 'wpflat_thread_reads' );
 	}
 
 	/** Has anything been entered in the new suite yet? */
 	public static function core_empty() {
 		global $wpdb;
-		foreach ( array( 'bizy_clients', 'bizy_team_members', 'bizy_departments', 'bizy_threads' ) as $t ) {
+		foreach ( array( 'wpflat_clients', 'wpflat_team_members', 'wpflat_departments', 'wpflat_threads' ) as $t ) {
 			if ( (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( $t ) ) > 0 ) { // phpcs:ignore WordPress.DB
 				return false;
 			}
@@ -262,7 +262,7 @@ class Legacy {
 	public static function step( $replace = false, $budget = 8 ) {
 		$r = self::reader();
 		if ( ! $r ) {
-			return new \WP_Error( 'bizycore_none', 'No backup has been chosen yet.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_none', 'No backup has been chosen yet.', array( 'status' => 400 ) );
 		}
 		$st = self::state();
 		if ( ! empty( $st['core_done'] ) ) {
@@ -271,13 +271,13 @@ class Legacy {
 		$deadline = microtime( true ) + max( 2, (int) $budget );
 		if ( 'idle' === $st['phase'] ) {
 			if ( ! self::core_empty() && ! $replace && empty( $st['replace'] ) ) {
-				return new \WP_Error( 'bizycore_not_empty', 'The new suite already has data. Importing replaces it. Confirm to continue.', array( 'status' => 409 ) );
+				return new \WP_Error( 'wpflatcore_not_empty', 'The new suite already has data. Importing replaces it. Confirm to continue.', array( 'status' => 409 ) );
 			}
 			$st['replace'] = (bool) $replace || ! empty( $st['replace'] );
 			$st['phase']   = 'files';
 			$st['cursor']  = array();
 			$st['report']  = array();
-			\BizyCore\Lookups::sync();
+			\WPFlatCore\Lookups::sync();
 		}
 		while ( microtime( true ) < $deadline && 'done' !== $st['phase'] ) {
 			$method = 'p_' . $st['phase'];
@@ -451,40 +451,40 @@ class Legacy {
 			case 'brands':
 				$new = self::pick( $row, array( 'id', 'name', 'type', 'description', 'status', 'created_by', 'created_at', 'updated_at' ) );
 				$new['logo_attachment_id'] = isset( $row['logo_attachment_id'] ) ? self::attachment_id( $row['logo_attachment_id'] ) : 0;
-				return $wpdb->insert( Schema::table( 'bizy_departments' ), $new );
+				return $wpdb->insert( Schema::table( 'wpflat_departments' ), $new );
 			case 'clients':
 				$new         = self::pick( $row, array( 'id', 'contact_person', 'email', 'phone', 'address', 'notes', 'status', 'created_by', 'created_at', 'updated_at' ) );
 				$new['name'] = $row['company_name'];
 				$new['type'] = isset( $row['client_type'] ) ? $row['client_type'] : '';
-				return $wpdb->insert( Schema::table( 'bizy_clients' ), $new );
+				return $wpdb->insert( Schema::table( 'wpflat_clients' ), $new );
 			case 'client_brands':
 				$new = self::pick( $row, array( 'id', 'client_id', 'is_primary' ) );
 				$new['department_id'] = $row['brand_id'];
-				return $wpdb->insert( Schema::table( 'bizy_client_departments' ), $new );
+				return $wpdb->insert( Schema::table( 'wpflat_client_departments' ), $new );
 			case 'client_contacts':
-				return $wpdb->insert( Schema::table( 'bizy_client_contacts' ), self::pick( $row, array( 'id', 'client_id', 'name', 'email', 'phone', 'job_title', 'kind', 'sort_order', 'created_by', 'created_at', 'updated_at' ) ) );
+				return $wpdb->insert( Schema::table( 'wpflat_client_contacts' ), self::pick( $row, array( 'id', 'client_id', 'name', 'email', 'phone', 'job_title', 'kind', 'sort_order', 'created_by', 'created_at', 'updated_at' ) ) );
 			case 'team_members':
 				$new = self::pick( $row, array( 'id', 'name', 'email', 'role', 'wp_user_id', 'kind', 'department_id', 'start_date', 'end_date', 'notes', 'status', 'created_by', 'created_at', 'updated_at' ) );
 				$new['cc_documents'] = isset( $row['cc_invoices'] ) ? $row['cc_invoices'] : 1;
-				return $wpdb->insert( Schema::table( 'bizy_team_members' ), $new );
+				return $wpdb->insert( Schema::table( 'wpflat_team_members' ), $new );
 			case 'activity':
 				$new = self::pick( $row, array( 'id', 'entity_id', 'client_id', 'action', 'summary', 'meta', 'user_id', 'created_at' ) );
 				$map = array( 'brands' => 'departments', 'services' => 'catalog', 'client-services' => 'client-services' );
 				$new['entity_type'] = isset( $map[ $row['entity_type'] ] ) ? $map[ $row['entity_type'] ] : $row['entity_type'];
-				return $wpdb->insert( Schema::table( 'bizy_activity' ), $new );
+				return $wpdb->insert( Schema::table( 'wpflat_activity' ), $new );
 			case 'lookups':
 				return self::put_lookup( $row, $st );
 			case 'threads':
 				$new = self::pick( $row, array( 'id', 'client_id', 'subject', 'status', 'started_by_type', 'created_by', 'last_message_at', 'last_message_id', 'message_count', 'closed_at', 'created_at', 'updated_at' ) );
 				$new['context_type'] = ! empty( $row['project_id'] ) ? 'project' : '';
 				$new['context_id']   = ! empty( $row['project_id'] ) ? (int) $row['project_id'] : 0;
-				return $wpdb->insert( Schema::table( 'bizy_threads' ), $new );
+				return $wpdb->insert( Schema::table( 'wpflat_threads' ), $new );
 			case 'messages':
-				return $wpdb->insert( Schema::table( 'bizy_messages' ), self::pick( $row, array( 'id', 'thread_id', 'client_id', 'sender_id', 'sender_type', 'kind', 'body', 'created_at', 'deleted_at' ) ) );
+				return $wpdb->insert( Schema::table( 'wpflat_messages' ), self::pick( $row, array( 'id', 'thread_id', 'client_id', 'sender_id', 'sender_type', 'kind', 'body', 'created_at', 'deleted_at' ) ) );
 			case 'message_files':
-				return $wpdb->insert( Schema::table( 'bizy_message_files' ), self::pick( $row, array( 'id', 'message_id', 'thread_id', 'client_id', 'file', 'name', 'mime', 'size', 'sha256', 'created_at' ) ) );
+				return $wpdb->insert( Schema::table( 'wpflat_message_files' ), self::pick( $row, array( 'id', 'message_id', 'thread_id', 'client_id', 'file', 'name', 'mime', 'size', 'sha256', 'created_at' ) ) );
 			case 'thread_reads':
-				return $wpdb->insert( Schema::table( 'bizy_thread_reads' ), self::pick( $row, array( 'id', 'thread_id', 'user_id', 'last_read_id', 'read_at' ) ) );
+				return $wpdb->insert( Schema::table( 'wpflat_thread_reads' ), self::pick( $row, array( 'id', 'thread_id', 'user_id', 'last_read_id', 'read_at' ) ) );
 		}
 		return false;
 	}
@@ -497,7 +497,7 @@ class Legacy {
 			$st['rest_lookups'][] = $row;
 			return true;
 		}
-		$t    = Schema::table( 'bizy_lookups' );
+		$t    = Schema::table( 'wpflat_lookups' );
 		$data = array( 'label' => $row['label'], 'color' => $row['color'], 'months' => $row['months'], 'sort_order' => $row['sort_order'], 'is_active' => $row['is_active'], 'is_system' => $row['is_system'] );
 		$new  = self::CORE_LOOKUPS[ $type ];
 		$id   = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $t WHERE type=%s AND item_key=%s", $new, $row['item_key'] ) ); // phpcs:ignore WordPress.DB
@@ -540,7 +540,7 @@ class Legacy {
 					$off[] = self::MODULES[ $id ];
 				}
 			}
-			update_option( \BizyCore\Registry::OFF_OPTION, $off, false );
+			update_option( \WPFlatCore\Registry::OFF_OPTION, $off, false );
 		}
 		foreach ( $opts as $k => $v ) {
 			if ( ! in_array( $k, array( 'bizydash_settings', 'bizydash_mail', 'bizydash_modules' ), true ) ) {
@@ -568,7 +568,7 @@ class Legacy {
 			$st['report']['mail'] = '' !== $plain ? 'The email password was carried over.' : 'The email password could not be carried over; enter it again in Settings → Email.';
 		}
 		$new['smtp_pass_enc'] = '' !== $plain ? Crypto::encrypt( $plain ) : '';
-		update_option( \BizyCore\Mail_Settings::OPTION, array_merge( \BizyCore\Mail_Settings::get_full(), $new ), false );
+		update_option( \WPFlatCore\Mail_Settings::OPTION, array_merge( \WPFlatCore\Mail_Settings::get_full(), $new ), false );
 		return $st;
 	}
 
@@ -595,13 +595,13 @@ class Legacy {
 			if ( 'lookups' === $old ) {
 				continue;
 			}
-			$new = array( 'brands' => 'bizy_departments', 'clients' => 'bizy_clients', 'client_brands' => 'bizy_client_departments', 'client_contacts' => 'bizy_client_contacts', 'team_members' => 'bizy_team_members', 'activity' => 'bizy_activity', 'threads' => 'bizy_threads', 'messages' => 'bizy_messages', 'message_files' => 'bizy_message_files', 'thread_reads' => 'bizy_thread_reads' )[ $old ];
+			$new = array( 'brands' => 'wpflat_departments', 'clients' => 'wpflat_clients', 'client_brands' => 'wpflat_client_departments', 'client_contacts' => 'wpflat_client_contacts', 'team_members' => 'wpflat_team_members', 'activity' => 'wpflat_activity', 'threads' => 'wpflat_threads', 'messages' => 'wpflat_messages', 'message_files' => 'wpflat_message_files', 'thread_reads' => 'wpflat_thread_reads' )[ $old ];
 			$st['report']['tables'][ $old ]['now'] = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( $new ) ); // phpcs:ignore WordPress.DB
 		}
 		$st['core_done'] = true;
 		$st['phase']     = 'done';
 		$st['done_at']   = gmdate( 'Y-m-d H:i:s' );
-		do_action( 'bizycore_legacy_core_imported', $st );
+		do_action( 'wpflatcore_legacy_core_imported', $st );
 		return $st;
 	}
 
@@ -626,24 +626,24 @@ class Legacy {
 	public static function run_module( $module, $again = false ) {
 		$st = self::state();
 		if ( empty( $st['core_done'] ) ) {
-			return new \WP_Error( 'bizycore_core_first', 'Import the core data first.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_core_first', 'Import the core data first.', array( 'status' => 400 ) );
 		}
-		if ( ! Registry::enabled( $module ) || ! has_filter( 'bizycore_legacy_import_' . $module ) ) {
-			return new \WP_Error( 'bizycore_module_missing', 'That module is not installed (or cannot import yet). Install it, then try again.', array( 'status' => 400 ) );
+		if ( ! Registry::enabled( $module ) || ! has_filter( 'wpflatcore_legacy_import_' . $module ) ) {
+			return new \WP_Error( 'wpflatcore_module_missing', 'That module is not installed (or cannot import yet). Install it, then try again.', array( 'status' => 400 ) );
 		}
 		if ( ! $again && ! empty( $st['modules'][ $module ]['done'] ) ) {
 			return $st['modules'][ $module ]['report'];
 		}
 		$reader = self::reader();
 		if ( ! $reader ) {
-			return new \WP_Error( 'bizycore_none', 'The backup is no longer available.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_none', 'The backup is no longer available.', array( 'status' => 400 ) );
 		}
-		$report = apply_filters( 'bizycore_legacy_import_' . $module, null, $reader, __CLASS__ );
+		$report = apply_filters( 'wpflatcore_legacy_import_' . $module, null, $reader, __CLASS__ );
 		if ( is_wp_error( $report ) ) {
 			return $report;
 		}
 		if ( ! is_array( $report ) ) {
-			return new \WP_Error( 'bizycore_module_silent', 'The module did not report anything; nothing was marked as imported.', array( 'status' => 500 ) );
+			return new \WP_Error( 'wpflatcore_module_silent', 'The module did not report anything; nothing was marked as imported.', array( 'status' => 500 ) );
 		}
 		$st                       = self::state();
 		$st['modules'][ $module ] = array( 'done' => true, 'report' => $report, 'at' => gmdate( 'Y-m-d H:i:s' ) );
@@ -654,15 +654,15 @@ class Legacy {
 	/* ───────────────────────── People ───────────────────────── */
 
 	/**
-	 * Give the people who had BizyDash roles the matching Bizy roles and carry over their client links and
+	 * Give the people who had BizyDash roles the matching WPFlat roles and carry over their client links and
 	 * preferences. The old roles stay, so the old plugin keeps working until it is switched off. $only limits it to
 	 * some user ids.
 	 */
 	public static function migrate_users( array $only = array() ) {
 		global $wpdb;
 		$done = 0;
-		$meta = array( 'bizydash_client_id' => 'bizycore_client_id', 'bizydash_portal_user' => 'bizycore_portal_user', 'bizydash_portal_org' => 'bizycore_portal_org', 'bizydash_last_login' => 'bizycore_last_login', 'bizydash_portal_invited' => 'bizycore_portal_invited', 'bizydash_theme' => 'bizycore_theme', 'bizydash_notify_prefs' => 'bizycore_notify_prefs', 'bizydash_msg_notify' => 'bizycore_msg_notify' );
-		\BizyCore\Roles::sync();
+		$meta = array( 'bizydash_client_id' => 'wpflatcore_client_id', 'bizydash_portal_user' => 'wpflatcore_portal_user', 'bizydash_portal_org' => 'wpflatcore_portal_org', 'bizydash_last_login' => 'wpflatcore_last_login', 'bizydash_portal_invited' => 'wpflatcore_portal_invited', 'bizydash_theme' => 'wpflatcore_theme', 'bizydash_notify_prefs' => 'wpflatcore_notify_prefs', 'bizydash_msg_notify' => 'wpflatcore_msg_notify' );
+		\WPFlatCore\Roles::sync();
 		foreach ( self::ROLES as $old => $new ) {
 			foreach ( get_users( array( 'role' => $old ) ) as $u ) {
 				if ( $only && ! in_array( (int) $u->ID, $only, true ) ) {
@@ -680,9 +680,9 @@ class Legacy {
 					}
 				}
 				$grants = get_user_meta( $u->ID, 'bizydash_manager_modules', true );
-				if ( is_array( $grants ) && ! get_user_meta( $u->ID, 'bizycore_manager_modules', true ) ) {
+				if ( is_array( $grants ) && ! get_user_meta( $u->ID, 'wpflatcore_manager_modules', true ) ) {
 					$map = array( 'clients' => 'clients', 'messages' => 'messages', 'work' => 'tasks', 'billing' => 'finance', 'finance' => 'finance', 'contracts' => 'sign' );
-					update_user_meta( $u->ID, 'bizycore_manager_modules', array_values( array_unique( array_filter( array_map( function ( $g ) use ( $map ) {
+					update_user_meta( $u->ID, 'wpflatcore_manager_modules', array_values( array_unique( array_filter( array_map( function ( $g ) use ( $map ) {
 						return isset( $map[ $g ] ) ? $map[ $g ] : '';
 					}, $grants ) ) ) ) );
 				}

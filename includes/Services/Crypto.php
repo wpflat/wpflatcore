@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
 class Crypto {
 
 	private static function key() {
-		return hash( 'sha256', wp_salt( 'auth' ) . 'bizycore', true );
+		return hash( 'sha256', wp_salt( 'auth' ) . 'wpflatcore', true );
 	}
 
 	public static function encrypt( $plain ) {

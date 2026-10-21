@@ -144,7 +144,7 @@ export async function copyText( text ) {
 /** Work: plain-word statuses. */
 /** What this business calls its departments, from the owner's chosen words (Settings → Words). */
 export const dept = () => {
-	const bc = window.BizyCore;
+	const bc = window.WPFlatCore;
 	const one = bc ? bc.t( 'department' ) : 'Department';
 	const many = bc ? bc.tp( 'department' ) : 'Departments';
 	return { one, many, lower: one.toLowerCase(), lowerMany: many.toLowerCase() };

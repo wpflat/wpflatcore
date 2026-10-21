@@ -1,23 +1,23 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Backups kept on this site, in a protected folder under uploads (override with BIZYCORE_BACKUP_DIR). */
+/** Backups kept on this site, in a protected folder under uploads (override with WPFLATCORE_BACKUP_DIR). */
 class Local_Store implements Backup_Store {
 
-	const EXT = '.bizy';
+	const EXT = '.wpflat';
 
 	public static function dir() {
-		if ( defined( 'BIZYCORE_BACKUP_DIR' ) && BIZYCORE_BACKUP_DIR ) {
-			$dir = rtrim( BIZYCORE_BACKUP_DIR, '/\\' );
+		if ( defined( 'WPFLATCORE_BACKUP_DIR' ) && WPFLATCORE_BACKUP_DIR ) {
+			$dir = rtrim( WPFLATCORE_BACKUP_DIR, '/\\' );
 			if ( ! is_dir( $dir ) ) {
 				wp_mkdir_p( $dir );
 			}
-			\BizyCore\Paths::ensure( $dir );
+			\WPFlatCore\Paths::ensure( $dir );
 			return $dir;
 		}
-		return \BizyCore\Paths::dir( 'backups' );
+		return \WPFlatCore\Paths::dir( 'backups' );
 	}
 
 	public static function work_root() {

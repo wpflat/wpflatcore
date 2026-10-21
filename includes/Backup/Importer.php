@@ -1,8 +1,8 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
-use BizyCore\Database\Schema;
-use BizyCore\Registry;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Registry;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Importer {
 
-	const LOCK   = 'bizycore_restore_lock';
+	const LOCK   = 'wpflatcore_restore_lock';
 	const BUDGET = 8;
 	const BATCH  = 200;
 
@@ -64,13 +64,13 @@ class Importer {
 		$meta  = $store->find( $id );
 		$path  = $store->path( $id );
 		if ( ! $meta || '' === $path ) {
-			return new \WP_Error( 'bizycore_missing', 'That backup was not found.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_missing', 'That backup was not found.', array( 'status' => 404 ) );
 		}
 		if ( ! Crypto::is_encrypted( $path ) ) {
 			return array( $path, '' );
 		}
 		if ( '' === (string) $password ) {
-			return new \WP_Error( 'bizycore_password_required', 'This backup is password protected. Enter its password.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_password_required', 'This backup is password protected. Enter its password.', array( 'status' => 400 ) );
 		}
 		$tmp = $into ? $into : Local_Store::work_root() . '/an-' . bin2hex( random_bytes( 6 ) ) . '.zip';
 		@set_time_limit( 120 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
@@ -95,14 +95,14 @@ class Importer {
 			foreach ( (array) $m['tables'] as $t => $info ) {
 				if ( ! isset( $entries[ 'data/' . $t . '.ndjson' ] ) || Archive::hash_entry( $zip, 'data/' . $t . '.ndjson' ) !== $info['sha256'] ) {
 					$zip->close();
-					return new \WP_Error( 'bizycore_verify', 'The safety backup could not be verified (' . $t . ').' );
+					return new \WP_Error( 'wpflatcore_verify', 'The safety backup could not be verified (' . $t . ').' );
 				}
 			}
 		}
 		foreach ( (array) $man['files'] as $f ) {
 			if ( ! isset( $entries[ $f['path'] ] ) ) {
 				$zip->close();
-				return new \WP_Error( 'bizycore_verify', 'The safety backup is missing a file (' . $f['path'] . ').' );
+				return new \WP_Error( 'wpflatcore_verify', 'The safety backup is missing a file (' . $f['path'] . ').' );
 			}
 		}
 		$zip->close();
@@ -135,11 +135,11 @@ class Importer {
 		$sv  = (int) ( $man['schema_version'] ?? 0 );
 		$cur = (int) Schema::VERSION;
 		if ( $sv > $cur ) {
-			$compat = array( 'status' => 'blocked', 'message' => 'This backup was made by a newer version of Bizy (database version ' . $sv . ', this site has ' . $cur . '). Update the plugin first, then restore.' );
+			$compat = array( 'status' => 'blocked', 'message' => 'This backup was made by a newer version of WPFlat (database version ' . $sv . ', this site has ' . $cur . '). Update the plugin first, then restore.' );
 		} elseif ( $sv < $cur ) {
-			$compat = array( 'status' => 'migrate', 'message' => 'This backup is from an older version of Bizy. Your data will be upgraded automatically after it is restored.' );
+			$compat = array( 'status' => 'migrate', 'message' => 'This backup is from an older version of WPFlat. Your data will be upgraded automatically after it is restored.' );
 		} else {
-			$compat = array( 'status' => 'ok', 'message' => 'This backup matches your version of Bizy.' );
+			$compat = array( 'status' => 'ok', 'message' => 'This backup matches your version of WPFlat.' );
 		}
 		$modules = array();
 		foreach ( Module_Map::modules() as $id => $m ) {
@@ -227,18 +227,18 @@ class Importer {
 
 	public static function start( $id, $password, array $modules, array $opts ) {
 		if ( self::locked() ) {
-			return new \WP_Error( 'bizycore_busy', 'A restore is already running.', array( 'status' => 409 ) );
+			return new \WP_Error( 'wpflatcore_busy', 'A restore is already running.', array( 'status' => 409 ) );
 		}
 		$report = self::analyze( $id, $password );
 		if ( is_wp_error( $report ) ) {
 			return $report;
 		}
 		if ( 'blocked' === $report['compat']['status'] ) {
-			return new \WP_Error( 'bizycore_blocked', $report['compat']['message'], array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_blocked', $report['compat']['message'], array( 'status' => 400 ) );
 		}
 		$modules = array_values( array_unique( array_map( 'strval', $modules ) ) );
 		if ( ! $modules ) {
-			return new \WP_Error( 'bizycore_modules', 'Choose at least one part to restore.', array( 'status' => 400 ) );
+			return new \WP_Error( 'wpflatcore_modules', 'Choose at least one part to restore.', array( 'status' => 400 ) );
 		}
 		$by = array();
 		foreach ( $report['modules'] as $m ) {
@@ -246,7 +246,7 @@ class Importer {
 		}
 		foreach ( $modules as $m ) {
 			if ( ! isset( $by[ $m ] ) || 'missing' === $by[ $m ]['status'] ) {
-				return new \WP_Error( 'bizycore_modules', 'This backup has nothing to restore for “' . $m . '”.', array( 'status' => 400 ) );
+				return new \WP_Error( 'wpflatcore_modules', 'This backup has nothing to restore for “' . $m . '”.', array( 'status' => 400 ) );
 			}
 		}
 		if ( in_array( 'core', $modules, true ) && empty( $opts['allow_orphans'] ) ) {
@@ -257,7 +257,7 @@ class Importer {
 				}
 			}
 			if ( $left ) {
-				return new \WP_Error( 'bizycore_dependents', 'Clients and departments are linked to your ' . implode( ', ', $left ) . ' records. Restore those together with them, or the links would break.', array( 'status' => 400, 'dependents' => $left ) );
+				return new \WP_Error( 'wpflatcore_dependents', 'Clients and departments are linked to your ' . implode( ', ', $left ) . ' records. Restore those together with them, or the links would break.', array( 'status' => 400, 'dependents' => $left ) );
 			}
 		}
 		$tables = array();
@@ -395,7 +395,7 @@ class Importer {
 	public static function step( $id, $password = '' ) {
 		$job = self::load( $id );
 		if ( ! $job ) {
-			return new \WP_Error( 'bizycore_job', 'That restore job is no longer there.', array( 'status' => 404 ) );
+			return new \WP_Error( 'wpflatcore_job', 'That restore job is no longer there.', array( 'status' => 404 ) );
 		}
 		if ( in_array( $job['phase'], array( 'done', 'failed' ), true ) ) {
 			return self::state( $job );
@@ -409,7 +409,7 @@ class Importer {
 		try {
 			do {
 				$phase = $job['phase'];
-				if ( defined( 'BIZYCORE_BACKUP_FAIL_AT' ) && BIZYCORE_BACKUP_FAIL_AT === 'restore_' . $phase ) {
+				if ( defined( 'WPFLATCORE_BACKUP_FAIL_AT' ) && WPFLATCORE_BACKUP_FAIL_AT === 'restore_' . $phase ) {
 					throw new \RuntimeException( 'Injected failure before ' . $phase );
 				}
 				$job = self::run_phase( $job, $password, $deadline );
@@ -553,9 +553,9 @@ class Importer {
 				if ( ! in_array( $kinds[ $fm[1] ], $job['modules'], true ) ) {
 					continue;
 				}
-				$dest = \BizyCore\Paths::dir( $fm[1] ) . '/' . $fm[2];
+				$dest = \WPFlatCore\Paths::dir( $fm[1] ) . '/' . $fm[2];
 			} elseif ( 0 === strpos( $path, 'files/public/' ) ) {
-				$dest = \BizyCore\Media::dir() . '/' . substr( $path, strlen( 'files/public/' ) );
+				$dest = \WPFlatCore\Media::dir() . '/' . substr( $path, strlen( 'files/public/' ) );
 			} else {
 				continue;
 			}
@@ -608,14 +608,14 @@ class Importer {
 		if ( '' === $rel ) {
 			$new = 'attachment' === get_post_type( $aid ) ? $aid : 0;
 		} elseif ( 0 === strpos( $rel, 'bd:' ) || 0 === strpos( $rel, 'up:' ) ) {
-			// A file saved in bizy-files/public: keep the id when this site already has that very file, otherwise register it.
+			// A file saved in wpflat-files/public: keep the id when this site already has that very file, otherwise register it.
 			$name  = substr( $rel, 3 );
-			$found = (int) $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key=%s AND meta_value=%s LIMIT 1", \BizyCore\Media::META, $name ) ); // phpcs:ignore WordPress.DB
+			$found = (int) $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key=%s AND meta_value=%s LIMIT 1", \WPFlatCore\Media::META, $name ) ); // phpcs:ignore WordPress.DB
 			if ( $found ) {
 				$new = $found;
-			} elseif ( is_file( \BizyCore\Media::dir() . '/' . $name ) ) {
+			} elseif ( is_file( \WPFlatCore\Media::dir() . '/' . $name ) ) {
 				$mime = wp_check_filetype( $name )['type'];
-				$id   = \BizyCore\Media::register( $name, preg_replace( '/^[a-f0-9]{12}-/', '', $name ), $mime ? $mime : 'application/octet-stream' );
+				$id   = \WPFlatCore\Media::register( $name, preg_replace( '/^[a-f0-9]{12}-/', '', $name ), $mime ? $mime : 'application/octet-stream' );
 				if ( ! is_wp_error( $id ) ) {
 					$new                   = (int) $id;
 					$job['created_atts'][] = $new;
@@ -783,13 +783,13 @@ class Importer {
 			$job['vstage'] = 'modules';
 		}
 		if ( 'modules' === $job['vstage'] ) {
-			// Modules may check what they are about to receive (BizySign verifies the signing audit trail). A module
+			// Modules may check what they are about to receive (WPFlat Sign verifies the signing audit trail). A module
 			// stops the restore by throwing a RuntimeException; nothing live has been touched yet.
 			$names = array();
 			foreach ( $job['tables'] as $t ) {
 				$names[ $t ] = self::tmp( $t );
 			}
-			do_action( 'bizycore_restore_validate', $job['tables'], $names );
+			do_action( 'wpflatcore_restore_validate', $job['tables'], $names );
 			$job['phase'] = 'swap';
 		}
 		return $job;
@@ -841,8 +841,8 @@ class Importer {
 				$opt = is_array( $opt ) ? $opt : array();
 			}
 			$mods = $job['modules'];
-			if ( isset( $opt['bizycore_settings'] ) && is_array( $opt['bizycore_settings'] ) ) {
-				$live  = get_option( 'bizycore_settings', array() );
+			if ( isset( $opt['wpflatcore_settings'] ) && is_array( $opt['wpflatcore_settings'] ) ) {
+				$live  = get_option( 'wpflatcore_settings', array() );
 				$live  = is_array( $live ) ? $live : array();
 				$owned = array();
 				foreach ( array_keys( Registry::all() ) as $rm ) {
@@ -850,7 +850,7 @@ class Importer {
 				}
 				$keep  = array( 'app_slug', 'app_home', 'home_module', 'app_login', 'app_frontend', 'app_fullscreen', 'app_keep_staff', 'delete_on_uninstall', 'delete_backups_on_uninstall' );
 				$next  = $live;
-				foreach ( $opt['bizycore_settings'] as $k => $v ) {
+				foreach ( $opt['wpflatcore_settings'] as $k => $v ) {
 					$owner = 'core';
 					foreach ( $owned as $m => $keys ) {
 						if ( in_array( $k, $keys, true ) ) {
@@ -869,27 +869,27 @@ class Importer {
 						}
 					}
 				}
-				update_option( 'bizycore_settings', $next );
+				update_option( 'wpflatcore_settings', $next );
 			}
-			if ( in_array( 'core', $mods, true ) && isset( $opt['bizycore_mail'] ) && is_array( $opt['bizycore_mail'] ) ) {
-				$cur              = get_option( 'bizycore_mail', array() );
-				$mail             = $opt['bizycore_mail'];
+			if ( in_array( 'core', $mods, true ) && isset( $opt['wpflatcore_mail'] ) && is_array( $opt['wpflatcore_mail'] ) ) {
+				$cur              = get_option( 'wpflatcore_mail', array() );
+				$mail             = $opt['wpflatcore_mail'];
 				$mail['smtp_pass_enc'] = is_array( $cur ) && isset( $cur['smtp_pass_enc'] ) ? $cur['smtp_pass_enc'] : '';
-				update_option( 'bizycore_mail', $mail );
+				update_option( 'wpflatcore_mail', $mail );
 				if ( 'smtp' === ( $mail['method'] ?? '' ) && empty( $job['same_site'] ) ) {
 					$warn[] = 'Email is set to send through SMTP. Enter the SMTP password again in Settings → Email.';
 				}
 			}
 			if ( ! empty( $job['opts']['apply_modules'] ) ) {
-				foreach ( array( 'bizycore_modules_off' ) as $k ) {
+				foreach ( array( 'wpflatcore_modules_off' ) as $k ) {
 					if ( isset( $opt[ $k ] ) ) {
 						update_option( $k, $opt[ $k ] );
 					}
 				}
 			}
-			if ( in_array( 'core', $mods, true ) && isset( $opt['bizycore_terms'] ) ) {
-				update_option( 'bizycore_terms', $opt['bizycore_terms'], false );
-				\BizyCore\Terminology::reset_cache();
+			if ( in_array( 'core', $mods, true ) && isset( $opt['wpflatcore_terms'] ) ) {
+				update_option( 'wpflatcore_terms', $opt['wpflatcore_terms'], false );
+				\WPFlatCore\Terminology::reset_cache();
 			}
 			// Each restored module's own options come back with it; counters and the like are adjusted by the module.
 			$opt_owner = Module_Map::options();
@@ -898,16 +898,16 @@ class Importer {
 					update_option( $name, $value );
 				}
 			}
-			do_action( 'bizycore_restore_post', $mods, $opt, isset( $live ) ? $live : array() );
+			do_action( 'wpflatcore_restore_post', $mods, $opt, isset( $live ) ? $live : array() );
 			if ( ! empty( $job['backup_schema'] ) && (int) $job['backup_schema'] < (int) Schema::VERSION ) {
-				update_option( \BizyCore\Install::OPTION, '0' ); // an older backup: bring its tables up to date
-				\BizyCore\Install::maybe_upgrade();
+				update_option( \WPFlatCore\Install::OPTION, '0' ); // an older backup: bring its tables up to date
+				\WPFlatCore\Install::maybe_upgrade();
 			}
 			if ( in_array( 'core', $mods, true ) ) {
-				\BizyCore\Lookups::seed();
+				\WPFlatCore\Lookups::seed();
 			}
-			delete_option( \BizyCore\Roles::HASH_OPT );
-			\BizyCore\Roles::sync();
+			delete_option( \WPFlatCore\Roles::HASH_OPT );
+			\WPFlatCore\Roles::sync();
 			wp_cache_flush();
 		} catch ( \Throwable $e ) {
 			$warn[] = 'The data was restored, but finishing the settings failed: ' . $e->getMessage();
@@ -927,14 +927,14 @@ class Importer {
 		if ( $bad ) {
 			$warn[] = 'After restoring, the row counts of ' . implode( ', ', $bad ) . ' differ from the backup. Use “Undo” to go back.';
 		}
-		// Modules report on what they now hold (BizySign: signed contracts that still verify) and may add warnings.
-		foreach ( (array) apply_filters( 'bizycore_restore_integrity', array(), $mods ) as $w ) {
+		// Modules report on what they now hold (WPFlat Sign: signed contracts that still verify) and may add warnings.
+		foreach ( (array) apply_filters( 'wpflatcore_restore_integrity', array(), $mods ) as $w ) {
 			$warn[] = (string) $w;
 		}
 		$job['warnings'] = array_values( array_unique( array_merge( $job['warnings'], $warn ) ) );
 		$job['result']   = array( 'restored' => $summary, 'modules' => $mods, 'safety_id' => $job['safety_id'], 'identical' => array_keys( array_filter( wp_list_pluck( $job['stats'], 'identical' ) ) ) );
 		$job['phase']    = 'done';
-		delete_option( 'bizycore_fresh_install' );
+		delete_option( 'wpflatcore_fresh_install' );
 		self::finish( $job );
 		return $job;
 	}
@@ -966,7 +966,7 @@ class Importer {
 		}
 		self::unlock();
 		Backup_Manager::rmdir( self::dir( $job['id'] ) );
-		return new \WP_Error( 'bizycore_restore_failed', $msg . ( empty( $job['swapped'] ) ? ' Your existing data was not changed.' : '' ), array( 'status' => 500 ) );
+		return new \WP_Error( 'wpflatcore_restore_failed', $msg . ( empty( $job['swapped'] ) ? ' Your existing data was not changed.' : '' ), array( 'status' => 500 ) );
 	}
 
 	public static function cancel( $id ) {
@@ -976,7 +976,7 @@ class Importer {
 			return true;
 		}
 		if ( ! empty( $job['swapped'] ) ) {
-			return new \WP_Error( 'bizycore_late', 'It is too late to cancel; the restore has already been applied.', array( 'status' => 409 ) );
+			return new \WP_Error( 'wpflatcore_late', 'It is too late to cancel; the restore has already been applied.', array( 'status' => 409 ) );
 		}
 		self::abort( $job, 'Cancelled.' );
 		return true;

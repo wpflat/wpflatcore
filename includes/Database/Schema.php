@@ -1,15 +1,15 @@
 <?php
-namespace BizyCore\Database;
+namespace WPFlatCore\Database;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Core's tables. Table names are written in full without the WordPress prefix: bizy_clients, bizy_departments… */
+/** Core's tables. Table names are written in full without the WordPress prefix: wpflat_clients, wpflat_departments… */
 class Schema {
 
 	/** Bump when the SQL below changes. */
 	const VERSION = '3';
 
-	/** Full table name for a name that already starts with its plugin prefix (bizy_, bizytasks_, bizyfinance_…). */
+	/** Full table name for a name that already starts with its plugin prefix (wpflat_, wpflattasks_, wpflatfinance_…). */
 	public static function table( $name ) {
 		global $wpdb;
 		return $wpdb->prefix . $name;
@@ -21,7 +21,7 @@ class Schema {
 		$charset = $wpdb->get_charset_collate();
 		$t       = array();
 		foreach ( array( 'departments', 'groups', 'group_members', 'group_roles', 'clients', 'client_departments', 'client_contacts', 'team_members', 'activity', 'lookups', 'threads', 'messages', 'message_files', 'thread_reads', 'notifications' ) as $n ) {
-			$t[ $n ] = self::table( 'bizy_' . $n );
+			$t[ $n ] = self::table( 'wpflat_' . $n );
 		}
 
 		$sql   = array();
@@ -117,7 +117,7 @@ class Schema {
   KEY email (email)
 ) $charset;";
 
-		// Pay, salary and bank details are not here: BizyFinance keeps them in its own table, linked by team_member_id.
+		// Pay, salary and bank details are not here: WPFlat Finance keeps them in its own table, linked by team_member_id.
 		$sql[] = "CREATE TABLE {$t['team_members']} (
   id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(190) NOT NULL DEFAULT '',

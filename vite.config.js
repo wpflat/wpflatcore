@@ -12,10 +12,10 @@ export default defineConfig( {
 		chunkSizeWarningLimit: 2000,
 		lib: {
 			entry: 'main.js',
-			name: 'BizyCore',
+			name: 'WPFlatCore',
 			formats: [ 'iife' ],
-			fileName: () => 'bizycore.js',
-			cssFileName: 'bizycore',
+			fileName: () => 'wpflatcore.js',
+			cssFileName: 'wpflatcore',
 		},
 	},
 } );

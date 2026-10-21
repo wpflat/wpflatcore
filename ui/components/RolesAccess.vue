@@ -5,8 +5,8 @@ import { api, errorMessage } from '../api';
 import Badge from './Badge.vue';
 import { sdk } from '../sdkInstance';
 
-const coreCaps = () => ( { manage_bizycore: 'Sign in', bizycore_clients: sdk.fmt( 'Edit {clients}' ), bizycore_team: sdk.fmt( 'Edit {team}' ), bizycore_messages: sdk.fmt( '{Client} messages' ), bizycore_admin: 'Settings & backups', bizycore_portal: sdk.fmt( '{Client} portal' ) } );
-/** Core's capabilities have plain names; a module's capability reads as its own word (bizytasks_work -> Work). */
+const coreCaps = () => ( { manage_wpflatcore: 'Sign in', wpflatcore_clients: sdk.fmt( 'Edit {clients}' ), wpflatcore_team: sdk.fmt( 'Edit {team}' ), wpflatcore_messages: sdk.fmt( '{Client} messages' ), wpflatcore_admin: 'Settings & backups', wpflatcore_portal: sdk.fmt( '{Client} portal' ) } );
+/** Core's capabilities have plain names; a module's capability reads as its own word (wpflattasks_work -> Work). */
 const capLabel = ( c ) => coreCaps()[ c ] || String( c ).replace( /^[a-z]+_/, '' ).replace( /_/g, ' ' ).replace( /^./, ( x ) => x.toUpperCase() );
 
 const data = ref( null );
@@ -63,7 +63,7 @@ onMounted( load );
 		<template v-if="data">
 			<el-card shadow="never" class="bd-mb">
 				<template #header><div class="bd-widget__head"><span>{{ $fmt( '{Client} logins' ) }}</span></div></template>
-				<p class="bd-muted bd-small">{{ $fmt( 'Every {client} can have contact people. Each contact who has an email gets a WordPress login with the' ) }} <strong>Bizy User</strong> {{ $fmt( 'role, linked to their {client} record, ready for the portal. Nobody is emailed and no password is shared. The people on a {client}\'s contacts are the logins for that {client}.' ) }}</p>
+				<p class="bd-muted bd-small">{{ $fmt( 'Every {client} can have contact people. Each contact who has an email gets a WordPress login with the' ) }} <strong>WPFlat User</strong> {{ $fmt( 'role, linked to their {client} record, ready for the portal. Nobody is emailed and no password is shared. The people on a {client}\'s contacts are the logins for that {client}.' ) }}</p>
 				<div class="bd-mt"><el-switch :model-value="data.auto" :active-text="$fmt( 'Create a login automatically when I add a {client} or contact' )" @update:model-value="toggleAuto" /></div>
 				<div class="bd-mt bd-small">
 					<Badge tone="info">{{ data.stats.portal_users }} {{ ( data.stats.portal_users === 1 ? sdk.t( 'client' ) : sdk.tp( 'client' ) ).toLowerCase() }} login{{ data.stats.portal_users === 1 ? '' : 's' }}</Badge>
@@ -78,7 +78,7 @@ onMounted( load );
 
 			<el-card shadow="never">
 				<template #header><div class="bd-widget__head"><span>Roles</span></div></template>
-				<p class="bd-muted bd-small">Give people a role from their profile in Team. These are standard WordPress roles, so you can fine-tune what each one may do with any role editor plugin; Bizy re-adds anything missing on update but never removes what you add.</p>
+				<p class="bd-muted bd-small">Give people a role from their profile in Team. These are standard WordPress roles, so you can fine-tune what each one may do with any role editor plugin; WPFlat re-adds anything missing on update but never removes what you add.</p>
 				<el-table :data="data.roles" size="small">
 					<el-table-column label="Role" min-width="180"><template #default="{ row }"><div class="bd-strong">{{ row.label }}</div><div class="bd-muted bd-small">{{ row.desc }}</div></template></el-table-column>
 					<el-table-column label="Can" min-width="260"><template #default="{ row }"><Badge v-for="c in row.caps" :key="c" tone="neutral" style="margin: 0 4px 4px 0">{{ capLabel( c ) }}</Badge></template></el-table-column>

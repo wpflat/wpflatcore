@@ -1,19 +1,19 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Settings;
+use WPFlatCore\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The one look every Bizy email has: your logo (or name) on top, a clean card, buttons in your brand colour and a footer with your
+ * The one look every WPFlat email has: your logo (or name) on top, a clean card, buttons in your brand colour and a footer with your
  * business details. Mailer::send() applies it to every email, so modules just write the words. Body HTML is plain paragraphs; a paragraph
  * that holds only a link becomes a button.
  */
 class Email_Template {
 
 	/** Present in a finished email so it is never wrapped twice. */
-	const MARK = '<!--bizy-branded-->';
+	const MARK = '<!--wpflat-branded-->';
 
 	const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 

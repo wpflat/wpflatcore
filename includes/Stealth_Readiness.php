@@ -1,26 +1,26 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * "Will this hosting cope?" A set of small, non-destructive tests run BEFORE anything risky can be switched on. Each
  * test says pass / warn / fail / info, and which layers a failure blocks:
- *   files    the Bizy files folder and moving files into it
+ *   files    the WPFlat files folder and moving files into it
  *   stealth  the PHP layer that hides WordPress's entry points
  *   rules    the .htaccess server rules
  * The result and the owner's acknowledgement are stored; the server refuses to enable a layer without both.
  */
 class Stealth_Readiness {
 
-	const OPTION   = 'bizycore_stealth_ready';
+	const OPTION   = 'wpflatcore_stealth_ready';
 	const VALID_FOR = DAY_IN_SECONDS;
 
 	public static function steps() {
 		return array(
 			'server'    => 'Server and PHP',
 			'files'     => 'Files folder',
-			'addresses' => 'Bizy addresses',
+			'addresses' => 'WPFlat addresses',
 			'probe'     => 'Folder protection',
 			'rules'     => 'Server rules',
 			'loopback'  => 'The site calling itself',
@@ -163,9 +163,9 @@ class Stealth_Readiness {
 		$ok = false;
 		if ( wp_mkdir_p( $root . '/private' ) ) {
 			$f = $root . '/private/zz-test-' . bin2hex( random_bytes( 4 ) );
-			$ok = false !== file_put_contents( $f, 'bizycore' ) && 'bizycore' === file_get_contents( $f ) && unlink( $f ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			$ok = false !== file_put_contents( $f, 'wpflatcore' ) && 'wpflatcore' === file_get_contents( $f ) && unlink( $f ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		}
-		$out[] = self::item( 'Create, write, read and delete a file in wp-content/bizy-files', $ok ? 'pass' : 'fail', $root, $ok ? '' : 'The folder cannot be created or written. Check permissions on wp-content.', array( 'files' ) );
+		$out[] = self::item( 'Create, write, read and delete a file in wp-content/wpflat-files', $ok ? 'pass' : 'fail', $root, $ok ? '' : 'The folder cannot be created or written. Check permissions on wp-content.', array( 'files' ) );
 		$free = @disk_free_space( WP_CONTENT_DIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 		$out[] = self::item( 'Free disk space', false === $free || $free > 200 * MB_IN_BYTES ? 'pass' : ( $free > 30 * MB_IN_BYTES ? 'warn' : 'fail' ), false === $free ? 'Could not be read.' : size_format( (int) $free ) . ' free', 'Free some space; backups and files need room.', array( 'files' ) );
 		$out[] = self::item( 'Outside the web root (advanced)', $t['outside']['writable'] ? 'info' : 'info', $t['outside']['writable'] ? 'Possible here, but a host update, restore or migration may remove a folder beside WordPress. wp-content is the safer home.' : 'Not possible on this host (the folder beside WordPress is not writable). That is fine: wp-content is recommended anyway.' );
@@ -174,19 +174,19 @@ class Stealth_Readiness {
 
 	private static function t_addresses() {
 		$out = array();
-		$css = self::get( Assets::url( 'bizycore.css' ) );
+		$css = self::get( Assets::url( 'wpflatcore.css' ) );
 		$ok  = ! is_wp_error( $css ) && 200 === (int) wp_remote_retrieve_response_code( $css ) && false !== stripos( (string) wp_remote_retrieve_header( $css, 'content-type' ), 'css' );
-		$out[] = self::item( 'App files load from /bd/a/…', $ok ? 'pass' : 'fail', is_wp_error( $css ) ? $css->get_error_message() : 'Answered ' . wp_remote_retrieve_response_code( $css ), 'Bizy addresses need pretty permalinks (Settings → Permalinks, anything but “Plain”) and a working rewrite setup.', array( 'stealth', 'rules' ) );
+		$out[] = self::item( 'App files load from /bd/a/…', $ok ? 'pass' : 'fail', is_wp_error( $css ) ? $css->get_error_message() : 'Answered ' . wp_remote_retrieve_response_code( $css ), 'WPFlat addresses need pretty permalinks (Settings → Permalinks, anything but “Plain”) and a working rewrite setup.', array( 'stealth', 'rules' ) );
 		$name = 'zz-ready-' . bin2hex( random_bytes( 4 ) ) . '.txt';
 		$pub  = Paths::dir( 'public' );
-		file_put_contents( $pub . '/' . $name, 'bizycore-ok' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		file_put_contents( $pub . '/' . $name, 'wpflatcore-ok' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		$r = self::get( Media::url( $name ) );
 		@unlink( $pub . '/' . $name ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions
-		$ok = ! is_wp_error( $r ) && 200 === (int) wp_remote_retrieve_response_code( $r ) && 'bizycore-ok' === trim( (string) wp_remote_retrieve_body( $r ) );
+		$ok = ! is_wp_error( $r ) && 200 === (int) wp_remote_retrieve_response_code( $r ) && 'wpflatcore-ok' === trim( (string) wp_remote_retrieve_body( $r ) );
 		$out[] = self::item( 'Public files load from /bd/f/…', $ok ? 'pass' : 'fail', is_wp_error( $r ) ? $r->get_error_message() : 'Answered ' . wp_remote_retrieve_response_code( $r ), 'Check permalinks and that nothing (a cache or firewall) intercepts /bd/ addresses.', array( 'files', 'stealth', 'rules' ) );
 		$api = self::get( Assets::api_base() . '/zz-nothing' );
 		$ok  = ! is_wp_error( $api ) && false !== stripos( (string) wp_remote_retrieve_header( $api, 'content-type' ), 'json' );
-		$out[] = self::item( 'The Bizy API answers at /bd/api/…', $ok ? 'pass' : 'fail', is_wp_error( $api ) ? $api->get_error_message() : 'Answered ' . wp_remote_retrieve_response_code( $api ), 'Same as above: permalinks and rewrites.', array( 'stealth', 'rules' ) );
+		$out[] = self::item( 'The WPFlat API answers at /bd/api/…', $ok ? 'pass' : 'fail', is_wp_error( $api ) ? $api->get_error_message() : 'Answered ' . wp_remote_retrieve_response_code( $api ), 'Same as above: permalinks and rewrites.', array( 'stealth', 'rules' ) );
 		$out[] = self::item( 'Pretty permalinks', '' !== (string) get_option( 'permalink_structure' ) ? 'pass' : 'warn', get_option( 'permalink_structure' ) ?: 'Plain', 'Settings → Permalinks → choose “Post name”.', array( 'stealth' ) );
 		return $out;
 	}
@@ -216,7 +216,7 @@ class Stealth_Readiness {
 		if ( 0 === $code ) {
 			return array( self::item( 'Is the private folder closed to the web?', 'warn', 'The check could not reach the site.', 'Run it again; if it keeps failing, see “The site calling itself”.', array( 'files' ) ) );
 		}
-		return array( self::item( 'Is the private folder closed to the web?', $leak ? 'fail' : 'pass', $leak ? 'A test file in the private folder was readable from the web.' : 'A test file in the private folder answered ' . $code . ' (not readable).', $leak ? 'Your server ignores .htaccess. Add a rule that denies access to wp-content/bizy-files (Nginx: location ~ ^/wp-content/bizy-files/ { deny all; return 404; }) or ask your host, then run the test again.' : '', array( 'files' ) ) );
+		return array( self::item( 'Is the private folder closed to the web?', $leak ? 'fail' : 'pass', $leak ? 'A test file in the private folder was readable from the web.' : 'A test file in the private folder answered ' . $code . ' (not readable).', $leak ? 'Your server ignores .htaccess. Add a rule that denies access to wp-content/wpflat-files (Nginx: location ~ ^/wp-content/wpflat-files/ { deny all; return 404; }) or ask your host, then run the test again.' : '', array( 'files' ) ) );
 	}
 
 	private static function t_rules() {
@@ -242,14 +242,14 @@ class Stealth_Readiness {
 		};
 		$out  = array();
 		$login = $has( array( 'wordfence', 'better-wp-security', 'ithemes-security-pro', 'solid-security', 'all-in-one-wp-security-and-firewall', 'wps-hide-login', 'two-factor', 'wp-2fa', 'miniorange-2-factor-authentication', 'google-authenticator', 'loginizer', 'limit-login-attempts-reloaded' ) );
-		$out[] = $login ? self::item( 'Login / security plugins found: ' . implode( ', ', $login ), 'warn', 'These work on the WordPress sign-in page. Bizy’s own sign-in still runs WordPress’s checks (passwords, lockouts), but two-factor prompts and hide-login features will not appear on the app or portal pages.', 'Use one hiding method, not two. Test signing in on /app/ after enabling.', array( 'stealth' ) ) : self::item( 'Login / security plugins', 'pass', 'None found.' );
+		$out[] = $login ? self::item( 'Login / security plugins found: ' . implode( ', ', $login ), 'warn', 'These work on the WordPress sign-in page. WPFlat’s own sign-in still runs WordPress’s checks (passwords, lockouts), but two-factor prompts and hide-login features will not appear on the app or portal pages.', 'Use one hiding method, not two. Test signing in on /app/ after enabling.', array( 'stealth' ) ) : self::item( 'Login / security plugins', 'pass', 'None found.' );
 		$rest = $has( array( 'contact-form-7', 'fluentform', 'fluent-forms', 'woocommerce', 'jetpack', 'elementor', 'wpforms-lite', 'wpforms', 'gravityforms', 'newsletter', 'mailchimp-for-wp' ) );
-		$out[] = $rest ? self::item( 'Plugins that may need the public API: ' . implode( ', ', $rest ), 'warn', 'Stealth hides the WordPress API from visitors who are not signed in. Forms and shop features on public pages call it.', 'Add the plugin’s API name to the allow-list on this screen (for example contact-form-7, fluentform, wc, wc-store). Public pages other than Bizy’s are hidden by stealth anyway.', array( 'stealth' ) ) : self::item( 'Plugins that need the public API', 'pass', 'None found.' );
+		$out[] = $rest ? self::item( 'Plugins that may need the public API: ' . implode( ', ', $rest ), 'warn', 'Stealth hides the WordPress API from visitors who are not signed in. Forms and shop features on public pages call it.', 'Add the plugin’s API name to the allow-list on this screen (for example contact-form-7, fluentform, wc, wc-store). Public pages other than WPFlat’s are hidden by stealth anyway.', array( 'stealth' ) ) : self::item( 'Plugins that need the public API', 'pass', 'None found.' );
 		$cache = $has( array( 'litespeed-cache', 'wp-rocket', 'w3-total-cache', 'wp-super-cache', 'wp-fastest-cache', 'cache-enabler', 'sg-cachepress', 'breeze' ) );
-		$out[] = $cache ? self::item( 'Page cache found: ' . implode( ', ', $cache ), 'info', in_array( 'litespeed-cache', $cache, true ) ? 'Bizy clears the LiteSpeed cache itself when you change these settings.' : 'Clear this plugin’s cache after changing these settings, or hidden pages may still be served from the cache.' ) : self::item( 'Page cache plugins', 'pass', 'None found.' );
+		$out[] = $cache ? self::item( 'Page cache found: ' . implode( ', ', $cache ), 'info', in_array( 'litespeed-cache', $cache, true ) ? 'WPFlat clears the LiteSpeed cache itself when you change these settings.' : 'Clear this plugin’s cache after changing these settings, or hidden pages may still be served from the cache.' ) : self::item( 'Page cache plugins', 'pass', 'None found.' );
 		$dropins = array_intersect( array( 'object-cache.php', 'advanced-cache.php' ), array_map( 'basename', glob( WP_CONTENT_DIR . '/*.php' ) ?: array() ) );
 		if ( $dropins ) {
-			$out[] = self::item( 'Cache drop-ins: ' . implode( ', ', $dropins ), 'info', 'Normal. They can serve pages before Bizy runs, which is why the cache is cleared on every change.' );
+			$out[] = self::item( 'Cache drop-ins: ' . implode( ', ', $dropins ), 'info', 'Normal. They can serve pages before WPFlat runs, which is why the cache is cleared on every change.' );
 		}
 		return $out;
 	}

@@ -1,7 +1,7 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
-use BizyCore\Services\Messages;
+use WPFlatCore\Services\Messages;
 
 defined( 'ABSPATH' ) || exit;
 

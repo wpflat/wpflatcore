@@ -1,9 +1,9 @@
 {
-  "name": "bizycore",
-  "version": "0.5.0",
+  "name": "wpflatcore",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
-  "description": "The foundation of the Bizy suite: clients and contacts, team, departments, groups, roles, settings, activity, notifications, messages, the client portal, backup and restore, stealth mode, the app shell and the module registry that the other Bizy plugins plug into.",
+  "description": "The foundation of the WPFlat suite: clients and contacts, team, departments, groups, roles, settings, activity, notifications, messages, the client portal, backup and restore, stealth mode, the app shell and the module registry that the other WPFlat plugins plug into.",
   "scripts": {
     "build": "vite build"
   },

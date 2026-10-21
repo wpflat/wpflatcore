@@ -1,18 +1,18 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Database\Schema;
+use WPFlatCore\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Groups of clients (classes, cohorts, houses… — the word is renamable). Modules use groups to decide who may see
- * something: BizyFiles gives a folder to a group, and every client in it can open it.
+ * something: WPFlat Files gives a folder to a group, and every client in it can open it.
  */
 class Groups {
 
 	public static function t() {
-		return Schema::table( 'bizy_group_members' );
+		return Schema::table( 'wpflat_group_members' );
 	}
 
 	/** Group ids a client belongs to. */
@@ -47,11 +47,11 @@ class Groups {
 			$wpdb->delete( self::t(), array( 'group_id' => $gid, 'client_id' => $client_id ) );
 		}
 		foreach ( array_diff( $want, $have ) as $gid ) {
-			if ( $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'bizy_groups' ) . ' WHERE id=%d', $gid ) ) ) { // phpcs:ignore WordPress.DB
+			if ( $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'wpflat_groups' ) . ' WHERE id=%d', $gid ) ) ) { // phpcs:ignore WordPress.DB
 				$wpdb->insert( self::t(), array( 'group_id' => $gid, 'client_id' => $client_id, 'created_at' => current_time( 'mysql' ) ) );
 			}
 		}
-		do_action( 'bizycore_groups_changed', 'client', $client_id );
+		do_action( 'wpflatcore_groups_changed', 'client', $client_id );
 	}
 
 	/** Make a group's members exactly this list of client ids. */
@@ -64,11 +64,11 @@ class Groups {
 			$wpdb->delete( self::t(), array( 'group_id' => $group_id, 'client_id' => $cid ) );
 		}
 		foreach ( array_diff( $want, $have ) as $cid ) {
-			if ( $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'bizy_clients' ) . ' WHERE id=%d', $cid ) ) ) { // phpcs:ignore WordPress.DB
+			if ( $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'wpflat_clients' ) . ' WHERE id=%d', $cid ) ) ) { // phpcs:ignore WordPress.DB
 				$wpdb->insert( self::t(), array( 'group_id' => $group_id, 'client_id' => $cid, 'created_at' => current_time( 'mysql' ) ) );
 			}
 		}
-		do_action( 'bizycore_groups_changed', 'group', $group_id );
+		do_action( 'wpflatcore_groups_changed', 'group', $group_id );
 	}
 
 	public static function add_members( $group_id, array $client_ids ) {
@@ -88,7 +88,7 @@ class Groups {
 	/* ───────────────────────── Roles (WordPress roles tied to a group) ───────────────────────── */
 
 	public static function rt() {
-		return Schema::table( 'bizy_group_roles' );
+		return Schema::table( 'wpflat_group_roles' );
 	}
 
 	/** Role slugs linked to a group. */
@@ -122,7 +122,7 @@ class Groups {
 		foreach ( array_diff( $want, $have ) as $r ) {
 			$wpdb->insert( self::rt(), array( 'group_id' => $group_id, 'role_slug' => $r ) );
 		}
-		do_action( 'bizycore_groups_changed', 'roles', $group_id );
+		do_action( 'wpflatcore_groups_changed', 'roles', $group_id );
 	}
 
 	/** Group ids a WordPress user is in through the roles they hold right now. */

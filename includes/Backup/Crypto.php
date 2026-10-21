@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -90,7 +90,7 @@ class Crypto {
 		$header = fread( $in, 36 );
 		if ( strlen( $header ) < 36 || self::MAGIC !== substr( $header, 0, 8 ) ) {
 			fclose( $in );
-			return new \WP_Error( 'bd_format', 'This is not a protected Bizy backup.' );
+			return new \WP_Error( 'bd_format', 'This is not a protected WPFlat backup.' );
 		}
 		$iter   = unpack( 'N', substr( $header, 8, 4 ) )[1];
 		$salt   = substr( $header, 12, 16 );

@@ -17,11 +17,11 @@ const left = ref( 0 );
 let timer = null;
 
 const LAYERS = [
-	[ 'hide_login', 'Hide the WordPress sign-in', 'wp-login.php answers “Not Found”. Staff and clients sign in on Bizy’s own pages.' ],
+	[ 'hide_login', 'Hide the WordPress sign-in', 'wp-login.php answers “Not Found”. Staff and clients sign in on WPFlat’s own pages.' ],
 	[ 'hide_admin', 'Hide WordPress admin', 'Only a browser that opened your secret address can reach /wp-admin.' ],
 	[ 'hide_rest', 'Hide the WordPress API', 'Strangers get “Not Found” from /wp-json. Signed-in tools and the allowed names below keep working.' ],
 	[ 'hide_misc', 'Hide feeds, author pages, XML-RPC, sitemaps and WordPress entry files', 'Stops username lookups and automatic scanners.' ],
-	[ 'only_allowlist', 'Everything else is a plain 404', 'Only the app, portal, signing and invoice links, and Bizy’s own files answer. The home address opens the app.' ],
+	[ 'only_allowlist', 'Everything else is a plain 404', 'Only the app, portal, signing and invoice links, and WPFlat’s own files answer. The home address opens the app.' ],
 	[ 'strip', 'Remove WordPress fingerprints', 'No generator tags, API links, pingback or “X-Powered-By” headers.' ],
 ];
 
@@ -30,7 +30,7 @@ const SYMPTOMS = [
 	[ 'The app or the portal shows a blank page or an error', 'Switch stealth mode off with a recovery switch below (it takes effect on the next page load). Then run the hosting test again and read the warnings: a plugin or a cache is usually involved.' ],
 	[ 'Logos, receipts or images are missing', 'Open Step 3A and check the files folder is “In use”. If you just moved the files, use “Go back to the old location” before deleting the old copies. Images are served from /bd/f/…; if that address answers 404, check Settings → Permalinks is not “Plain”.' ],
 	[ 'A plugin stopped working (a form, a shop, an editor)', 'It probably needs the WordPress API without a sign-in. Add its name to “Tools allowed to use the API” in Step 3B (for example contact-form-7, fluentform, wc). If it uses the WordPress sign-in page (two-factor, hide-login plugins), use only one hiding method.' ],
-	[ 'The whole site shows a “500 Internal Server Error” after the server rules', 'Open .htaccess in the WordPress folder (FTP or the host’s file manager) and delete everything from “# BEGIN Bizy Stealth” to “# END Bizy Stealth”, or replace it with the saved copy .htaccess.bd-backup. Bizy also tries to undo this by itself within seconds.' ],
+	[ 'The whole site shows a “500 Internal Server Error” after the server rules', 'Open .htaccess in the WordPress folder (FTP or the host’s file manager) and delete everything from “# BEGIN WPFlat Stealth” to “# END WPFlat Stealth”, or replace it with the saved copy .htaccess.bd-backup. WPFlat also tries to undo this by itself within seconds.' ],
 	[ 'My host uses Nginx, or the test says .htaccess is ignored', 'The server rules cannot be added automatically. Everything else still works. Ask your host to add the rules shown in Step 3C, or leave that step off.' ],
 	[ 'The files folder is not writable', 'Give the web server write access to the wp-content folder (permission 755 or 775 for the folder and its owner set to the web user), or ask your host, then run the test again. Nothing is moved until the test passes.' ],
 	[ 'I changed host, restored a backup, or cloned the site', 'The files folder lives in wp-content/bd-files, so it travels with wp-content. After any move, run the hosting test again and check Step 3A. Always keep your own backup (Settings → Backup & restore).' ],
@@ -75,7 +75,7 @@ async function downloadCard() {
 		const url = URL.createObjectURL( new Blob( [ r.text ], { type: 'text/plain' } ) );
 		const a = document.createElement( 'a' );
 		a.href = url;
-		a.download = 'bizy-recovery-card.txt';
+		a.download = 'wpflat-recovery-card.txt';
 		a.click();
 		URL.revokeObjectURL( url );
 	} catch ( e ) {
@@ -221,7 +221,7 @@ onBeforeUnmount( () => clearInterval( timer ) );
 		<!-- 1 -->
 		<el-card shadow="never" class="bd-mb">
 			<template #header><div class="bd-widget__head"><span>1 · Read this first</span><Badge :tone="R.ack ? 'success' : 'neutral'">{{ R.ack ? 'Done' : 'Required' }}</Badge></div></template>
-			<p class="bd-muted bd-small">Stealth mode makes the site stop looking like WordPress: WordPress sign-in, admin, API, feeds and core files answer “Not Found”, and nothing in Bizy’s pages points at <code>/wp-content/</code>. Contracts, messages, backups and images move into their own folder. It hides the usual giveaways; it cannot promise to be invisible to someone who studies the site closely.</p>
+			<p class="bd-muted bd-small">Stealth mode makes the site stop looking like WordPress: WordPress sign-in, admin, API, feeds and core files answer “Not Found”, and nothing in WPFlat’s pages points at <code>/wp-content/</code>. Contracts, messages, backups and images move into their own folder. It hides the usual giveaways; it cannot promise to be invisible to someone who studies the site closely.</p>
 			<ol class="bd-small bd-steps2">
 				<li><strong>Take a backup</strong> before you start. <a href="#/settings?tab=backup" @click.prevent="navigate( '/settings?tab=backup' )">Open Backup &amp; restore</a></li>
 				<li><strong>Keep a second browser or private window signed in</strong> while you try things, so you can undo a change from it.</li>
@@ -235,7 +235,7 @@ onBeforeUnmount( () => clearInterval( timer ) );
 		<!-- 2 -->
 		<el-card shadow="never" class="bd-mb">
 			<template #header><div class="bd-widget__head"><span>2 · Test my hosting</span><el-button size="small" type="primary" :loading="testing.on" @click="runTest">{{ R.complete ? 'Run the test again' : 'Run the test' }}</el-button></div></template>
-			<p class="bd-muted bd-small">Checks, without changing anything, whether this hosting can do each stage: the PHP features, whether the files folder can be created and kept private, whether Bizy’s own addresses work, whether the server obeys .htaccess, whether the site can call itself, and which other plugins might be affected. The result stays valid for 24 hours.</p>
+			<p class="bd-muted bd-small">Checks, without changing anything, whether this hosting can do each stage: the PHP features, whether the files folder can be created and kept private, whether WPFlat’s own addresses work, whether the server obeys .htaccess, whether the site can call itself, and which other plugins might be affected. The result stays valid for 24 hours.</p>
 			<div v-if="testing.on" class="bd-mb"><el-progress :percentage="Math.round( 100 * testing.done / Math.max( 1, testing.total ) )" :stroke-width="8" /><div class="bd-muted bd-small">Checking: {{ testing.step }}…</div></div>
 			<div v-if="R.complete" class="bd-mb">
 				<div class="bd-prefrow" v-for="l in [ [ 'files', 'A · Files folder' ], [ 'stealth', 'B · Hide WordPress' ], [ 'rules', 'C · Server rules' ] ]" :key="l[ 0 ]"><span class="bd-prefrow__l">{{ l[ 1 ] }}</span><Badge :tone="VERDICT[ verdict( l[ 0 ] ) ][ 1 ]">{{ VERDICT[ verdict( l[ 0 ] ) ][ 0 ] }}</Badge></div>
@@ -255,7 +255,7 @@ onBeforeUnmount( () => clearInterval( timer ) );
 
 		<el-card shadow="never" class="bd-mb">
 			<template #header><div class="bd-widget__head"><span>A · BD files folder</span><Badge :tone="VERDICT[ verdict( 'files' ) ][ 1 ]">{{ VERDICT[ verdict( 'files' ) ][ 0 ] }}</Badge></div></template>
-			<p class="bd-muted bd-small"><strong>What changes:</strong> contracts, messages, backups and images are copied into <code>wp-content/bd-files</code> and checked, then Bizy switches over. Nothing is deleted until you choose. <strong>Look for:</strong> contract PDFs still download and verify, logos still show. <strong>Undo:</strong> “Go back to the previous location” (until you delete the old copies).</p>
+			<p class="bd-muted bd-small"><strong>What changes:</strong> contracts, messages, backups and images are copied into <code>wp-content/bd-files</code> and checked, then WPFlat switches over. Nothing is deleted until you choose. <strong>Look for:</strong> contract PDFs still download and verify, logos still show. <strong>Undo:</strong> “Go back to the previous location” (until you delete the old copies).</p>
 			<div class="bd-small bd-mb">Now: <code>{{ o.files.root }}</code> <Badge :tone="o.files.mode === 'bd' ? 'success' : 'neutral'">{{ o.files.mode === 'bd' ? 'In use' : 'Not moved yet' }}</Badge> <Badge :tone="o.files.outside_webroot ? 'info' : 'success'">{{ o.files.outside_webroot ? 'Outside the web root' : 'Inside wp-content' }}</Badge></div>
 			<div v-if="o.files.mode !== 'bd'" class="bd-small bd-mb">Waiting to be moved: {{ pending || 'nothing yet' }}.</div>
 			<el-radio-group v-if="!homeNow && !o.files.fixed_by_constant" v-model="target" class="bd-mb" style="display: grid; gap: 8px">
@@ -270,7 +270,7 @@ onBeforeUnmount( () => clearInterval( timer ) );
 
 		<el-card shadow="never" class="bd-mb">
 			<template #header><div class="bd-widget__head"><span>B · Hide WordPress (stealth mode)</span><Badge :tone="o.enabled ? 'success' : VERDICT[ verdict( 'stealth' ) ][ 1 ]">{{ o.enabled ? ( o.confirmed ? 'On' : 'On — waiting for confirmation' ) : VERDICT[ verdict( 'stealth' ) ][ 0 ] }}</Badge></div></template>
-			<p class="bd-muted bd-small"><strong>What changes:</strong> the WordPress entry points answer a plain “Not Found”, and anything Bizy does not own does too. Sign-in happens on the app and portal pages. <strong>Look for:</strong> you can still sign in to the app and the portal, a signed contract link and an invoice link still open, and WordPress admin opens through your secret address. <strong>Undo:</strong> the Turn off button, the 5-minute confirm timer, or a recovery switch.</p>
+			<p class="bd-muted bd-small"><strong>What changes:</strong> the WordPress entry points answer a plain “Not Found”, and anything WPFlat does not own does too. Sign-in happens on the app and portal pages. <strong>Look for:</strong> you can still sign in to the app and the portal, a signed contract link and an invoice link still open, and WordPress admin opens through your secret address. <strong>Undo:</strong> the Turn off button, the 5-minute confirm timer, or a recovery switch.</p>
 			<div class="bd-strong bd-small">Your secret admin address</div>
 			<div style="display: flex; gap: 8px; flex-wrap: wrap; max-width: 640px; margin: 4px 0 8px">
 				<el-input v-model="secretInput" placeholder="at least 8 letters or numbers" style="flex: 1; min-width: 220px"><template #prepend>{{ o.secret_url ? o.secret_url.replace( o.secret, '' ) : '/' }}</template></el-input>

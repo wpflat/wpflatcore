@@ -1,33 +1,33 @@
 <?php
-namespace BizyCore\Backup;
+namespace WPFlatCore\Backup;
 
-use BizyCore\Database\Schema;
+use WPFlatCore\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
 /** Runs backup jobs, keeps the saved list tidy, and owns the automatic-backup settings and schedule. */
 class Backup_Manager {
 
-	const OPTION   = 'bizycore_backup_settings';
-	const ACTIVE   = 'bizycore_backup_active';
-	const AUTO     = 'bizycore_backup_auto';
-	const CONTINUE = 'bizycore_backup_continue';
+	const OPTION   = 'wpflatcore_backup_settings';
+	const ACTIVE   = 'wpflatcore_backup_active';
+	const AUTO     = 'wpflatcore_backup_auto';
+	const CONTINUE = 'wpflatcore_backup_continue';
 	const BUDGET   = 8;
 	const KEEP_PRE = 3;
 
 	public static function init() {
 		add_action( self::AUTO, array( __CLASS__, 'run_auto' ) );
 		add_action( self::CONTINUE, array( __CLASS__, 'continue_auto' ) );
-		add_action( 'bizycore_daily', array( __CLASS__, 'housekeeping' ) );
-		add_filter( 'bizycore_boot', array( __CLASS__, 'boot_flags' ) );
+		add_action( 'wpflatcore_daily', array( __CLASS__, 'housekeeping' ) );
+		add_filter( 'wpflatcore_boot', array( __CLASS__, 'boot_flags' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'guard_public' ), 0 );
 	}
 
 	/** What the browser app needs to show the fresh-install card and a failed-backup warning. */
 	public static function boot_flags( $d ) {
 		global $wpdb;
-		$admin             = \BizyCore\Roles::can_admin();
-		$d['freshInstall'] = $admin && (bool) get_option( 'bizycore_fresh_install' ) && 0 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \BizyCore\Database\Schema::table( 'bizy_clients' ) ); // phpcs:ignore WordPress.DB
+		$admin             = \WPFlatCore\Roles::can_admin();
+		$d['freshInstall'] = $admin && (bool) get_option( 'wpflatcore_fresh_install' ) && 0 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \WPFlatCore\Database\Schema::table( 'wpflat_clients' ) ); // phpcs:ignore WordPress.DB
 		$s                 = self::settings();
 		$d['backupAlert']  = ( $admin && 'failed' === $s['last_status'] ) ? (string) $s['last_error'] : '';
 		return $d;
@@ -131,7 +131,7 @@ class Backup_Manager {
 		// Each module lists the first address segments and query arguments of its public pages (invoice links, signing links…).
 		$segs   = array();
 		$params = array();
-		foreach ( \BizyCore\Registry::all() as $m ) {
+		foreach ( \WPFlatCore\Registry::all() as $m ) {
 			$segs   = array_merge( $segs, (array) $m['public_paths'] );
 			$params = array_merge( $params, (array) $m['public_params'] );
 		}
@@ -178,7 +178,7 @@ class Backup_Manager {
 	/** Rough size of the data + files, for the disk check. */
 	public static function estimate_bytes() {
 		global $wpdb;
-		$like = $wpdb->esc_like( $wpdb->prefix . 'bizycore_' ) . '%';
+		$like = $wpdb->esc_like( $wpdb->prefix . 'wpflatcore_' ) . '%';
 		$data = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(data_length),0) FROM information_schema.TABLES WHERE table_schema = DATABASE() AND table_name LIKE %s', $like ) ); // phpcs:ignore WordPress.DB
 		$sum  = 0;
 		foreach ( Exporter::collect_files() as $f ) {
@@ -304,7 +304,7 @@ class Backup_Manager {
 		if ( 'auto' === $job['type'] ) {
 			self::note_result( true );
 		}
-		do_action( 'bizycore_backup_created', $meta, $store->path( $id ) );
+		do_action( 'wpflatcore_backup_created', $meta, $store->path( $id ) );
 		return $job;
 	}
 
@@ -329,7 +329,7 @@ class Backup_Manager {
 
 	public static function run_auto() {
 		$s = self::settings();
-		if ( 'off' === $s['auto'] || get_option( 'bizycore_restore_lock' ) ) {
+		if ( 'off' === $s['auto'] || get_option( 'wpflatcore_restore_lock' ) ) {
 			return;
 		}
 		$r = self::run_blocking( 'auto', array( 'files' => $s['files'], 'logs' => $s['logs'] ) );
@@ -508,19 +508,19 @@ class Backup_Manager {
 			'cron_disabled' => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
 			'next_auto'     => 'off' === $s['auto'] ? null : wp_next_scheduled( self::AUTO ),
 			'exposed'       => null,
-			'outside_webroot' => \BizyCore\Paths::outside_webroot(),
+			'outside_webroot' => \WPFlatCore\Paths::outside_webroot(),
 			'estimate'      => self::estimate_bytes(),
 		);
 		$url = Local_Store::probe_url();
-		if ( ! $url && \BizyCore\Paths::outside_webroot() ) {
+		if ( ! $url && \WPFlatCore\Paths::outside_webroot() ) {
 			$out['exposed'] = false; // not under the web root at all
 		}
 		if ( $url ) {
-			$cached = get_transient( 'bizycore_backup_probe' );
+			$cached = get_transient( 'wpflatcore_backup_probe' );
 			if ( false === $cached ) {
 				$r      = wp_remote_get( $url, array( 'timeout' => 5, 'sslverify' => false, 'redirection' => 0 ) );
 				$cached = is_wp_error( $r ) ? 'unknown' : ( 200 === (int) wp_remote_retrieve_response_code( $r ) ? 'yes' : 'no' );
-				set_transient( 'bizycore_backup_probe', $cached, 6 * HOUR_IN_SECONDS );
+				set_transient( 'wpflatcore_backup_probe', $cached, 6 * HOUR_IN_SECONDS );
 			}
 			$out['exposed'] = 'yes' === $cached ? true : ( 'no' === $cached ? false : null );
 		}

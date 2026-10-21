@@ -1,10 +1,10 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The Bizy app on the front end: https://site/app/ (the word is configurable).
+ * The WPFlat app on the front end: https://site/app/ (the word is configurable).
  * A theme-less page with no WordPress admin around it — the same app, drawing its own navigation.
  */
 class App_Page {
@@ -30,7 +30,7 @@ class App_Page {
 		return trim( substr( (string) $path, strlen( $home ) ), '/' );
 	}
 
-	/** Parameters other Bizy pages use on the home URL (payslips, certificates…) — never hijack those. */
+	/** Parameters other WPFlat pages use on the home URL (payslips, certificates…) — never hijack those. */
 	private static function foreign_request() {
 		$own = array( 'bd_error', 'bd_msg', 'bd_view', 'bd_sent', 'key', 'login' );
 		foreach ( array_keys( $_GET ) as $k ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -57,7 +57,7 @@ class App_Page {
 				return false;
 			}
 			// A signed-in person who is not on the team (a customer, say) still gets the ordinary home page.
-			return ! is_user_logged_in() || current_user_can( 'manage_bizycore' );
+			return ! is_user_logged_in() || current_user_can( 'manage_wpflatcore' );
 		}
 		return false;
 	}
@@ -69,7 +69,7 @@ class App_Page {
 		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
 			define( 'DONOTCACHEPAGE', true );
 		}
-		do_action( 'litespeed_control_set_nocache', 'bizycore app' );
+		do_action( 'litespeed_control_set_nocache', 'wpflatcore app' );
 		nocache_headers();
 		header( 'X-Robots-Tag: noindex, nofollow' );
 
@@ -81,14 +81,14 @@ class App_Page {
 			wp_safe_redirect( wp_login_url( self::url() ) );
 			exit;
 		}
-		if ( ! current_user_can( 'manage_bizycore' ) ) {
-			wp_die( 'You do not have access to Bizy.', 'Not allowed', array( 'response' => 403 ) );
+		if ( ! current_user_can( 'manage_wpflatcore' ) ) {
+			wp_die( 'You do not have access to WPFlat.', 'Not allowed', array( 'response' => 403 ) );
 		}
 
 		status_header( 200 );
 		header( 'X-Frame-Options: SAMEORIGIN' );
 		header( 'X-Content-Type-Options: nosniff' );
-		// A page of our own: no theme, no WordPress head, and every address is a Bizy one.
+		// A page of our own: no theme, no WordPress head, and every address is a WPFlat one.
 		$boot = wp_json_encode( Shell::boot_data( '/', true ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT );
 		?>
 <!doctype html>
@@ -97,18 +97,18 @@ class App_Page {
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Bizy — <?php echo esc_html( Settings::get( 'business_name' ) ); ?></title>
+<title>WPFlat — <?php echo esc_html( Settings::get( 'business_name' ) ); ?></title>
 <link rel="preload" href="<?php echo esc_url( Assets::font_base() . 'google-sans-latin.woff2' ); ?>" as="font" type="font/woff2" crossorigin>
 <style><?php echo Shell::font_face_css(); // phpcs:ignore WordPress.Security.EscapeOutput ?></style>
-<link rel="stylesheet" href="<?php echo esc_url( Assets::url( 'bizycore.css' ) ); ?>">
+<link rel="stylesheet" href="<?php echo esc_url( Assets::url( 'wpflatcore.css' ) ); ?>">
 <?php foreach ( Registry::assets() as $mod_files ) : if ( ! empty( $mod_files['style'] ) ) : ?>
 <link rel="stylesheet" href="<?php echo esc_url( $mod_files['style'] ); ?>">
 <?php endif; endforeach; ?>
 </head>
-<body class="bizycore-screen bizycore-frontend bizycore-fullscreen">
-<div id="bizycore-root" class="bizycore-root"><p style="padding:24px;font-family:sans-serif">Loading…</p></div>
-<script>window.bizycoreBoot=<?php echo $boot; // phpcs:ignore WordPress.Security.EscapeOutput ?>;</script>
-<script src="<?php echo esc_url( Assets::url( 'bizycore.js' ) ); ?>"></script>
+<body class="wpflatcore-screen wpflatcore-frontend wpflatcore-fullscreen">
+<div id="wpflatcore-root" class="wpflatcore-root"><p style="padding:24px;font-family:sans-serif">Loading…</p></div>
+<script>window.wpflatcoreBoot=<?php echo $boot; // phpcs:ignore WordPress.Security.EscapeOutput ?>;</script>
+<script src="<?php echo esc_url( Assets::url( 'wpflatcore.js' ) ); ?>"></script>
 <?php foreach ( Registry::assets() as $mod_files ) : if ( ! empty( $mod_files['script'] ) ) : ?>
 <script src="<?php echo esc_url( $mod_files['script'] ); ?>"></script>
 <?php endif; endforeach; ?>

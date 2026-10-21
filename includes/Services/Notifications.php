@@ -1,9 +1,9 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Database\Schema;
-use BizyCore\Settings;
-use BizyCore\Urls;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Settings;
+use WPFlatCore\Urls;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -12,11 +12,11 @@ defined( 'ABSPATH' ) || exit;
  * they want. Core owns the engine (delivery, preferences, digests); each module registers the kinds of notification
  * it can raise and listens to its own events:
  *
- *   add_action( 'bizycore_register_notifications', function () {
- *       \BizyCore\Services\Notifications::register( 'client_invoice_sent', array( ... ) );
+ *   add_action( 'wpflatcore_register_notifications', function () {
+ *       \WPFlatCore\Services\Notifications::register( 'client_invoice_sent', array( ... ) );
  *   } );
  *
- * and uses Notifications::emit() when something happens. Daily reminders hook `bizycore_daily`.
+ * and uses Notifications::emit() when something happens. Daily reminders hook `wpflatcore_daily`.
  *
  * Email modes per person and event: instant, a daily digest, or off. Events that already send their own email
  * (an invoice, a contract invitation, a chat message) only create the in-app notification.
@@ -46,11 +46,11 @@ class Notifications {
 
 	/** Who may use the bell: the team and clients with portal access. */
 	public static function can_use() {
-		return is_user_logged_in() && ( current_user_can( 'manage_bizycore' ) || ( current_user_can( 'bizycore_portal' ) && \BizyCore\Portal::enabled() ) );
+		return is_user_logged_in() && ( current_user_can( 'manage_wpflatcore' ) || ( current_user_can( 'wpflatcore_portal' ) && \WPFlatCore\Portal::enabled() ) );
 	}
 
 	private static function t() {
-		return Schema::table( 'bizy_notifications' );
+		return Schema::table( 'wpflat_notifications' );
 	}
 
 	/* ───────────────────────── Preferences ───────────────────────── */
@@ -59,7 +59,7 @@ class Notifications {
 	public static function pref( $user_id, $type ) {
 		$cat = self::catalog();
 		$def = array( 'app' => true, 'email' => isset( $cat[ $type ] ) ? $cat[ $type ][4] : 'off' );
-		$all = get_user_meta( (int) $user_id, 'bizycore_notify_prefs', true );
+		$all = get_user_meta( (int) $user_id, 'wpflatcore_notify_prefs', true );
 		if ( is_array( $all ) && isset( $all[ $type ] ) && is_array( $all[ $type ] ) ) {
 			$p = $all[ $type ];
 			if ( isset( $p['app'] ) ) {
@@ -80,12 +80,12 @@ class Notifications {
 				$out[ $type ] = array( 'app' => ! empty( $p['app'] ), 'email' => in_array( isset( $p['email'] ) ? $p['email'] : '', array( 'instant', 'digest', 'off' ), true ) ? $p['email'] : 'off' );
 			}
 		}
-		update_user_meta( (int) $user_id, 'bizycore_notify_prefs', $out );
+		update_user_meta( (int) $user_id, 'wpflatcore_notify_prefs', $out );
 	}
 
 	/** The events a person can configure, with their current choice. Clients see client events, the team team events. */
 	public static function prefs_for( $user_id ) {
-		$team = user_can( (int) $user_id, 'manage_bizycore' );
+		$team = user_can( (int) $user_id, 'manage_wpflatcore' );
 		$out  = array();
 		foreach ( self::catalog() as $k => $c ) {
 			if ( ( $team ? 'team' : 'client' ) !== $c[1] || ! self::enabled_type( $k ) ) {
@@ -118,7 +118,7 @@ class Notifications {
 			if ( $uid <= 0 || ( $uid === $actor && 'client' !== $cat[1] ) ) {
 				continue; // people are not notified about what they just did themselves
 			}
-			if ( ( 'team' === $cat[1] ) !== (bool) user_can( $uid, 'manage_bizycore' ) ) {
+			if ( ( 'team' === $cat[1] ) !== (bool) user_can( $uid, 'manage_wpflatcore' ) ) {
 				continue; // a team event goes to the team, a client event to client logins
 			}
 			$p = self::pref( $uid, $type );
@@ -181,7 +181,7 @@ class Notifications {
 		}
 		$biz   = (string) Settings::get( 'business_name' );
 		$biz   = $biz ? $biz : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
-		$team  = user_can( $u, 'manage_bizycore' );
+		$team  = user_can( $u, 'manage_wpflatcore' );
 		$prefs = $team ? Urls::app( '/notifications' ) : Urls::portal( 'notifications' );
 		$open  = function ( $r ) use ( $team ) {
 			return self::absolute_link( $r['link'], $team );
@@ -238,7 +238,7 @@ class Notifications {
 		if ( $before ) {
 			$where .= $wpdb->prepare( ' AND n.id < %d', $before ); // phpcs:ignore WordPress.DB
 		}
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT n.*, c.name AS client_name FROM ' . self::t() . ' n LEFT JOIN ' . Schema::table( 'bizy_clients' ) . " c ON c.id=n.client_id WHERE $where ORDER BY n.id DESC LIMIT %d", $limit ), ARRAY_A ); // phpcs:ignore WordPress.DB
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( 'SELECT n.*, c.name AS client_name FROM ' . self::t() . ' n LEFT JOIN ' . Schema::table( 'wpflat_clients' ) . " c ON c.id=n.client_id WHERE $where ORDER BY n.id DESC LIMIT %d", $limit ), ARRAY_A ); // phpcs:ignore WordPress.DB
 		$cat  = self::catalog();
 		$out  = array();
 		foreach ( $rows as $r ) {
@@ -290,24 +290,24 @@ class Notifications {
 	/** The WordPress user behind a team member id, or 0. */
 	public static function team_user( $team_member_id ) {
 		global $wpdb;
-		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT wp_user_id FROM ' . Schema::table( 'bizy_team_members' ) . ' WHERE id=%d', $team_member_id ) ); // phpcs:ignore WordPress.DB
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT wp_user_id FROM ' . Schema::table( 'wpflat_team_members' ) . ' WHERE id=%d', $team_member_id ) ); // phpcs:ignore WordPress.DB
 	}
 
 	/* ───────────────────────── Wiring ───────────────────────── */
 
 	public static function init() {
-		add_action( 'bizycore_ready', array( __CLASS__, 'collect' ), 6 );
-		add_action( 'bizycore_daily', array( __CLASS__, 'daily' ), 99 );
+		add_action( 'wpflatcore_ready', array( __CLASS__, 'collect' ), 6 );
+		add_action( 'wpflatcore_daily', array( __CLASS__, 'daily' ), 99 );
 	}
 
 	public static function collect() {
 		self::register( 'client_message', array( 'label' => 'Message', 'audience' => 'client', 'group' => 'Messages', 'description' => 'You have a new message', 'email' => 'off', 'external' => true ) );
 		self::register( 'team_message', array( 'label' => 'Message', 'audience' => 'team', 'group' => 'Messages', 'description' => 'A client sent a message', 'email' => 'off', 'external' => true ) );
 		/** Modules register their own kinds here with Notifications::register(). */
-		do_action( 'bizycore_register_notifications' );
+		do_action( 'wpflatcore_register_notifications' );
 	}
 
-	/** Runs once a day after every module's own reminders (they hook `bizycore_daily` earlier): send digests, then tidy up. */
+	/** Runs once a day after every module's own reminders (they hook `wpflatcore_daily` earlier): send digests, then tidy up. */
 	public static function daily() {
 		self::send_digests();
 		self::prune();

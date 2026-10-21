@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -11,8 +11,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Stealth_Rules {
 
-	const BEGIN = '# BEGIN Bizy Stealth';
-	const END   = '# END Bizy Stealth';
+	const BEGIN = '# BEGIN WPFlat Stealth';
+	const END   = '# END WPFlat Stealth';
 
 	private static function file() {
 		return rtrim( wp_normalize_path( ABSPATH ), '/' ) . '/.htaccess';
@@ -84,7 +84,7 @@ class Stealth_Rules {
 
 	/** Is the site still answering normally? */
 	private static function healthy() {
-		foreach ( array( home_url( '/' ), App_Page::url(), Assets::url( 'bizycore.css' ) ) as $u ) {
+		foreach ( array( home_url( '/' ), App_Page::url(), Assets::url( 'wpflatcore.css' ) ) as $u ) {
 			$r = wp_remote_get( $u, array( 'timeout' => 10, 'redirection' => 3, 'sslverify' => false ) );
 			if ( is_wp_error( $r ) || (int) wp_remote_retrieve_response_code( $r ) >= 400 ) {
 				return false;
@@ -143,7 +143,7 @@ class Stealth_Rules {
 		}
 		$old   = is_file( $f ) ? (string) file_get_contents( $f ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions
 		$path  = 'bd-rule-test-' . bin2hex( random_bytes( 5 ) );
-		$block = "# BEGIN Bizy RuleTest\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^" . $path . "$ - [G,L]\n</IfModule>\n# END Bizy RuleTest\n\n";
+		$block = "# BEGIN WPFlat RuleTest\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^" . $path . "$ - [G,L]\n</IfModule>\n# END WPFlat RuleTest\n\n";
 		if ( '' !== $old && ! is_file( $f . '.bd-backup' ) ) {
 			copy( $f, $f . '.bd-backup' ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		}

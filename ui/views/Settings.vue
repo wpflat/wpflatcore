@@ -21,7 +21,7 @@ const saving = ref( false );
 const tab = ref( props.initialTab === 'brands' ? 'departments' : props.initialTab );
 const removingDemo = ref( false );
 
-// Tabs modules add (BizyFinance: payment methods, currencies, invoice wording…).
+// Tabs modules add (WPFlat Finance: payment methods, currencies, invoice wording…).
 const moduleTabs = computed( () => sdk.slot( 'settings.tabs', {} ) );
 // Backup, migration and other tabs for people who manage the suite.
 const adminTabs = computed( () => ( store.canManage ? sdk.slot( 'settings.admin-tabs', {} ) : [] ) );
@@ -171,7 +171,7 @@ const save = async () => {
 							<el-col :xs="24" :sm="8"><el-form-item label="Email"><el-input v-model="form.business_email" /></el-form-item></el-col>
 							<el-col :xs="24" :sm="8"><el-form-item label="Phone"><el-input v-model="form.business_phone" /></el-form-item></el-col>
 							<el-col :xs="24" :sm="8"><el-form-item label="Website"><el-input v-model="form.business_website" placeholder="https://" /></el-form-item></el-col>
-							<el-col :span="24"><el-form-item label="Data"><el-switch v-model="form.delete_on_uninstall" active-text="Delete all Bizy data when the plugin is deleted" /></el-form-item></el-col>
+							<el-col :span="24"><el-form-item label="Data"><el-switch v-model="form.delete_on_uninstall" active-text="Delete all WPFlat data when the plugin is deleted" /></el-form-item></el-col>
 							<el-col v-if="store.demoLoaded && store.canManage" :span="24"><el-form-item label="Sample data"><el-button :loading="removingDemo" @click="removeDemo">Remove sample data</el-button><div class="bd-help">The example records added for you to explore. Things you added yourself are kept.</div></el-form-item></el-col>
 							<el-col v-if="store.demoLoaded && store.canManage && demoLogin" :span="24">
 								<el-card shadow="never" class="bd-demologin">
@@ -218,8 +218,8 @@ const save = async () => {
 								<el-option value="" label="Show my website's own home page (default)" />
 								<el-option v-for="m in homeChoices" :key="m.id" :value="m.id" :label="'Take them straight to ' + m.label" />
 							</el-select>
-							<div class="bd-help" v-if="homeChoices.length">Installed Bizy for just one module? Pick it here and visitors go straight to it (they sign in first if the page needs it). Your normal home page stays at <code>{{ store.homeUrl }}?bd_site=1</code>, and the app at its own address.</div>
-							<div class="bd-help" v-else>No module has a page of its own to use as the home page yet. For BizyFiles, turn on its front-end page in Files settings first.</div>
+							<div class="bd-help" v-if="homeChoices.length">Installed WPFlat for just one module? Pick it here and visitors go straight to it (they sign in first if the page needs it). Your normal home page stays at <code>{{ store.homeUrl }}?bd_site=1</code>, and the app at its own address.</div>
+							<div class="bd-help" v-else>No module has a page of its own to use as the home page yet. For WPFlat Files, turn on its front-end page in Files settings first.</div>
 							<div class="bd-help" v-if="homeModuleUrl">Visitors will land on <a class="bd-link" :href="homeModuleUrl" target="_blank" rel="noopener">{{ homeModuleUrl }}</a></div>
 						</el-form-item>
 					</el-form>
@@ -229,7 +229,7 @@ const save = async () => {
 					<template #header><div class="bd-widget__head"><span>The app</span></div></template>
 					<el-form label-position="top" @submit.prevent>
 						<el-form-item label="Full-screen app mode">
-							<el-switch v-model="form.app_fullscreen" active-text="Hide the WordPress menu, admin bar and notices on Bizy screens" />
+							<el-switch v-model="form.app_fullscreen" active-text="Hide the WordPress menu, admin bar and notices on WPFlat screens" />
 						</el-form-item>
 						<el-form-item label="Team members">
 							<el-switch v-model="form.app_keep_staff" active-text="Keep people who are not WordPress administrators out of wp-admin" />
@@ -257,14 +257,14 @@ const save = async () => {
 
 			<el-tab-pane label="Email" name="email">
 				<el-card shadow="never">
-					<p class="bd-muted bd-mb">How Bizy sends email. You can use your own SMTP account here — no extra plugin needed — or keep using the site's mailer.</p>
+					<p class="bd-muted bd-mb">How WPFlat sends email. You can use your own SMTP account here — no extra plugin needed — or keep using the site's mailer.</p>
 					<el-form label-position="top" style="max-width: 820px" @submit.prevent>
 						<el-form-item label="Mailer">
 							<el-radio-group v-model="mail.method" class="bd-seg-sm">
 								<el-radio-button value="wp">Site mailer (wp_mail)</el-radio-button>
-								<el-radio-button value="smtp">Bizy SMTP</el-radio-button>
+								<el-radio-button value="smtp">WPFlat SMTP</el-radio-button>
 							</el-radio-group>
-							<div class="bd-help">{{ mail.method === 'smtp' ? 'Used only for Bizy emails. Other plugins on the site are unaffected.' : 'Uses whatever the site already uses to send mail (e.g. FluentSMTP, or the server default).' }}</div>
+							<div class="bd-help">{{ mail.method === 'smtp' ? 'Used only for WPFlat emails. Other plugins on the site are unaffected.' : 'Uses whatever the site already uses to send mail (e.g. FluentSMTP, or the server default).' }}</div>
 						</el-form-item>
 						<el-row :gutter="16">
 							<el-col :xs="24" :sm="8"><el-form-item label="From name"><el-input v-model="mail.from_name" :placeholder="mail.resolved_from.name || 'Your business name'" /></el-form-item></el-col>

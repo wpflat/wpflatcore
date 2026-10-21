@@ -1,18 +1,18 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
-use BizyCore\Services\Crypto;
+use WPFlatCore\Services\Crypto;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Email configuration: sender and mailer (the site's own, or Bizy's SMTP). Each module keeps its own message templates. */
+/** Email configuration: sender and mailer (the site's own, or WPFlat's SMTP). Each module keeps its own message templates. */
 class Mail_Settings {
 
-	const OPTION = 'bizycore_mail';
+	const OPTION = 'wpflatcore_mail';
 
 	public static function defaults() {
 		return array(
-			'method'          => 'wp', // wp = the site's mailer (wp_mail), smtp = Bizy SMTP below.
+			'method'          => 'wp', // wp = the site's mailer (wp_mail), smtp = WPFlat SMTP below.
 			'from_name'       => '',
 			'from_email'      => '',
 			'reply_to'        => '',

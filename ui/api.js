@@ -1,6 +1,6 @@
 import { store } from './store';
 
-const boot = window.bizycoreBoot || {};
+const boot = window.wpflatcoreBoot || {};
 
 const qs = ( o ) => {
 	const p = new URLSearchParams();
@@ -14,7 +14,7 @@ const qs = ( o ) => {
 
 /** Join the REST base with a path + query, supporting both pretty and ?rest_route= permalinks. */
 export const buildUrl = ( path, params ) => {
-	const base = boot.restUrl || '/wp-json/bizycore/v1';
+	const base = boot.restUrl || '/wp-json/wpflatcore/v1';
 	const q = qs( params );
 	let url = base;
 	if ( base.includes( '?' ) ) {

@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Shell {
 
-	const PAGE = 'bizycore';
+	const PAGE = 'wpflatcore';
 
 	/** WordPress admin page slug => the in-app route it opens (core plus each enabled module). */
 	public static function pages() {
@@ -25,7 +25,7 @@ class Shell {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_filter( 'admin_body_class', array( __CLASS__, 'body_class' ) );
 		add_action( 'in_admin_header', array( __CLASS__, 'quiet_admin' ), 1000 );
-		// Team members who only work in Bizy never see WordPress.
+		// Team members who only work in WPFlat never see WordPress.
 		add_filter( 'show_admin_bar', array( __CLASS__, 'hide_admin_bar' ) );
 		add_action( 'admin_init', array( __CLASS__, 'confine_staff' ) );
 		add_action( 'admin_init', array( __CLASS__, 'confine_clients' ) );
@@ -35,7 +35,7 @@ class Shell {
 	/* ───────────────────────── WordPress admin menus ───────────────────────── */
 
 	public static function admin_menu() {
-		add_menu_page( 'Bizy', 'Bizy', 'manage_bizycore', self::PAGE, array( __CLASS__, 'render' ), 'dashicons-chart-area', 26 );
+		add_menu_page( 'WPFlat', 'WPFlat', 'manage_wpflatcore', self::PAGE, array( __CLASS__, 'render' ), 'dashicons-chart-area', 26 );
 		$core  = array(
 			Terminology::label( 'home', true ) => '/',
 			Terminology::label( 'client', true ) => '/clients',
@@ -48,19 +48,19 @@ class Shell {
 		foreach ( $core as $label => $route ) {
 			// Submenu items are in-app hash routes; the first one replaces the auto-generated duplicate parent entry.
 			$slug = $first ? self::PAGE : self::PAGE . '#' . $route;
-			add_submenu_page( self::PAGE, $label, $label, 'manage_bizycore', $slug, $first ? array( __CLASS__, 'render' ) : '__return_null' );
+			add_submenu_page( self::PAGE, $label, $label, 'manage_wpflatcore', $slug, $first ? array( __CLASS__, 'render' ) : '__return_null' );
 			$first = false;
 		}
 		// Each enabled module is its own top-level menu with its own sub-menu.
 		foreach ( Registry::active() as $id => $m ) {
 			$parent = self::PAGE . '-' . $id;
-			add_menu_page( 'Bizy ' . $m['label'], 'Bizy ' . $m['label'], 'manage_bizycore', $parent, array( __CLASS__, 'render' ), $m['wp'][0], $m['wp'][1] );
+			add_menu_page( 'WPFlat ' . $m['label'], 'WPFlat ' . $m['label'], 'manage_wpflatcore', $parent, array( __CLASS__, 'render' ), $m['wp'][0], $m['wp'][1] );
 			$first = true;
 			foreach ( $m['menu'] as $it ) {
 				if ( ! empty( $it['url'] ) ) {
 					continue; // external tools (e.g. a public verify page) are not WordPress admin pages
 				}
-				$cap  = ( ! $first && ! empty( $it['cap'] ) ) ? $it['cap'] : 'manage_bizycore';
+				$cap  = ( ! $first && ! empty( $it['cap'] ) ) ? $it['cap'] : 'manage_wpflatcore';
 				$slug = $first ? $parent : $parent . '#' . $it['route'];
 				add_submenu_page( $parent, $it['label'], $it['label'], $cap, $slug, $first ? array( __CLASS__, 'render' ) : '__return_null' );
 				$first = false;
@@ -69,7 +69,7 @@ class Shell {
 	}
 
 	public static function render() {
-		echo '<div id="bizycore-root" class="bizycore-root"><p style="padding:24px">Loading…</p></div>';
+		echo '<div id="wpflatcore-root" class="wpflatcore-root"><p style="padding:24px">Loading…</p></div>';
 	}
 
 	private static function current_page() {
@@ -85,7 +85,7 @@ class Shell {
 		if ( ! self::is_screen() ) {
 			return $classes;
 		}
-		return $classes . ' bizycore-screen' . ( Settings::get( 'app_fullscreen' ) ? ' bizycore-fullscreen' : '' );
+		return $classes . ' wpflatcore-screen' . ( Settings::get( 'app_fullscreen' ) ? ' wpflatcore-fullscreen' : '' );
 	}
 
 	/** In full-screen mode no stray WordPress notices appear over the app. */
@@ -100,19 +100,19 @@ class Shell {
 
 	/* ───────────────────────── Keeping team members and clients out of wp-admin ───────────────────────── */
 
-	/** A user who works in Bizy but is not a WordPress administrator. */
+	/** A user who works in WPFlat but is not a WordPress administrator. */
 	public static function is_staff_only() {
-		return is_user_logged_in() && current_user_can( 'manage_bizycore' ) && ! current_user_can( 'manage_options' );
+		return is_user_logged_in() && current_user_can( 'manage_wpflatcore' ) && ! current_user_can( 'manage_options' );
 	}
 
-	/** Where staff-only users land: the front-end app if enabled, else the Bizy admin screen. */
+	/** Where staff-only users land: the front-end app if enabled, else the WPFlat admin screen. */
 	public static function home_for_staff() {
 		return Settings::get( 'app_frontend' ) ? Urls::app() : admin_url( 'admin.php?page=' . self::PAGE );
 	}
 
 	/** A client login: portal only, never WordPress admin or the internal app. */
 	public static function is_client_only() {
-		return is_user_logged_in() && current_user_can( 'bizycore_portal' ) && ! current_user_can( 'manage_bizycore' ) && ! current_user_can( 'manage_options' );
+		return is_user_logged_in() && current_user_can( 'wpflatcore_portal' ) && ! current_user_can( 'manage_wpflatcore' ) && ! current_user_can( 'manage_options' );
 	}
 
 	public static function hide_admin_bar( $show ) {
@@ -143,17 +143,17 @@ class Shell {
 			return;
 		}
 		if ( self::is_screen() && ! Settings::get( 'app_frontend' ) ) {
-			return; // no front-end app: the Bizy admin screen is where they work
+			return; // no front-end app: the WPFlat admin screen is where they work
 		}
 		wp_safe_redirect( self::home_for_staff() );
 		exit;
 	}
 
 	public static function login_redirect( $to, $requested, $user ) {
-		if ( $user instanceof \WP_User && user_can( $user, 'bizycore_portal' ) && ! user_can( $user, 'manage_bizycore' ) && Portal::enabled() ) {
+		if ( $user instanceof \WP_User && user_can( $user, 'wpflatcore_portal' ) && ! user_can( $user, 'manage_wpflatcore' ) && Portal::enabled() ) {
 			return Portal::url();
 		}
-		if ( $user instanceof \WP_User && Settings::get( 'app_keep_staff' ) && user_can( $user, 'manage_bizycore' ) && ! user_can( $user, 'manage_options' ) ) {
+		if ( $user instanceof \WP_User && Settings::get( 'app_keep_staff' ) && user_can( $user, 'manage_wpflatcore' ) && ! user_can( $user, 'manage_options' ) ) {
 			return self::home_for_staff();
 		}
 		return $to;
@@ -162,18 +162,18 @@ class Shell {
 	/* ───────────────────────── Boot data and assets ───────────────────────── */
 
 	public static function theme() {
-		$t = get_user_meta( get_current_user_id(), 'bizycore_theme', true );
+		$t = get_user_meta( get_current_user_id(), 'wpflatcore_theme', true );
 		return in_array( $t, array( 'dark', 'auto' ), true ) ? $t : 'light'; // 'auto' follows the device's light/dark setting
 	}
 
-	/** What the browser app needs besides its own code: lookups and settings (modules add enums through `bizycore_meta`). */
+	/** What the browser app needs besides its own code: lookups and settings (modules add enums through `wpflatcore_meta`). */
 	public static function meta_payload() {
-		return apply_filters( 'bizycore_meta', array( 'settings' => Settings::get(), 'lookups' => Lookups::grouped(), 'enums' => array() ) );
+		return apply_filters( 'wpflatcore_meta', array( 'settings' => Settings::get(), 'lookups' => Lookups::grouped(), 'enums' => array() ) );
 	}
 
 	/**
 	 * The JavaScript boot object shared by the admin screen and the front-end app page. Modules (and Core's own
-	 * features such as backup) add keys with the `bizycore_boot` filter.
+	 * features such as backup) add keys with the `wpflatcore_boot` filter.
 	 */
 	public static function boot_data( $initial_route, $frontend ) {
 		$u = wp_get_current_user();
@@ -201,7 +201,7 @@ class Shell {
 			'homeUrl'      => home_url( '/' ),
 			'theme'        => self::theme(), // light | dark | auto
 		);
-		return apply_filters( 'bizycore_boot', $d, $initial_route, $frontend );
+		return apply_filters( 'wpflatcore_boot', $d, $initial_route, $frontend );
 	}
 
 	public static function enqueue( $hook ) {
@@ -213,25 +213,25 @@ class Shell {
 	}
 
 	public static function enqueue_app( $initial_route, $frontend ) {
-		$js = BIZYCORE_DIR . 'build/bizycore.js';
+		$js = WPFLATCORE_DIR . 'build/wpflatcore.js';
 		if ( ! is_readable( $js ) ) {
 			return;
 		}
 		$ver = (string) filemtime( $js );
-		wp_enqueue_script( 'bizycore-app', Assets::url( 'bizycore.js' ), array(), $ver, true );
-		wp_add_inline_script( 'bizycore-app', 'window.bizycoreBoot=' . wp_json_encode( self::boot_data( $initial_route, $frontend ) ) . ';', 'before' );
-		// Module bundles load after Core, so they find window.BizyCore ready.
+		wp_enqueue_script( 'wpflatcore-app', Assets::url( 'wpflatcore.js' ), array(), $ver, true );
+		wp_add_inline_script( 'wpflatcore-app', 'window.wpflatcoreBoot=' . wp_json_encode( self::boot_data( $initial_route, $frontend ) ) . ';', 'before' );
+		// Module bundles load after Core, so they find window.WPFlatCore ready.
 		foreach ( Registry::assets() as $id => $files ) {
 			if ( ! empty( $files['style'] ) ) {
-				wp_enqueue_style( 'bizycore-mod-' . $id, $files['style'], array( 'bizycore-app' ), $ver );
+				wp_enqueue_style( 'wpflatcore-mod-' . $id, $files['style'], array( 'wpflatcore-app' ), $ver );
 			}
 			if ( ! empty( $files['script'] ) ) {
-				wp_enqueue_script( 'bizycore-mod-' . $id, $files['script'], array( 'bizycore-app' ), $ver, true );
+				wp_enqueue_script( 'wpflatcore-mod-' . $id, $files['script'], array( 'wpflatcore-app' ), $ver, true );
 			}
 		}
-		if ( is_readable( BIZYCORE_DIR . 'build/bizycore.css' ) ) {
-			wp_enqueue_style( 'bizycore-app', Assets::url( 'bizycore.css' ), array(), $ver );
-			wp_add_inline_style( 'bizycore-app', self::font_face_css() );
+		if ( is_readable( WPFLATCORE_DIR . 'build/wpflatcore.css' ) ) {
+			wp_enqueue_style( 'wpflatcore-app', Assets::url( 'wpflatcore.css' ), array(), $ver );
+			wp_add_inline_style( 'wpflatcore-app', self::font_face_css() );
 		}
 		add_action( $frontend ? 'wp_head' : 'admin_head', array( __CLASS__, 'preload_font' ), 1 );
 	}

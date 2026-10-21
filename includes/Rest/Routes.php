@@ -1,24 +1,24 @@
 <?php
-namespace BizyCore\Rest;
+namespace WPFlatCore\Rest;
 
-use BizyCore\Links;
-use BizyCore\Registry;
-use BizyCore\Terminology;
+use WPFlatCore\Links;
+use WPFlatCore\Registry;
+use WPFlatCore\Terminology;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Core's own REST routes: modules, links and terminology. Namespace bizycore/v1. */
+/** Core's own REST routes: modules, links and terminology. Namespace wpflatcore/v1. */
 class Routes {
 
-	const NS = 'bizycore/v1';
+	const NS = 'wpflatcore/v1';
 
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register' ) );
 	}
 
 	/**
-	 * How a module adds its own routes (inside the `bizycore_register_routes` action): everything lives in
-	 * bizycore/v1 so the neutral /bd/api address reaches it. The route disappears when the module is off, and a route
+	 * How a module adds its own routes (inside the `wpflatcore_register_routes` action): everything lives in
+	 * wpflatcore/v1 so the neutral /bd/api address reaches it. The route disappears when the module is off, and a route
 	 * that only asks for "can use the app" is narrowed to the module's capability.
 	 */
 	public static function add( $module, $route, array $args ) {
@@ -29,7 +29,7 @@ class Routes {
 		$wrap = function ( $a ) use ( $cap ) {
 			if ( $cap && isset( $a['permission_callback'] ) && array( Resource_Controller::class, 'can' ) === $a['permission_callback'] ) {
 				$a['permission_callback'] = function () use ( $cap ) {
-					return current_user_can( 'manage_options' ) || ( current_user_can( 'manage_bizycore' ) && current_user_can( $cap ) );
+					return current_user_can( 'manage_options' ) || ( current_user_can( 'manage_wpflatcore' ) && current_user_can( $cap ) );
 				};
 			}
 			return $a;
@@ -39,16 +39,16 @@ class Routes {
 
 	/** Anyone who may use the app. */
 	public static function can_use() {
-		return current_user_can( 'manage_options' ) || current_user_can( 'manage_bizycore' );
+		return current_user_can( 'manage_options' ) || current_user_can( 'manage_wpflatcore' );
 	}
 
 	/** Settings, modules and renaming words. */
 	public static function can_admin() {
-		return current_user_can( 'manage_options' ) || current_user_can( 'bizycore_admin' );
+		return current_user_can( 'manage_options' ) || current_user_can( 'wpflatcore_admin' );
 	}
 
 	public static function register() {
-		do_action( 'bizycore_register_routes' );
+		do_action( 'wpflatcore_register_routes' );
 		register_rest_route( self::NS, '/modules', array(
 			array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'modules' ), 'permission_callback' => array( __CLASS__, 'can_use' ) ),
 		) );
@@ -65,7 +65,7 @@ class Routes {
 			array( 'methods' => 'DELETE', 'callback' => array( __CLASS__, 'remove_link' ), 'permission_callback' => array( __CLASS__, 'can_use' ) ),
 		) );
 		register_rest_route( self::NS, '/group-roles', array(
-			array( 'methods' => 'GET', 'callback' => function () { return rest_ensure_response( \BizyCore\Services\Groups::assignable_roles() ); }, 'permission_callback' => array( __CLASS__, 'can_use' ) ),
+			array( 'methods' => 'GET', 'callback' => function () { return rest_ensure_response( \WPFlatCore\Services\Groups::assignable_roles() ); }, 'permission_callback' => array( __CLASS__, 'can_use' ) ),
 		) );
 		register_rest_route( self::NS, '/links/types', array(
 			array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'link_types' ), 'permission_callback' => array( __CLASS__, 'can_use' ) ),

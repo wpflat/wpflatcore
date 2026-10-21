@@ -37,10 +37,10 @@ const initial = computed( () => ( store.user || 'U' ).slice( 0, 1 ).toUpperCase(
 </script>
 
 <template>
-	<aside :class="[ 'bd-side', { 'is-open': open } ]" aria-label="Bizy">
+	<aside :class="[ 'bd-side', { 'is-open': open } ]" aria-label="WPFlat">
 		<a class="bd-side__brand" href="#/" @click="emit( 'close' )">
 			<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><defs><linearGradient id="bdlogo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4052" /><stop offset="1" stop-color="#14161d" /></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#bdlogo)" /><path d="M9.5 22V10h6.6a3.9 3.9 0 0 1 1.5 7.5A3.9 3.9 0 0 1 16 22H9.5zm2.9-9.6v2.5h3.2a1.25 1.25 0 0 0 0-2.5h-3.2zm0 5.2v2.5h3.6a1.25 1.25 0 0 0 0-2.5h-3.6z" fill="#fff" /></svg>
-			<span>Bizy</span>
+			<span>WPFlat</span>
 		</a>
 
 		<nav class="bd-side__nav">

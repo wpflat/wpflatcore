@@ -1,16 +1,16 @@
 <?php
-namespace BizyCore\Services;
+namespace WPFlatCore\Services;
 
-use BizyCore\Database\Schema;
-use BizyCore\Settings;
+use WPFlatCore\Database\Schema;
+use WPFlatCore\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Data for the Home screen. Core supplies the basics (how many clients and team members, a short setup checklist);
- * modules add what they know with the `bizycore_home` filter:
+ * modules add what they know with the `wpflatcore_home` filter:
  *
- *   add_filter( 'bizycore_home', function ( $home ) {
+ *   add_filter( 'wpflatcore_home', function ( $home ) {
  *       $home['todo'][]      = array( 'kind' => 'task', 'title' => '…', 'sub' => '…', 'link' => '/tasks/3', 'days' => 0 );
  *       $home['coming_up'][] = array( 'kind' => 'invoice', 'title' => '…', 'sub' => '…', 'link' => '…', 'days' => 4 );
  *       $home['setup'][]     = array( 'key' => 'catalog', 'label' => 'Add what you sell', 'to' => '/catalog', 'done' => false );
@@ -26,19 +26,19 @@ class Home {
 		};
 		$home = array(
 			'stats'      => array(
-				'clients'     => $count( 'bizy_clients', "status='active'" ),
-				'team'        => $count( 'bizy_team_members', "status='active'" ),
-				'departments' => $count( 'bizy_departments', "status='active'" ),
+				'clients'     => $count( 'wpflat_clients', "status='active'" ),
+				'team'        => $count( 'wpflat_team_members', "status='active'" ),
+				'departments' => $count( 'wpflat_departments', "status='active'" ),
 			),
 			'todo'       => array(),
 			'coming_up'  => array(),
 			'setup'      => array(
 				array( 'key' => 'profile', 'label' => 'Add your business details and logo', 'to' => '/settings?tab=business', 'done' => '' !== trim( (string) Settings::get( 'company_name' ) ) || (int) Settings::get( 'business_logo_id' ) > 0 ),
-				array( 'key' => 'client', 'label' => \BizyCore\Terminology::fmt( 'Add your first {client}' ), 'to' => '/clients', 'done' => $count( 'bizy_clients' ) > 0 ),
-				array( 'key' => 'team', 'label' => 'Add the people who work with you', 'to' => '/team', 'done' => $count( 'bizy_team_members' ) > 0 ),
+				array( 'key' => 'client', 'label' => \WPFlatCore\Terminology::fmt( 'Add your first {client}' ), 'to' => '/clients', 'done' => $count( 'wpflat_clients' ) > 0 ),
+				array( 'key' => 'team', 'label' => 'Add the people who work with you', 'to' => '/team', 'done' => $count( 'wpflat_team_members' ) > 0 ),
 			),
 		);
-		$home = apply_filters( 'bizycore_home', $home );
+		$home = apply_filters( 'wpflatcore_home', $home );
 		usort( $home['todo'], function ( $a, $b ) {
 			return ( isset( $a['days'] ) ? $a['days'] : 0 ) <=> ( isset( $b['days'] ) ? $b['days'] : 0 );
 		} );

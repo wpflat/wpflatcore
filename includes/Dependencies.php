@@ -1,5 +1,5 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -15,7 +15,7 @@ class Dependencies {
 			return;
 		}
 		foreach ( Registry::problems() as $msg ) {
-			echo '<div class="notice notice-warning"><p><strong>Bizy:</strong> ' . esc_html( $msg ) . '</p></div>';
+			echo '<div class="notice notice-warning"><p><strong>WPFlat:</strong> ' . esc_html( $msg ) . '</p></div>';
 		}
 	}
 }

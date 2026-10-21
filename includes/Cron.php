@@ -1,13 +1,13 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
-/** One daily job. Core and every module hook `bizycore_daily` (reminders, digests, clean-up); modules never schedule their own. */
+/** One daily job. Core and every module hook `wpflatcore_daily` (reminders, digests, clean-up); modules never schedule their own. */
 class Cron {
 
-	/** WordPress's scheduled event; its handler announces the public `bizycore_daily` action that everyone listens to. */
-	const HOOK = 'bizycore_daily_tick';
+	/** WordPress's scheduled event; its handler announces the public `wpflatcore_daily` action that everyone listens to. */
+	const HOOK = 'wpflatcore_daily_tick';
 
 	public static function init() {
 		add_action( self::HOOK, array( __CLASS__, 'run' ) );
@@ -17,7 +17,7 @@ class Cron {
 	}
 
 	public static function run() {
-		do_action( 'bizycore_daily' );
+		do_action( 'wpflatcore_daily' );
 	}
 
 	public static function unschedule() {

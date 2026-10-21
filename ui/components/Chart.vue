@@ -20,7 +20,7 @@ const props = defineProps( {
 const canvas = ref( null );
 let chart = null;
 
-const token = ( name, fallback ) => getComputedStyle( document.getElementById( 'bizycore-root' ) || document.body ).getPropertyValue( name ).trim() || fallback;
+const token = ( name, fallback ) => getComputedStyle( document.getElementById( 'wpflatcore-root' ) || document.body ).getPropertyValue( name ).trim() || fallback;
 const PALETTE = [ '--bd-accent', '--bd-success', '--bd-warning', '--bd-info', '--bd-danger' ];
 const FALLBACK = [ '#635bff', '#15a46e', '#d9822b', '#2f8fd8', '#d92d20', '#8a63d2', '#2aa7a0' ];
 const resolve = ( c ) => {

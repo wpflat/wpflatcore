@@ -1,9 +1,9 @@
 <?php
-namespace BizyCore;
+namespace WPFlatCore;
 
 defined( 'ABSPATH' ) || exit;
 
-/** The standalone, theme-free page frame every public Bizy document (invoice, payslip, contract, signing) is drawn in. */
+/** The standalone, theme-free page frame every public WPFlat document (invoice, payslip, contract, signing) is drawn in. */
 class Public_Page {
 
 	public static function shell( $title, $body, $biz ) {

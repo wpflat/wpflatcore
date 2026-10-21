@@ -1,6 +1,6 @@
 import { createSdk } from './sdk';
 
-const boot = window.bizycoreBoot || {};
+const boot = window.wpflatcoreBoot || {};
 const nav = boot.nav && boot.nav.modules ? boot.nav.modules : [];
 
 /**

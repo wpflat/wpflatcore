@@ -1,7 +1,7 @@
 import { markRaw, reactive } from 'vue';
 
 /**
- * The browser side of the module API. Core's app creates one SDK and exposes it as window.BizyCore; each module's
+ * The browser side of the module API. Core's app creates one SDK and exposes it as window.WPFlatCore; each module's
  * bundle (built separately, with Vue and Element Plus left external) calls registerRoute / registerSlot on it.
  *
  * - routes:  a module's screens, matched by path pattern ("/tasks/:id")
