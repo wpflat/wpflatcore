@@ -9,6 +9,7 @@ import { h, reactive } from 'vue';
 import { api, errorMessage } from './api';
 import { sdk } from './sdkInstance';
 import { navigate, store } from './store';
+import { linkMeWithCode } from './linkMe';
 import { avatarStyle, dept, humanize, initials, options } from './util';
 
 const ACTIVE_STATUSES = [
@@ -373,7 +374,7 @@ export const teamConfig = () => ( {
 	actionsWidth: 130,
 	actions: ( r, ctx ) => [
 		store.caps.team && r.access_label && r.access_state !== 'active' ? { label: r.access_state === 'invited' ? 'Resend invite' : 'Send invite', onClick: () => sendTeamInvite( r, ctx ) } : null,
-		! r.is_me ? { label: 'This is me', menu: true, onClick: async () => { try { await api.update( 'team', r.id, { wp_user_id: store.userId } ); ElMessage.success( 'Linked to your login.' ); ctx.reload(); } catch ( e ) { ElMessage.error( errorMessage( e ) ); } } } : null,
+		! r.is_me ? { label: 'This is me', menu: true, onClick: () => linkMeWithCode( r, ctx.reload ) } : null,
 	],
 	columns: [
 		{

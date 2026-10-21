@@ -240,6 +240,10 @@ class Core_Resources {
 					if ( isset( $params['email'] ) && empty( $d['email'] ) ) {
 						return new \WP_Error( 'wpflatcore_invalid', 'Enter a valid email address.', array( 'status' => 400 ) );
 					}
+					// Which login a record belongs to is never taken from the request: "This is me" proves it with an emailed code.
+					unset( $d['wp_user_id'] );
+					// Which login a record belongs to is never taken from the request: "This is me" proves it with an emailed code.
+					unset( $d['wp_user_id'] );
 					if ( ! $existing ) {
 						$d += array( 'status' => 'active', 'cc_documents' => 1 );
 					}

@@ -9,6 +9,7 @@ import StatusTag from '../components/StatusTag.vue';
 import TeamAccess from '../components/TeamAccess.vue';
 import LinkedRecords from '../components/LinkedRecords.vue';
 import { avatarStyle, fmtDate, initials } from '../util';
+import { linkMeWithCode } from '../linkMe';
 import { teamFields } from '../resources';
 import { store } from '../store';
 import { sdk } from '../sdkInstance';
@@ -46,15 +47,7 @@ const saved = () => {
 	ElMessage.success( 'Saved' );
 	load();
 };
-const linkMe = async () => {
-	try {
-		await api.update( 'team', props.id, { wp_user_id: store.userId } );
-		ElMessage.success( 'Linked to your login.' );
-		load();
-	} catch ( e ) {
-		ElMessage.error( errorMessage( e ) );
-	}
-};
+const linkMe = () => linkMeWithCode( member.value, load );
 const kindLabel = computed( () => ( member.value && member.value.kind === 'contractor' ? 'Contractor' : 'Employee' ) );
 </script>
 

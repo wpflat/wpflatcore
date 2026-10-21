@@ -82,6 +82,8 @@ class Collab_Routes {
 		self::reg( '/access/sync-clients', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'sync_clients' ), 'permission_callback' => $admin ) );
 		self::reg( '/team/access-options', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'team_access_options' ), 'permission_callback' => $team ) );
 		self::reg( '/team/(?P<id>\d+)/invite', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'team_invite' ), 'permission_callback' => $team ) );
+		self::reg( '/team/(?P<id>\d+)/link-me', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'link_me_start' ), 'permission_callback' => $team ) );
+		self::reg( '/team/(?P<id>\d+)/link-me/verify', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'link_me_verify' ), 'permission_callback' => $team ) );
 		self::reg( '/team/(?P<id>\d+)/access', array(
 			array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'team_access_get' ), 'permission_callback' => $team ),
 			array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'team_access_set' ), 'permission_callback' => $team ),
@@ -222,6 +224,70 @@ class Collab_Routes {
 	private static function member( $team_id ) {
 		global $wpdb;
 		return $wpdb->get_row( $wpdb->prepare( 'SELECT id, name, email, wp_user_id FROM ' . Schema::table( 'wpflat_team_members' ) . ' WHERE id=%d', $team_id ), ARRAY_A ); // phpcs:ignore WordPress.DB
+	}
+
+	/* "This is me": linking a team record to the signed-in login is only allowed after proving the mailbox on the record is yours. */
+
+	private static function link_key( $member_id ) {
+		return 'wpflatcore_linkme_' . (int) $member_id . '_' . get_current_user_id();
+	}
+
+	/** Email a 6-digit code to the address on the team record. */
+	public static function link_me_start( \WP_REST_Request $req ) {
+		$m = self::member( (int) $req['id'] );
+		if ( ! $m ) {
+			return new \WP_Error( 'wpflatcore_missing', 'Team member not found.', array( 'status' => 404 ) );
+		}
+		$email = sanitize_email( $m['email'] );
+		if ( ! $email ) {
+			return new \WP_Error( 'wpflatcore_email', 'This person has no email address to send a code to.', array( 'status' => 400 ) );
+		}
+		$key = self::link_key( $m['id'] );
+		$cur = get_transient( $key );
+		if ( $cur && time() - (int) $cur['sent'] < 60 ) {
+			return new \WP_Error( 'wpflatcore_wait', 'A code was just sent. Wait a minute before asking for another.', array( 'status' => 429 ) );
+		}
+		$code = (string) wp_rand( 100000, 999999 );
+		set_transient( $key, array( 'hash' => wp_hash_password( $code ), 'sent' => time(), 'tries' => 0 ), 10 * MINUTE_IN_SECONDS );
+		$first = '' !== trim( (string) $m['name'] ) ? trim( explode( ' ', trim( $m['name'] ) )[0] ) : 'there';
+		$me    = wp_get_current_user();
+		$html  = '<p>Hi ' . esc_html( $first ) . ',</p><p>Someone signed in as <strong>' . esc_html( $me->user_login ) . '</strong> asked to link this team record to their login. If that is you, enter this code:</p><p style="font-size:28px;letter-spacing:6px;font-weight:700;">' . esc_html( $code ) . '</p><p>It works for 10 minutes. If it was not you, ignore this email: nothing is linked without the code.</p>';
+		$text  = "Hi {$first},\n\nSomeone signed in as {$me->user_login} asked to link this team record to their login. If that is you, enter this code: {$code}\nIt works for 10 minutes. If it was not you, ignore this email.\n";
+		$r     = \WPFlatCore\Services\Mailer::send( array( 'to' => array( $email ), 'subject' => 'Your confirmation code: ' . $code, 'heading' => 'Confirm it is you', 'preheader' => 'Your code is ' . $code, 'html' => $html, 'text' => $text ) );
+		if ( empty( $r['ok'] ) ) {
+			delete_transient( $key );
+			return new \WP_Error( 'wpflatcore_mail', 'The code could not be emailed: ' . ( isset( $r['error'] ) ? $r['error'] : 'mail failed' ), array( 'status' => 502 ) );
+		}
+		$at = strpos( $email, '@' );
+		return rest_ensure_response( array( 'sent' => true, 'to' => substr( $email, 0, min( 2, $at ) ) . '***' . substr( $email, $at ) ) );
+	}
+
+	/** Check the code; on success the record is linked to the signed-in login. */
+	public static function link_me_verify( \WP_REST_Request $req ) {
+		global $wpdb;
+		$m = self::member( (int) $req['id'] );
+		if ( ! $m ) {
+			return new \WP_Error( 'wpflatcore_missing', 'Team member not found.', array( 'status' => 404 ) );
+		}
+		$key = self::link_key( $m['id'] );
+		$cur = get_transient( $key );
+		if ( ! $cur ) {
+			return new \WP_Error( 'wpflatcore_code', 'That code has expired. Ask for a new one.', array( 'status' => 400 ) );
+		}
+		$p    = (array) $req->get_json_params();
+		$code = preg_replace( '/\D/', '', (string) ( isset( $p['code'] ) ? $p['code'] : '' ) );
+		if ( ++$cur['tries'] > 5 ) {
+			delete_transient( $key );
+			return new \WP_Error( 'wpflatcore_code', 'Too many wrong codes. Ask for a new one.', array( 'status' => 429 ) );
+		}
+		if ( '' === $code || ! wp_check_password( $code, $cur['hash'] ) ) {
+			set_transient( $key, $cur, 10 * MINUTE_IN_SECONDS );
+			return new \WP_Error( 'wpflatcore_code', 'That code is not right.', array( 'status' => 400 ) );
+		}
+		delete_transient( $key );
+		$wpdb->update( Schema::table( 'wpflat_team_members' ), array( 'wp_user_id' => get_current_user_id() ), array( 'id' => (int) $m['id'] ) );
+		\WPFlatCore\Services\Activity::log( 'team', (int) $m['id'], 0, 'linked', sprintf( 'Team record %s linked to login %s after an email code', $m['name'], wp_get_current_user()->user_login ) );
+		return rest_ensure_response( array( 'linked' => true ) );
 	}
 
 	public static function team_access_get( \WP_REST_Request $req ) {
