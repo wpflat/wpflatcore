@@ -82,7 +82,7 @@ class App_Page {
 			exit;
 		}
 		if ( ! current_user_can( 'manage_wpflatcore' ) ) {
-			wp_die( 'You do not have access to WPFlat.', 'Not allowed', array( 'response' => 403 ) );
+			wp_die( 'You do not have access to this app.', 'Not allowed', array( 'response' => 403 ) );
 		}
 
 		status_header( 200 );
@@ -97,7 +97,7 @@ class App_Page {
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>WPFlat — <?php echo esc_html( Settings::get( 'business_name' ) ); ?></title>
+<title><?php echo esc_html( Settings::app_name() ); ?></title>
 <link rel="preload" href="<?php echo esc_url( Assets::font_base() . 'google-sans-latin.woff2' ); ?>" as="font" type="font/woff2" crossorigin>
 <style><?php echo Shell::font_face_css(); // phpcs:ignore WordPress.Security.EscapeOutput ?></style>
 <link rel="stylesheet" href="<?php echo esc_url( Assets::url( 'wpflatcore.css' ) ); ?>">

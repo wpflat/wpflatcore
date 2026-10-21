@@ -129,7 +129,7 @@ class System_Routes {
 		$via  = 'smtp' === $m['method'] ? 'WPFlat SMTP (' . $m['smtp_host'] . ':' . $m['smtp_port'] . ')' : 'the site mailer (wp_mail)';
 		$biz  = (string) Settings::get( 'business_name' );
 		$html = '<p>This is a test message from ' . esc_html( $biz ) . '.</p><p>If you can read it, your email settings work. It was sent through ' . esc_html( $via ) . '.</p>';
-		$res  = Mailer::send( array( 'to' => array( $to ), 'subject' => 'WPFlat test email', 'html' => $html, 'text' => 'This is a test message. It was sent through ' . $via . '.' ) );
+		$res  = Mailer::send( array( 'to' => array( $to ), 'subject' => ( '' !== Settings::app_name() ? Settings::app_name() : 'WPFlat' ) . ' test email', 'html' => $html, 'text' => 'This is a test message. It was sent through ' . $via . '.' ) );
 		if ( empty( $res['ok'] ) ) {
 			return new \WP_Error( 'wpflatcore_mail_failed', $res['error'], array( 'status' => 502 ) );
 		}

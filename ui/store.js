@@ -15,6 +15,7 @@ function parseHash() {
 export const store = reactive( {
 	meta: boot.meta || { settings: {}, lookups: {}, enums: {} },
 	nav: boot.nav && boot.nav.core ? boot.nav : { core: [], modules: [], footer: [] },
+	appName: boot.appName || '',
 	modules: boot.modules || [],
 	coreAnalytics: boot.coreAnalytics || {},
 	frontend: !! boot.frontend,

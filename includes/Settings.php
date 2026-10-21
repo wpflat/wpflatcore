@@ -21,6 +21,7 @@ class Settings {
 			array(
 				'company_name'           => '',
 				'business_name'          => '',
+				'app_name'               => '',
 				'business_logo_id'       => 0,
 				'business_logo_email_id' => 0,
 				'brand_color'            => '#222530',
@@ -67,6 +68,12 @@ class Settings {
 			return $s;
 		}
 		return isset( $s[ $key ] ) ? $s[ $key ] : null;
+	}
+
+	/** What the team calls this app (their own name for it, e.g. "Company Portal"). Falls back to the business name; never "WPFlat". */
+	public static function app_name() {
+		$n = trim( (string) self::get( 'app_name' ) );
+		return '' !== $n ? $n : (string) self::get( 'business_name' );
 	}
 
 	/** Save the keys that were sent; anything unknown is ignored. */

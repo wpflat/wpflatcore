@@ -25,7 +25,7 @@ const trail = computed( () => {
 	}
 	const all = [ ...store.nav.core, ...store.nav.footer ];
 	const hit = all.find( ( i ) => ( i.route === '/' ? p === '/' : p === i.route || p.startsWith( i.route + '/' ) ) );
-	return [ hit ? hit.label : 'WPFlat' ];
+	return [ hit ? hit.label : ( store.appName || 'WPFlat' ) ];
 } );
 </script>
 

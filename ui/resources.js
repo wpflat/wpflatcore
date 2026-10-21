@@ -320,7 +320,7 @@ export const teamFields = () => {
 			{ name: 'cc_documents', label: 'Document emails', type: 'checkbox', checkLabel: 'Copy (Cc) this person on every document email', wide: true },
 			{ name: 'status', label: 'Status', type: 'select', required: true, options: ACTIVE_STATUSES },
 			{ name: 'notes', label: 'Notes', type: 'textarea', wide: true },
-			{ name: 'access_role', label: 'Access to WPFlat', type: 'select', placeholder: 'No access yet (just a record)', wide: true, show: canGrant, options: () => teamAccess.roles.map( ( r ) => ( { value: r.key, label: r.label } ) ), help: ( v ) => ( ( teamAccess.roles.find( ( r ) => r.key === v.access_role ) || {} ).desc || 'Choose a role to give them a login, and invite them to join.' ) },
+			{ name: 'access_role', label: 'Access', type: 'select', placeholder: 'No access yet (just a record)', wide: true, show: canGrant, options: () => teamAccess.roles.map( ( r ) => ( { value: r.key, label: r.label } ) ), help: ( v ) => ( ( teamAccess.roles.find( ( r ) => r.key === v.access_role ) || {} ).desc || 'Choose a role to give them a login, and invite them to join.' ) },
 			{ name: 'access_modules', label: 'Also lets them manage', type: 'checks', wide: true, options: () => Object.entries( teamAccess.modules ).map( ( [ value, label ] ) => ( { value, label } ) ), show: ( v, isNew ) => canGrant( v, isNew ) && v.access_role === 'wpflat_team_manager' },
 			{ name: 'send_invite', label: 'Invite', type: 'checkbox', checkLabel: 'Email them an invite to join (they choose their own username and password)', wide: true, show: ( v, isNew ) => canGrant( v, isNew ) && !! v.access_role },
 		],

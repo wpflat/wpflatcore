@@ -170,7 +170,7 @@ class Migrate_Bizy {
 			if ( '' === $new_key ) {
 				continue;
 			}
-			$label = isset( $wp->roles[ $key ]['name'] ) ? preg_replace( '/^Bizy /', 'WPFlat ', $wp->roles[ $key ]['name'] ) : $new_key;
+			$label = isset( $wp->roles[ $key ]['name'] ) ? preg_replace( '/^Bizy /', '', $wp->roles[ $key ]['name'] ) : $new_key;
 			if ( ! get_role( $new_key ) ) {
 				add_role( $new_key, $label, (array) get_role( $key )->capabilities );
 			}

@@ -144,6 +144,7 @@ const save = async () => {
 	try {
 		await api.post( 'settings', JSON.parse( JSON.stringify( form ) ) );
 		await refreshMeta();
+		store.appName = form.app_name || form.business_name || store.appName;
 		ElMessage.success( 'Settings saved' );
 	} catch ( e ) {
 		ElMessage.error( errorMessage( e ) );
@@ -164,6 +165,7 @@ const save = async () => {
 						<el-row :gutter="16">
 							<el-col :xs="24" :sm="12"><el-form-item label="Business name"><el-input v-model="form.business_name" placeholder="Your business" /></el-form-item></el-col>
 							<el-col :xs="24" :sm="12"><el-form-item label="Company name (legal)"><el-input v-model="form.company_name" /></el-form-item></el-col>
+							<el-col :xs="24" :sm="12"><el-form-item label="App name (for your team)"><el-input v-model="form.app_name" placeholder="e.g. Company Portal, Workspace" /><div class="bd-help">What your team calls this app. It appears in the sidebar, invites and emails. Leave empty to use your business name. Your clients’ portal has its own name under Client portal.</div></el-form-item></el-col>
 							<el-col :xs="24" :sm="12"><el-form-item label="Logo"><AttachmentField v-model="form.business_logo_id" v-model:url="form.business_logo_url" title="Business logo" library /><div v-if="form.business_logo_url" class="bd-logo-prev"><img :src="form.business_logo_url" alt="Logo preview" /></div></el-form-item></el-col>
 							<el-col :xs="24" :sm="12"><el-form-item label="Logo for emails (PNG/JPG)"><AttachmentField v-model="form.business_logo_email_id" v-model:url="form.business_logo_email_url" title="Email logo" library /><div class="bd-help">Email apps don't show SVG logos, so add a PNG or JPG version here. Not needed if your logo is already a PNG or JPG.</div></el-form-item></el-col>
 							<el-col :xs="24" :sm="12"><el-form-item label="Brand colour"><el-color-picker v-model="form.brand_color" :predefine="[ '#222530', '#2b6cff', '#0e7c66', '#b42318', '#7a3cff', '#c2410c' ]" /><div class="bd-help">Buttons and links in your emails use this colour, with your logo on top. Send a test email from Settings → Email to see it.</div></el-form-item></el-col>

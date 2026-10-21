@@ -66,6 +66,12 @@ class Team_Invite {
 		return $biz ? $biz : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 	}
 
+	/** What the team calls the app: their own name for it, never the product name. */
+	private static function app_name() {
+		$n = Settings::app_name();
+		return '' !== $n ? $n : self::business();
+	}
+
 	private static function role_label( $key ) {
 		$roles = Roles::roles();
 		return isset( $roles[ $key ] ) ? $roles[ $key ]['label'] : '';
@@ -98,17 +104,18 @@ class Team_Invite {
 		$all[ (int) $member_id ]['sent_at'] = time();
 		$all[ (int) $member_id ]['by']      = get_current_user_id();
 		$biz     = self::business();
+		$an      = self::app_name();
 		$by      = wp_get_current_user();
 		$by_name = ( $by && $by->ID ) ? $by->display_name : '';
 		$role    = self::role_label( $p['role'] );
 		$first   = '' !== trim( (string) $m['name'] ) ? trim( explode( ' ', trim( $m['name'] ) )[0] ) : 'there';
 		$link    = self::accept_url( $token );
 		$who     = '' !== $by_name ? esc_html( $by_name ) . ' has' : esc_html( $biz ) . ' has';
-		$intro   = $who . ' invited you to join ' . esc_html( $biz ) . ' on WPFlat' . ( '' !== $role ? ' as <strong>' . esc_html( $role ) . '</strong>' : '' ) . '.';
-		$ti      = ( '' !== $by_name ? $by_name : $biz ) . ' has invited you to join ' . $biz . ' on WPFlat' . ( '' !== $role ? ' as ' . $role : '' ) . '.';
+		$intro   = $who . ' invited you to join ' . esc_html( $an ) . ( '' !== $role ? ' as <strong>' . esc_html( $role ) . '</strong>' : '' ) . '.';
+		$ti      = ( '' !== $by_name ? $by_name : $biz ) . ' has invited you to join ' . $an . ( '' !== $role ? ' as ' . $role : '' ) . '.';
 		$html    = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . $intro . ' It is where the team works on ' . esc_html( strtolower( Terminology::label( 'client', true ) ) ) . ', projects and files.</p><p><a href="' . esc_url( $link ) . '">Accept the invite</a></p><p>You will choose your own username and password. You can use your email address as your username if you prefer. This invite works for ' . self::DAYS . ' days; if it has expired, ask ' . ( '' !== $by_name ? esc_html( $by_name ) : 'the person who invited you' ) . ' to send it again.</p>';
 		$text    = "Hi {$first},\n\n{$ti}\nAccept the invite: {$link}\n\nYou will choose your own username and password (you can use your email address as your username). The invite works for " . self::DAYS . " days.\n";
-		$r       = Mailer::send( array( 'to' => array( $m['email'] ), 'subject' => 'You are invited to join ' . $biz . ' on WPFlat', 'heading' => 'You are invited to join ' . $biz, 'preheader' => $ti, 'html' => $html, 'text' => $text ) );
+		$r       = Mailer::send( array( 'to' => array( $m['email'] ), 'subject' => 'You are invited to join ' . $an, 'heading' => 'You are invited to join ' . $an, 'preheader' => $ti, 'html' => $html, 'text' => $text ) );
 		if ( empty( $r['ok'] ) ) {
 			return new \WP_Error( 'wpflatcore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) );
 		}
@@ -125,13 +132,14 @@ class Team_Invite {
 		list( $rk ) = Roles::role_of( $u->ID );
 		$role       = self::role_label( $rk );
 		$biz        = self::business();
+		$an         = self::app_name();
 		$by         = wp_get_current_user();
 		$by_name    = ( $by && $by->ID ) ? $by->display_name : $biz;
 		$app        = App_Page::url();
 		$first      = $u->first_name ? $u->first_name : $u->display_name;
-		$line       = $by_name . ' has given you access to ' . $biz . ' on WPFlat' . ( '' !== $role ? ' as ' . $role : '' ) . '.';
-		$html       = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . esc_html( $line ) . ' You can sign in with your existing login.</p><p><a href="' . esc_url( $app ) . '">Open ' . esc_html( $biz ) . ' on WPFlat</a></p>';
-		$r          = Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'You now have access to ' . $biz . ' on WPFlat', 'heading' => 'You have been added to ' . $biz, 'html' => $html, 'text' => "Hi {$first},\n\n{$line}\nSign in with your existing login: {$app}\n" ) );
+		$line       = $by_name . ' has given you access to ' . $an . ( '' !== $role ? ' as ' . $role : '' ) . '.';
+		$html       = '<p>Hi ' . esc_html( $first ) . ',</p><p>' . esc_html( $line ) . ' You can sign in with your existing login.</p><p><a href="' . esc_url( $app ) . '">Open ' . esc_html( $an ) . '</a></p>';
+		$r          = Mailer::send( array( 'to' => array( $u->user_email ), 'subject' => 'You now have access to ' . $an, 'heading' => 'You have been added to ' . $an, 'html' => $html, 'text' => "Hi {$first},\n\n{$line}\nSign in with your existing login: {$app}\n" ) );
 		return empty( $r['ok'] ) ? new \WP_Error( 'wpflatcore_mail', isset( $r['error'] ) ? $r['error'] : 'The email could not be sent.', array( 'status' => 500 ) ) : true;
 	}
 

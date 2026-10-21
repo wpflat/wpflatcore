@@ -446,7 +446,7 @@ CSS;
 </head>
 <body>
 		<?php if ( self::$ctx['preview'] ) : ?>
-<div class="preview">Preview: this is what <?php echo esc_html( $c['name'] ); ?> sees. <a href="<?php echo esc_url( Urls::app( '/clients/' . (int) $c['id'] ) ); ?>">Back to WPFlat</a></div>
+<div class="preview">Preview: this is what <?php echo esc_html( $c['name'] ); ?> sees. <a href="<?php echo esc_url( Urls::app( '/clients/' . (int) $c['id'] ) ); ?>">Back to <?php echo esc_html( Settings::app_name() ); ?></a></div>
 		<?php endif; ?>
 <header class="top"><div class="bar-in">
 	<a class="brand" href="<?php echo esc_url( self::link() ); ?>"><?php echo self::brand(); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>

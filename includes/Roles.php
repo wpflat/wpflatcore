@@ -62,10 +62,10 @@ class Roles {
 	public static function roles() {
 		$base  = array( 'read' => true, 'upload_files' => true, 'manage_wpflatcore' => true );
 		$roles = array(
-			'wpflat_user'           => array( 'label' => 'WPFlat User', 'desc' => 'A person’s own login for the portal (a client, student, learner, patient… whatever you call them). Cannot open the WPFlat app or WordPress admin.', 'caps' => array( 'read' => true, 'wpflatcore_portal' => true ), 'internal' => false ),
-			'wpflat_client_manager' => array( 'label' => 'WPFlat Client Manager', 'desc' => 'Looks after clients: edits clients and contacts, answers messages and sees what the installed modules show about them.', 'caps' => $base + self::flag( array_merge( array( 'wpflatcore_clients', 'wpflatcore_messages' ), self::module_caps( 'client_manager_caps' ) ) ), 'internal' => true ),
-			'wpflat_team_manager'   => array( 'label' => 'WPFlat Team Manager', 'desc' => 'Manages the team. You choose which other parts of WPFlat each manager can also manage.', 'caps' => $base + self::flag( array_merge( array( 'wpflatcore_team', 'wpflatcore_messages' ), self::module_caps( 'team_manager_caps' ) ) ), 'internal' => true ),
-			'wpflat_admin'          => array( 'label' => 'WPFlat Admin', 'desc' => 'Full access to WPFlat, including settings, modules and backups. No access to WordPress itself.', 'caps' => $base + self::flag( self::all_caps() ), 'internal' => true ),
+			'wpflat_user'           => array( 'label' => 'User', 'desc' => 'A person’s own login for the portal (a client, student, learner, patient… whatever you call them). Cannot open the WPFlat app or WordPress admin.', 'caps' => array( 'read' => true, 'wpflatcore_portal' => true ), 'internal' => false ),
+			'wpflat_client_manager' => array( 'label' => 'Client Manager', 'desc' => 'Looks after clients: edits clients and contacts, answers messages and sees what the installed modules show about them.', 'caps' => $base + self::flag( array_merge( array( 'wpflatcore_clients', 'wpflatcore_messages' ), self::module_caps( 'client_manager_caps' ) ) ), 'internal' => true ),
+			'wpflat_team_manager'   => array( 'label' => 'Team Manager', 'desc' => 'Manages the team. You choose which other parts of the app each manager can also manage.', 'caps' => $base + self::flag( array_merge( array( 'wpflatcore_team', 'wpflatcore_messages' ), self::module_caps( 'team_manager_caps' ) ) ), 'internal' => true ),
+			'wpflat_admin'          => array( 'label' => 'Admin', 'desc' => 'Full access to the app, including settings, modules and backups. No access to WordPress itself.', 'caps' => $base + self::flag( self::all_caps() ), 'internal' => true ),
 		);
 		foreach ( Registry::all() as $m ) {
 			foreach ( (array) $m['roles'] as $slug => $r ) {
@@ -102,6 +102,16 @@ class Roles {
 		}
 	}
 
+	/** Keep the stored display name in step with the label (roles used to be saved as "WPFlat Admin" and so on). */
+	private static function rename_role( $key, $label ) {
+		$wp = wp_roles();
+		if ( isset( $wp->roles[ $key ] ) && $wp->roles[ $key ]['name'] !== $label ) {
+			$wp->roles[ $key ]['name'] = $label;
+			$wp->role_names[ $key ]    = $label;
+			update_option( $wp->role_key, $wp->roles );
+		}
+	}
+
 	public static function install() {
 		$admin = get_role( 'administrator' );
 		foreach ( self::all_caps() as $cap ) {
@@ -115,6 +125,7 @@ class Roles {
 				add_role( $key, $r['label'], $r['caps'] );
 				continue;
 			}
+			self::rename_role( $key, $r['label'] );
 			foreach ( $r['caps'] as $cap => $grant ) {
 				if ( ! $role->has_cap( $cap ) ) {
 					$role->add_cap( $cap, $grant );

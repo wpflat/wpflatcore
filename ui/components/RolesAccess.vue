@@ -63,7 +63,7 @@ onMounted( load );
 		<template v-if="data">
 			<el-card shadow="never" class="bd-mb">
 				<template #header><div class="bd-widget__head"><span>{{ $fmt( '{Client} logins' ) }}</span></div></template>
-				<p class="bd-muted bd-small">{{ $fmt( 'Every {client} can have contact people. Each contact who has an email gets a WordPress login with the' ) }} <strong>WPFlat User</strong> {{ $fmt( 'role, linked to their {client} record, ready for the portal. Nobody is emailed and no password is shared. The people on a {client}\'s contacts are the logins for that {client}.' ) }}</p>
+				<p class="bd-muted bd-small">{{ $fmt( 'Every {client} can have contact people. Each contact who has an email gets a WordPress login with the' ) }} <strong>User</strong> {{ $fmt( 'role, linked to their {client} record, ready for the portal. Nobody is emailed and no password is shared. The people on a {client}\'s contacts are the logins for that {client}.' ) }}</p>
 				<div class="bd-mt"><el-switch :model-value="data.auto" :active-text="$fmt( 'Create a login automatically when I add a {client} or contact' )" @update:model-value="toggleAuto" /></div>
 				<div class="bd-mt bd-small">
 					<Badge tone="info">{{ data.stats.portal_users }} {{ ( data.stats.portal_users === 1 ? sdk.t( 'client' ) : sdk.tp( 'client' ) ).toLowerCase() }} login{{ data.stats.portal_users === 1 ? '' : 's' }}</Badge>

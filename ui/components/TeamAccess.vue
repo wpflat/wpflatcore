@@ -59,7 +59,7 @@ watch( () => props.memberId, load );
 		<template #header><div class="bd-widget__head"><span>Access</span></div></template>
 		<el-alert v-if="info.is_wp_admin" type="info" show-icon :closable="false" title="This person is a WordPress administrator and already has full access." />
 		<template v-else>
-			<p class="bd-muted bd-small">What this person can open in WPFlat. {{ info.has_login ? 'Login: ' + info.login + '.' : ( info.pending ? 'Waiting for them to accept the invite.' : 'They do not have a login yet. Choose a role and invite them: they pick their own username and password when they accept, and their login is created then.' ) }}</p>
+			<p class="bd-muted bd-small">What this person can open in the app. {{ info.has_login ? 'Login: ' + info.login + '.' : ( info.pending ? 'Waiting for them to accept the invite.' : 'They do not have a login yet. Choose a role and invite them: they pick their own username and password when they accept, and their login is created then.' ) }}</p>
 			<el-select v-model="role" placeholder="No access" clearable style="width: 100%; max-width: 360px">
 				<el-option v-for="r in info.roles" :key="r.key" :value="r.key" :label="r.label" />
 			</el-select>

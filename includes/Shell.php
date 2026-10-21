@@ -35,7 +35,7 @@ class Shell {
 	/* ───────────────────────── WordPress admin menus ───────────────────────── */
 
 	public static function admin_menu() {
-		add_menu_page( 'WPFlat', 'WPFlat', 'manage_wpflatcore', self::PAGE, array( __CLASS__, 'render' ), 'dashicons-chart-area', 26 );
+		add_menu_page( Settings::app_name(), Settings::app_name(), 'manage_wpflatcore', self::PAGE, array( __CLASS__, 'render' ), 'dashicons-chart-area', 26 );
 		$core  = array(
 			Terminology::label( 'home', true ) => '/',
 			Terminology::label( 'client', true ) => '/clients',
@@ -54,7 +54,7 @@ class Shell {
 		// Each enabled module is its own top-level menu with its own sub-menu.
 		foreach ( Registry::active() as $id => $m ) {
 			$parent = self::PAGE . '-' . $id;
-			add_menu_page( 'WPFlat ' . $m['label'], 'WPFlat ' . $m['label'], 'manage_wpflatcore', $parent, array( __CLASS__, 'render' ), $m['wp'][0], $m['wp'][1] );
+			add_menu_page( $m['label'], $m['label'], 'manage_wpflatcore', $parent, array( __CLASS__, 'render' ), $m['wp'][0], $m['wp'][1] );
 			$first = true;
 			foreach ( $m['menu'] as $it ) {
 				if ( ! empty( $it['url'] ) ) {
@@ -196,6 +196,7 @@ class Shell {
 			'caps'         => Roles::ui_caps(),
 			'staffOnly'    => self::is_staff_only(),
 			'user'         => $u->display_name,
+			'appName'      => Settings::app_name(),
 			'userEmail'    => $u->user_email,
 			'userId'       => get_current_user_id(),
 			'homeUrl'      => home_url( '/' ),

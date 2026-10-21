@@ -276,7 +276,8 @@ class App_Login {
 		$err   = isset( $_GET['bd_error'] ) ? sanitize_key( wp_unslash( $_GET['bd_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$msg   = isset( $_GET['bd_msg'] ) ? sanitize_key( wp_unslash( $_GET['bd_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$sent  = isset( $_GET['bd_sent'] ); // phpcs:ignore WordPress.Security.NonceVerification
-		$label = $name ? $name : 'WPFlat';
+		$label = Settings::app_name();
+		$label = '' !== $label ? $label : $name;
 		$titles = array( 'login' => 'Sign in', 'forgot' => 'Reset your password', 'reset' => 'Choose a new password', 'invite' => 'Accept your invite', 'invite_bad' => 'This invite has expired' );
 		$ERR = array(
 			'1'       => 'Those details didn’t match. Check them and try again.',
